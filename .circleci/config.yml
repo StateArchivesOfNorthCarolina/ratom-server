@@ -54,7 +54,8 @@ jobs:
               export IMAGE=us.gcr.io/ratom-258217/ratom_api
               export TAG=release-${CIRCLE_SHA1}
               docker tag app "${IMAGE}:${TAG}"
-              docker push "${IMAGE}:${TAG}"
+              docker tag app "${IMAGE}:latest"
+              docker push "${IMAGE}"
               # cd deployment/
               # ansible-playbook -l gcp-staging deploy.yaml
             fi
