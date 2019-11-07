@@ -1,0 +1,31 @@
+version: '3.4'
+
+services:
+  cache:
+    restart: always
+    image: memcached:1.5
+    expose:
+      - "11211"
+  db:
+    environment:
+      POSTGRES_DB: app_db
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: changeme
+    restart: always
+    image: postgres:9.6  # Match GCP
+    expose:
+      - "5432"
+  app:
+    environment:
+      DATABASE_URL: postgres://app_user:changeme@db/app_db
+      CACHE_HOST: cache:11211
+      ENVIRONMENT: local
+      DJANGO_SECRET_KEY: insecure-dev-key
+      DOMAIN: localhost
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    links:
+      - db:db
+    ports:
+      - "8000:8000"
