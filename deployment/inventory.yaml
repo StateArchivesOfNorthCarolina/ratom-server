@@ -19,3 +19,4 @@ all:
             DATABASE_URL: postgres://ratom_staging:abc123@10.57.192.2/ratom_staging
             CACHE_HOST: memcached:11211
             DOMAIN: "{{ DOMAIN_NAMES[0] }}"
+            SENTRY_DSN: https://a0ca0bdd3f3d4d66b0bb7baaaa322a81@sentry.caktus-built.com/18
