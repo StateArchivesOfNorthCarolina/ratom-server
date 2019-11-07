@@ -14,18 +14,22 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
 from django.conf import settings
-from django.conf.urls import url, include
+from django.urls import re_path, path, include
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.views.generic import TemplateView
 
+from graphene_django.views import GraphQLView
+from .schema import schema
+
 urlpatterns = [
-    url(r'^$', TemplateView.as_view(template_name='base.html')),
-    url(r'^admin/', admin.site.urls),
+    re_path(r'^$', TemplateView.as_view(template_name='base.html')),
+    path('admin', admin.site.urls),
+    path('graphql', GraphQLView.as_view(graphiql=True, schema=schema)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
     import debug_toolbar
     urlpatterns += [
-        url(r'^__debug__/', include(debug_toolbar.urls)),
+        re_path(r'^__debug__/', include(debug_toolbar.urls)),
     ]

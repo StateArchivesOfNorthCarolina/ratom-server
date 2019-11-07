@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.humanize',
     'django.contrib.sitemaps',
+    'graphene_django',
     'ratom',
 ]
 
@@ -45,6 +46,11 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# location of schema.py in our project directory
+GRAPHENE = {
+    'SCHEMA': 'ratom_api.schema.schema'
+}
 
 
 ROOT_URLCONF = 'ratom_api.urls'
