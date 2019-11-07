@@ -12,7 +12,7 @@ os.environ.setdefault('BROKER_HOST', '127.0.0.1:5672')
 ENVIRONMENT = os.environ['ENVIRONMENT']
 
 
-DEBUG = False
+DEBUG = os.getenv("DJANGO_DEBUG") == "1"
 
 
 if 'MEDIA_ROOT' in os.environ:
