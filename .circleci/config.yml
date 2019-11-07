@@ -4,16 +4,15 @@ jobs:
     # Adapted from https://circleci.com/blog/how-to-build-a-docker-image-on-circleci-2-0/
     working_directory: /app
     docker:
-      - image: google/cloud-sdk
+      - image: docker:19.03
     steps:
       - checkout
       - setup_remote_docker
       - run:
           name: Install dependencies
           command: |
+            apk add --no-cache py-pip
             pip --version | true
-            # apt-get install -y add --no-cache \
-            #   py-pip=9.0.0-r1
             # pip install \
             #   docker-compose==1.12.0 \
             #   ansible==2.9.0 \
@@ -42,16 +41,17 @@ jobs:
           key: v1-{{ .Branch }}-{{ epoch }}
           paths:
             - /caches/app.tar
-      - run:
-          name: Auth gCloud SDK
-          command: |
-            echo $GOOGLE_AUTH | gcloud auth activate-service-account --key-file=-
-            gcloud --quiet config set project ratom-258217
-            gcloud --quiet config set compute/zone us-east1
+      # - run:
+      #     name: Auth gCloud SDK
+      #     command: |
+      #       echo $GOOGLE_AUTH | gcloud auth activate-service-account --key-file=-
+      #       gcloud --quiet config set project ratom-258217
+      #       gcloud --quiet config set compute/zone us-east1
       - deploy:
           name: Push application Docker image
           command: |
             if [ "${CIRCLE_BRANCH}" == "deployment" ]; then
+              echo $GOOGLE_AUTH | docker login -u _json_key --password-stdin https://us.gcr.io/
               export IMAGE=us.gcr.io/ratom-258217/ratom_api
               export TAG=release-${CIRCLE_SHA1}
               docker tag app "${IMAGE}:${TAG}"
