@@ -2,7 +2,7 @@
 # version of Django within the given range, but not for versions outside that
 # range. So if 1.11.12 gets released, we get warned. If 2.0.1 gets released,
 # we don't.
-Django==2.2.6  # rq.filter: >=2.2.7,<2.3
+Django==2.2.7  # rq.filter: >=2.2.7,<2.3
 # Required by Django
 sqlparse==0.3.0
 pytz
@@ -11,5 +11,5 @@ dealer==2.0.5
 django-dotenv==1.4.2
 dj-database-url==0.5.0
 Pillow==6.2.0
-psycopg2-binary==2.8.3
+psycopg2==2.8.4
 whitenoise==4.1.4
