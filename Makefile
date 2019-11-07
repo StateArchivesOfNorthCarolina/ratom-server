@@ -10,19 +10,13 @@ test:
 		(echo 'There are changes which require migrations.' && exit 1)
 	coverage run manage.py test
 	coverage report -m --fail-under 80
-	npm test
 
 lint-py:
 	# Check for Python formatting issues
 	# Requires flake8
 	$(WORKON_HOME)/ratom_api/bin/flake8 .
 
-lint-js:
-	# Check JS for any problems
-	# Requires jshint
-	./node_modules/.bin/eslint -c .eslintrc '${STATIC_DIR}' --ext js,jsx
-
-lint: lint-py lint-js
+lint: lint-py
 
 # Generate a random string of desired length
 generate-secret: length = 32
@@ -61,8 +55,6 @@ setup:
 	$(WORKON_HOME)/ratom_api/bin/pip install -U pip wheel
 	$(WORKON_HOME)/ratom_api/bin/pip install -Ur requirements/dev.txt
 	$(WORKON_HOME)/ratom_api/bin/pip freeze
-	npm install
-	npm update
 	cp ratom_api/settings/local.example.py ratom_api/settings/local.py
 	echo "DJANGO_SETTINGS_MODULE=ratom_api.settings.local" > .env
 	createdb -E UTF-8 ratom_api
@@ -74,18 +66,15 @@ setup:
 	@echo "development server:"
 	@echo
 	@echo "	workon ratom_api"
-	@echo "	npm run dev"
 
 update:
 	$(WORKON_HOME)/ratom_api/bin/pip install -U -r requirements/dev.txt
-	npm install
-	npm update
 
 # Build documentation
 docs:
 	cd docs && make html
 
-.PHONY: default test lint lint-py lint-js generate-secret makemessages \
+.PHONY: default test lint lint-py generate-secret makemessages \
 		pushmessages pullmessages compilemessages docs
 
 .PRECIOUS: conf/keys/%.pub.ssh
