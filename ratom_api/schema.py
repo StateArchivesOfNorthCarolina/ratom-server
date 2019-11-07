@@ -11,4 +11,4 @@ class Mutation(graphene.ObjectType):
 
 # remove the parameters for the server to start
 # will not start correctly because we don't have any schema!
-schema = graphene.Schema(query=Query, mutation=Mutation)
+schema = graphene.Schema()
