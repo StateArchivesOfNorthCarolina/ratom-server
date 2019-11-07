@@ -1,48 +1,6 @@
 version: 2
 jobs:
-  test:
-    # Adapted from Python sample when creating a new project in CircleCI
-    docker:
-      # specify the version you desire here
-      # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
-      - image: circleci/python:3.7
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      - image: circleci/postgres:9.6
-    working_directory: ~/repo
-    steps:
-      - checkout
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "requirements.txt" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
-      - run:
-          name: install dependencies
-          command: |
-            python3 -m venv venv
-            . venv/bin/activate
-            pip install -r requirements.txt
-      - save_cache:
-          paths:
-            - ./venv
-          key: v1-dependencies-{{ checksum "requirements.txt" }}
-      # run tests!
-      # this example uses Django's built-in test-runner
-      # other common Python testing frameworks include pytest and nose
-      # https://pytest.org
-      # https://nose.readthedocs.io
-      - run:
-          name: run tests
-          command: |
-            . venv/bin/activate
-            python manage.py test
-      - store_artifacts:
-          path: test-reports
-          destination: test-reports
-  deploy:
+  build:
     # Adapted from https://circleci.com/blog/how-to-build-a-docker-image-on-circleci-2-0/
     working_directory: /app
     docker:
@@ -56,10 +14,7 @@ jobs:
             apk add --no-cache \
               py-pip=9.0.0-r1
             pip install \
-              docker-compose==1.12.0 \
-              ansible==2.9.0 \
-              openshift==0.10.0 \
-              kubernetes-validate==1.16.0 \
+              docker-compose==1.12.0
       - restore_cache:
           keys:
             - v1-{{ .Branch }}
@@ -83,6 +38,31 @@ jobs:
           key: v1-{{ .Branch }}-{{ epoch }}
           paths:
             - /caches/app.tar
+  deploy:
+    # Adapted from https://circleci.com/blog/how-to-build-a-docker-image-on-circleci-2-0/
+    working_directory: /app
+    docker:
+      - image: google/cloud-sdk
+    steps:
+      - checkout
+      - setup_remote_docker
+      - attach_workspace:
+        at: .
+      - run:
+          name: Install dependencies
+          command: |
+            apt-get install -y python3-pip
+            pip install \
+              docker-compose==1.12.0 \
+              ansible==2.9.0 \
+              openshift==0.10.0 \
+              kubernetes-validate==1.16.0
+      - run:
+          name: Load docker image from cache
+          command: docker load --input /caches/app.tar
+      - run:
+          name: Auth gCloud SDK
+          command: bash ./deploy/gcloud-auth.sh
       - deploy:
           name: Push application Docker image
           command: |
