@@ -20,9 +20,6 @@ local development system:
 - Postgres >= 9.3
 - git >= 1.7
 
-Installing the proper NodeJS versions for each of your projects can be difficult. It's probably best
-to `use nvm <https://github.com/nvm-sh/nvm>`_.
-
 Django version
 ------------------------
 
@@ -38,7 +35,7 @@ First clone the repository from Github and switch to the new directory::
     $ cd ratom_api
 
 To setup your local environment you can use the quickstart make target `setup`, which will
-install both Python and Javascript dependencies (via pip and npm) into a virtualenv named
+install Python dependencies (via pip) into a virtualenv named
 "ratom_api", configure a local django settings file, and create a database via
 Postgres named "ratom_api" with all migrations run::
 
@@ -55,7 +52,6 @@ necessary requirements::
     $ which python3.7
     $ mkvirtualenv ratom_api -p `which python3.7`
     (ratom_api)$ pip install -r requirements/dev.txt
-    (ratom_api)$ npm install
 
 Next, we'll set up our local environment variables. We use `django-dotenv
 <https://github.com/jpadilla/django-dotenv>`_ to help with this. It reads environment variables
@@ -79,16 +75,7 @@ that currently exists.  (That one is for testing the template itself.)::
 Development
 -----------
 
-You should be able to run the development server via the configured `dev` script::
-
-    (ratom_api)$ npm run dev
-
-Or, on a custom port and address::
-
-    (ratom_api)$ npm run dev -- --address=0.0.0.0 --port=8020
-
-Any changes made to Python, Javascript or Less files will be detected and rebuilt transparently as
-long as the development server is running.
+🤯
 
 Deployment
 ----------

@@ -15,9 +15,4 @@ public/media/
 conf/pillar/*/deploy
 *.priv
 .env
-node_modules
-*/static/js/bundle.js
-*/static/js/vendors.js
-*/static/libs/modernizr.js
-*/static/css
 deployment/roles/

@@ -19,11 +19,5 @@ echo "PREDEPLOY SCRIPT"
 
 mkdir -p $MEDIA_ROOT
 
-# NOTE: the buildpack should already have installed our node packages
-npm run build
-# We need to run collectstatic here, even though the buildpack already did,
-# to pick up the output of the `npm run build`
-python manage.py collectstatic --noinput
-
 # Run migrations
 python manage.py migrate --noinput
