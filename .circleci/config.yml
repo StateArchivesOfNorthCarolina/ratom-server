@@ -1,0 +1,60 @@
+version: 2
+jobs:
+  build:
+    # Adapted from https://circleci.com/blog/how-to-build-a-docker-image-on-circleci-2-0/
+    working_directory: /app
+    docker:
+      - image: docker:19.03
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --no-cache py-pip
+            # pip install \
+            #   docker-compose==1.12.0 \
+            #   ansible==2.9.0 \
+            #   openshift==0.10.0 \
+            #   kubernetes-validate==1.16.0
+      - restore_cache:
+          keys:
+            - v1-{{ .Branch }}
+          paths:
+            - /caches/app.tar
+      - run:
+          name: Load Docker image layer cache
+          command: |
+            set +o pipefail
+            docker load -i /caches/app.tar | true
+      - run:
+          name: Build application Docker image
+          command: |
+            docker build --pull --cache-from=app -t app .
+      - run:
+          name: Save Docker image layer cache
+          command: |
+            mkdir -p /caches
+            docker save -o /caches/app.tar app
+      - save_cache:
+          key: v1-{{ .Branch }}-{{ epoch }}
+          paths:
+            - /caches/app.tar
+      # - run:
+      #     name: Auth gCloud SDK
+      #     command: |
+      #       echo $GOOGLE_AUTH | gcloud auth activate-service-account --key-file=-
+      #       gcloud --quiet config set project ratom-258217
+      #       gcloud --quiet config set compute/zone us-east1
+      - deploy:
+          name: Push application Docker image
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "deployment" ]; then
+              echo $GOOGLE_AUTH | docker login -u _json_key --password-stdin https://us.gcr.io/
+              export IMAGE=us.gcr.io/ratom-258217/ratom_api
+              export TAG=release-${CIRCLE_SHA1}
+              docker tag app "${IMAGE}:${TAG}"
+              docker push "${IMAGE}:${TAG}"
+              # cd deployment/
+              # ansible-playbook -l gcp-staging deploy.yaml
+            fi
