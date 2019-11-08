@@ -57,9 +57,6 @@ jobs:
             docker tag app "${IMAGE}:${TAG}"
             docker tag app "${IMAGE}:latest"
             docker push "${IMAGE}"
-      - deploy:
-          name: Deploy to staging
-          command: |
             if [ "${CIRCLE_BRANCH}" == "develop" ]; then
               echo $GOOGLE_AUTH | gcloud auth activate-service-account --key-file=-
               gcloud --quiet config set project ratom-258217
