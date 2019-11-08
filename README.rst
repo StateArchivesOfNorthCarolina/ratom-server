@@ -141,6 +141,8 @@ Deployment
 Deployment for this project is done by CircleCI on each merge to ``develop``. You can inspect
 the ``.circle/config.yml`` file to see how it's done, or update the process.
 
+The frontend is deployed to a separate pod via its own repo, using the same process.
+
 You can also test or update the deployment locally in the ``deployment/`` directory::
 
     pip install -r requirements/dev.txt
