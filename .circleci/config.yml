@@ -64,5 +64,5 @@ jobs:
               kubectl cluster-info
               cd deployment/
               /caches/venv/bin/ansible-galaxy install -r requirements.yaml
-              /caches/venv/bin/ansible-playbook -l gcp-staging deploy.yaml -e CONTAINER_IMAGE_TAG=${TAG}
+              /caches/venv/bin/ansible-playbook -l gcp-staging deploy.yaml -e k8s_container_image_tag=${TAG}
             fi
