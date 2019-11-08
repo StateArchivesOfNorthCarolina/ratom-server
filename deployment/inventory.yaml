@@ -10,6 +10,7 @@ all:
           k8s_domain_names:
           - ratom-staging.caktus-built.com
           k8s_namespace: "ratom-{{ env_name }}"
+          k8s_container_name: api
           k8s_container_image: us.gcr.io/ratom-258217/ratom_api
           k8s_container_image_tag: latest
           k8s_container_port: 8000
