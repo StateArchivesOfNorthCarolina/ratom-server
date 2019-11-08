@@ -51,13 +51,16 @@ jobs:
       - deploy:
           name: Push application Docker image
           command: |
+            echo $GOOGLE_AUTH | docker login -u _json_key --password-stdin https://us.gcr.io/
+            export IMAGE=us.gcr.io/ratom-258217/ratom_frontend
+            export TAG=${CIRCLE_BRANCH}-${CIRCLE_SHA1:0:7}
+            docker tag app "${IMAGE}:${TAG}"
+            docker tag app "${IMAGE}:latest"
+            docker push "${IMAGE}"
+      - deploy:
+          name: Deploy to staging
+          command: |
             if [ "${CIRCLE_BRANCH}" == "develop" ]; then
-              echo $GOOGLE_AUTH | docker login -u _json_key --password-stdin https://us.gcr.io/
-              export IMAGE=us.gcr.io/ratom-258217/ratom_api
-              export TAG=release-${CIRCLE_SHA1}
-              docker tag app "${IMAGE}:${TAG}"
-              docker tag app "${IMAGE}:latest"
-              docker push "${IMAGE}"
               echo $GOOGLE_AUTH | gcloud auth activate-service-account --key-file=-
               gcloud --quiet config set project ratom-258217
               gcloud container clusters get-credentials --region=us-east1 ratom-cluster
