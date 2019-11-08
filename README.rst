@@ -80,22 +80,26 @@ Development
 Deployment
 ----------
 
-There are different ways to deploy, and `this document <http://caktus.github.io/developer-documentation/deploy-strategies.html>`_ outlines a few of them that could be used for ratom_api.
+Deployment for this project is done by CircleCI on each merge to ``develop``. You can inspect
+the ``.circle/config.yml`` file to see how it's done, or update the process.
 
-Deployment with fabric
-......................
+You can also test or update the deployment locally in the ``deployment/`` directory::
 
-We use a library called `fabric <http://www.fabfile.org/>`_ as a wrapper around a lot of our deployment
-functionality. However, deployment is no longer fully set up in this template, and instead you'll need
-to do something like set up `Tequila <https://github.com/caktus/tequila>`_ for your project. Currently,
-best way to do that is to copy the configuration from an existing project. Once that is done, and the
-servers have been provisioned, you can deploy changes to a particular environment with the ``deploy``
-command::
+    pip install -r requirements/dev.txt
+    cd deployment/
+    ansible-galaxy install -r requirements.yaml
+    gcloud auth login
+    gcloud config set project ratom-258217
+    gcloud container clusters get-credentials --region=us-east1 ratom-cluster
+    ansible-playbook deploy.yaml
 
-    $ fab staging deploy
+Note: This will deploy the image with the ``:latest`` tag. Normally, CI/CD will deploy a tag
+with a commit sha to ensure the that the Kubernetes ``Deployment`` updates the underlying pods.
+You can override the ``CONTAINER_IMAGE_TAG`` on the command line, if needed, to deploy a different
+image::
 
-Deployment with Dokku
-.....................
+    ansible-playbook deploy.yaml -e CONTAINER_IMAGE_TAG=my-docker-tag
 
-Alternatively, you can deploy the project using Dokku. See the
-`Caktus developer docs <http://caktus.github.io/developer-documentation/dokku.html>`_.
+You can see the available images in the GCR repo for this project in GCP:
+
+https://console.cloud.google.com/gcr/images/ratom-258217/US/ratom_api?project=ratom-258217&organizationId=450077367739&gcrImageListsize=30

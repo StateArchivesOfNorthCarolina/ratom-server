@@ -1,0 +1,68 @@
+version: 2
+jobs:
+  build:
+    # Adapted from https://circleci.com/blog/how-to-build-a-docker-image-on-circleci-2-0/
+    working_directory: /app
+    docker:
+      - image: google/cloud-sdk
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Install virtualenv
+          command: |
+            pip install virtualenv
+      - restore_cache:
+          keys:
+            - v1-{{ .Branch }}
+          paths:
+            - /caches/app.tar
+            - /caches/venv
+      - run:
+          name: Create or update virtualenv
+          command: |
+            if [ ! -f /caches/venv/bin/pip ]; then
+              virtualenv /caches/venv
+            fi
+            /caches/venv/bin/pip install \
+              docker-compose==1.12.0 \
+              ansible==2.9.0 \
+              openshift==0.10.0 \
+              kubernetes-validate==1.16.0
+      - run:
+          name: Load Docker image layer cache
+          command: |
+            set +o pipefail
+            docker load -i /caches/app.tar | true
+      - run:
+          name: Build application Docker image
+          command: |
+            docker build --pull --cache-from=app -t app .
+      - run:
+          name: Save Docker image layer cache
+          command: |
+            mkdir -p /caches
+            docker save -o /caches/app.tar app
+      - save_cache:
+          key: v1-{{ .Branch }}-{{ epoch }}
+          paths:
+            - /caches/app.tar
+            - /caches/venv
+      - deploy:
+          name: Push application Docker image
+          command: |
+            echo $GOOGLE_AUTH | docker login -u _json_key --password-stdin https://us.gcr.io/
+            export IMAGE=us.gcr.io/ratom-258217/ratom_api
+            export TAG=${CIRCLE_BRANCH}-${CIRCLE_SHA1:0:7}
+            docker tag app "${IMAGE}:${TAG}"
+            docker tag app "${IMAGE}:latest"
+            docker push "${IMAGE}"
+            if [ "${CIRCLE_BRANCH}" == "develop" ]; then
+              echo $GOOGLE_AUTH | gcloud auth activate-service-account --key-file=-
+              gcloud --quiet config set project ratom-258217
+              gcloud container clusters get-credentials --region=us-east1 ratom-cluster
+              kubectl cluster-info
+              cd deployment/
+              /caches/venv/bin/ansible-galaxy install -r requirements.yaml
+              /caches/venv/bin/ansible-playbook -l gcp-staging deploy.yaml -e k8s_container_image_tag=${TAG}
+            fi

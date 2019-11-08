@@ -12,7 +12,7 @@ os.environ.setdefault('BROKER_HOST', '127.0.0.1:5672')
 ENVIRONMENT = os.environ['ENVIRONMENT']
 
 
-DEBUG = False
+DEBUG = os.getenv("DJANGO_DEBUG") == "1"
 
 
 if 'MEDIA_ROOT' in os.environ:
@@ -136,3 +136,14 @@ if 'DOKKU_NGINX_SSL_PORT' in os.environ:
     # Honor the 'X-Forwarded-Proto' header for request.is_secure()
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_REDIRECT_EXEMPT = ['/.well-known']  # For Let's Encrypt
+
+
+SENTRY_DSN = os.getenv("SENTRY_DSN")
+
+if SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()]
+    )

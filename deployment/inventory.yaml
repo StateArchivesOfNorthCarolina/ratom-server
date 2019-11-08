@@ -5,17 +5,23 @@ all:
         ansible_connection: local
       hosts:
         gcp-staging:
-          KUBE_CONTEXT: gke_ratom-258217_us-east1_ratom-cluster
-          DOMAIN_NAMES:
+          env_name: staging
+          k8s_kube_context: gke_ratom-258217_us-east1_ratom-cluster
+          k8s_domain_names:
           - ratom-staging.caktus-built.com
-          ENV_NAME: staging
-          NAMESPACE: "ratom-{{ ENV_NAME }}"
-          CONTAINER_IMAGE: us.gcr.io/ratom-258217/ratom_api
-          CONTAINER_IMAGE_TAG: latest
-          CONTAINER_PORT: 8000
-          ENVIRONMENT_VARIABLES:
+          k8s_namespace: "ratom-{{ env_name }}"
+          k8s_container_name: api
+          k8s_container_image: us.gcr.io/ratom-258217/ratom_api
+          k8s_container_image_tag: latest
+          k8s_container_port: 8000
+          k8s_container_ingress_paths:
+          - /admin
+          - /graphql
+          - /static
+          k8s_environment_variables:
             DJANGO_SECRET_KEY: temporary-insecure-secret-key-vK2o6lmpsSLFdC82
-            ENVIRONMENT: "{{ ENV_NAME }}"
+            ENVIRONMENT: "{{ env_name }}"
             DATABASE_URL: postgres://ratom_staging:abc123@10.57.192.2/ratom_staging
             CACHE_HOST: memcached:11211
-            DOMAIN: "{{ DOMAIN_NAMES[0] }}"
+            DOMAIN: "{{ k8s_domain_names[0] }}"
+            SENTRY_DSN: https://a0ca0bdd3f3d4d66b0bb7baaaa322a81@sentry.caktus-built.com/18

@@ -12,4 +12,4 @@ class RootQuery(ratom.schema.Query, graphene.ObjectType):
 
 # remove the parameters for the server to start
 # will not start correctly because we don't have any schema!
-schema = graphene.Schema(query=RootQuery)#, mutation=RootMutation)
+schema = graphene.Schema(query=RootQuery)
