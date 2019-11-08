@@ -11,7 +11,7 @@ class CollectionNode(DjangoObjectType):
         model = Collection
         filter_fields = {
             "title": ["exact", "iexact", "icontains", "istartswith", "iendswith"],
-            "sent_date": ["exact", "iexact", "icontains", "gte", "lte", "range"],
+            "accession_date": ["exact", "iexact", "icontains", "gte", "lte", "range"],
         }
         interfaces = (relay.Node, )
 
