@@ -10,8 +10,8 @@ class CollectionNode(DjangoObjectType):
     class Meta:
         model = Collection
         filter_fields = {
-            "title": ["exact", "icontains", "istartswith"],
-            "accession_date": ["exact", "gte", "lte"]
+            "title": ["exact", "iexact", "icontains", "istartswith", "iendswith"],
+            "sent_date": ["exact", "iexact", "icontains", "gte", "lte", "range"],
         }
         interfaces = (relay.Node, )
 
@@ -20,11 +20,14 @@ class MessageNode(DjangoObjectType):
     class Meta:
         model = Message
         filter_fields = {
-            "message_id": ["exact", "icontains", "istartswith"],
-            "sent_date": ["exact", "icontains", "istartswith"],
-            "msg_from": ["exact", "icontains", "istartswith"],
-            "msg_to": ["exact", "icontains", "istartswith"],
-            "msg_subject": ["exact", "icontains", "istartswith"],
+            "message_id": ["exact", "iexact", "icontains", "istartswith"],
+            "sent_date": ["exact", "iexact", "icontains", "gte", "lte", "range"],
+            "msg_from": ["exact", "iexact", "icontains", "istartswith", "iendswith"],
+            "msg_to": ["exact", "iexact", "icontains", "istartswith", "iendswith"],
+            "msg_cc": ["exact", "iexact", "icontains", "istartswith", "iendswith"],
+            "msg_bcc": ["exact", "iexact", "icontains", "istartswith", "iendswith"],
+            "msg_subject": ["exact", "iexact", "icontains", "istartswith"],
+            "msg_body": ["exact", "iexact", "icontains", "istartswith", "iendswith"],
         }
         interfaces = (relay.Node, )
 
