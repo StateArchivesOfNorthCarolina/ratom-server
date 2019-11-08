@@ -17,6 +17,7 @@ all:
           k8s_container_ingress_paths:
           - /admin
           - /graphql
+          - /static
           k8s_environment_variables:
             DJANGO_SECRET_KEY: temporary-insecure-secret-key-vK2o6lmpsSLFdC82
             ENVIRONMENT: "{{ env_name }}"
