@@ -10,8 +10,8 @@ class CollectionNode(DjangoObjectType):
     class Meta:
         model = Collection
         filter_fields = {
-            "title": ["exact", "icontains", "istartswith"],
-            "accession_date": ["exact", "gte", "lte"]
+            "title": ["exact", "iexact", "icontains", "istartswith", "iendswith"],
+            "sent_date": ["exact", "iexact", "icontains", "gte", "lte", "range"],
         }
         interfaces = (relay.Node, )
 
