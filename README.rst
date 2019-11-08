@@ -139,7 +139,8 @@ Deployment
 ~~~~~~~~~~
 
 Deployment for this project is done by CircleCI on each merge to ``develop``. You can inspect
-the ``.circle/config.yml`` file to see how it's done, or update the process.
+the ``.circle/config.yml`` file to see how it's done, or to update the process. It relies on the
+`django-k8s <https://github.com/caktus/ansible-role-django-k8s>`_ Ansible role.
 
 The frontend is deployed to a separate pod via its own repo, using the same process.
 
@@ -152,10 +153,10 @@ You can also test or update the deployment locally in the ``deployment/`` direct
 
 Note: This will deploy the image with the ``:latest`` tag. Normally, CI/CD will deploy a tag
 with a commit sha to ensure the that the Kubernetes ``Deployment`` updates the underlying pods.
-You can override the ``CONTAINER_IMAGE_TAG`` on the command line, if needed, to deploy a different
+You can override the ``k8s_container_image_tag`` on the command line, if needed, to deploy a different
 image::
 
-    ansible-playbook deploy.yaml -e CONTAINER_IMAGE_TAG=my-docker-tag
+    ansible-playbook deploy.yaml -l gcp-staging -e k8s_container_image_tag=my-docker-tag
 
 You can see the available images in the GCR repo for this project in GCP:
 
