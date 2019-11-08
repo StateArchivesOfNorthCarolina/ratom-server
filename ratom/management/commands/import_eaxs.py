@@ -16,7 +16,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         path = options['path'][0]
-        eaxs_file = Path(path) / 'ratom/management/commands/test_account.xml'
+        eaxs_file = Path(path)
         message_tag = "Message"
         messages = etree.iterparse(str(eaxs_file.absolute()), events=("end",), strip_cdata=False,
                                    tag=message_tag, huge_tree=True)
