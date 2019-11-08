@@ -49,7 +49,8 @@ MIDDLEWARE = [
 
 # location of schema.py in our project directory
 GRAPHENE = {
-    'SCHEMA': 'ratom_api.schema.schema'
+    'SCHEMA': 'ratom_api.schema.schema',
+    'SCHEMA_OUTPUT': 'schema.json'
 }
 
 
