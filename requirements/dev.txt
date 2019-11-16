@@ -25,3 +25,6 @@ snowballstemmer==1.2.1
 ansible==2.9.0
 openshift==0.10.0
 kubernetes-validate==1.16.0
+
+# For Jupyter notebooks
+jupyterlab==1.2.2

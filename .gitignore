@@ -15,4 +15,6 @@ public/media/
 conf/pillar/*/deploy
 *.priv
 .env
+env-setup.sh
 deployment/roles/
+notebooks/.ipynb_checkpoints
