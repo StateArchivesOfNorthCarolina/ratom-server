@@ -72,6 +72,24 @@ that currently exists.  (That one is for testing the template itself.)::
 
     (ratom_api)$ mv project.travis.yml .travis.yml
 
+
+Black
+-----
+
+Run::
+
+    $ pre-commit install
+
+You can also use ``black`` to format on save. For example, configuration for VS Code::
+
+    {
+        "settings": {
+            "python.formatting.provider": "black",
+            "editor.formatOnSave": true
+        }
+    }
+
+
 Development
 -----------
 
