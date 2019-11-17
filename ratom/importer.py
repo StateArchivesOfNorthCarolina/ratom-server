@@ -70,7 +70,6 @@ class PstImporter:
         collection, _ = ratom.Collection.objects.get_or_create(
             title=title, accession_date=dt.date.today()
         )
-        collection.message_set.all().delete()  # TODO: temporary
         self.collection = collection
 
     def _extract_match(self, pattern: Pattern[str], haystack: str) -> str:
