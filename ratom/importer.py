@@ -7,6 +7,7 @@ from typing import Iterable, Pattern
 import pypff
 from libratom.lib.pff import PffArchive
 from django.db import transaction
+from django.utils.timezone import make_aware
 
 from ratom import models as ratom
 from ratom.util.bulk_create_manager import BulkCreateManager
@@ -72,10 +73,11 @@ class PstImporter:
         headers = message.transport_headers.strip()
         msg_from = self._extract_match(from_re, headers)
         msg_to = self._extract_match(to_re, headers)
+        sent_date = make_aware(message.delivery_time)
         # folder_path = self.get_folder_abs_path(folder)
         return ratom.Message(
             message_id=message,
-            sent_date=message.delivery_time,
+            sent_date=sent_date,
             msg_to=msg_to,
             msg_from=msg_from,
             msg_subject=message.subject,

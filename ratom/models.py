@@ -24,16 +24,16 @@ class Processor(models.Model):
 
 
 class Message(models.Model):
-    message_id = models.CharField(max_length=256, null=True, blank=True)
+    message_id = models.CharField(max_length=256, blank=True)
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
-    sent_date = models.CharField(max_length=32)
+    sent_date = models.DateTimeField(db_index=True)
     msg_from = models.TextField(db_index=True)
     msg_to = models.TextField(db_index=True)
-    msg_cc = models.TextField()
-    msg_bcc = models.TextField()
+    msg_cc = models.TextField(blank=True)
+    msg_bcc = models.TextField(blank=True)
     msg_subject = models.TextField(db_index=True)
-    msg_body = models.TextField(null=True, blank=True)
-    msg_tagged_body = models.TextField()
+    msg_body = models.TextField(blank=True)
+    msg_tagged_body = models.TextField(blank=True)
     processor = models.OneToOneField(
         Processor, on_delete=models.PROTECT, null=True, blank=True
     )
