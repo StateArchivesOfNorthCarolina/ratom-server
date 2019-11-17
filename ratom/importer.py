@@ -86,7 +86,7 @@ class PstImporter:
             msg_body=self.archive.format_message(message),
             collection=self.collection,
             directory=folder_path,
-            processor=ratom.Processor(),
+            processor=ratom.Processor.objects.create(),  # TODO: likely impacts BulkCreateManager
         )
 
 
@@ -108,6 +108,7 @@ def import_psts(paths: List[str], clean: bool) -> None:
         collection = get_collection(Path(paths[0]))
         logger.warning(f"Deleting {collection.title} collection (if exists)")
         collection.delete()
+        ratom.Processor.objects.filter(message=None).delete()
     for path in paths:
         importer = PstImporter(path)
         importer.run()
