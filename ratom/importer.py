@@ -2,9 +2,10 @@ import datetime as dt
 import logging
 import re
 from pathlib import Path
-from typing import Iterable, Pattern
+from typing import Iterable, Pattern, Union
 
 import pypff
+import pytz
 from libratom.lib.pff import PffArchive
 from django.db import transaction
 from django.utils.timezone import make_aware
@@ -16,6 +17,7 @@ from ratom.util.bulk_create_manager import BulkCreateManager
 logger = logging.getLogger(__name__)
 from_re = re.compile(r"^[fF]rom:\s+(?P<value>.*)$", re.MULTILINE)
 to_re = re.compile(r"^[tT]o:\s+(?P<value>.*)$", re.MULTILINE)
+title_re = re.compile(r"[a-zA-Z_]+")
 
 
 class PstImporter:
@@ -54,12 +56,19 @@ class PstImporter:
             )
             folder_path = self.get_folder_abs_path(folder)
             for message in folder.sub_messages:
-                bulk_mgr.add(self._create_message(folder_path, message))
+                msg = self._create_message(folder_path, message)
+                if msg:
+                    bulk_mgr.add(msg)
         bulk_mgr.done()
 
     def _create_collection(self) -> None:
+        title = self.path.with_suffix("").name
+        # attempt to clean title to just be the name
+        match = title_re.match(self.path.name)
+        if match:
+            title = match.group(0).rstrip("_")
         collection, _ = ratom.Collection.objects.get_or_create(
-            title=self.path.with_suffix("").name, accession_date=dt.date.today()
+            title=title, accession_date=dt.date.today()
         )
         collection.message_set.all().delete()  # TODO: temporary
         self.collection = collection
@@ -70,11 +79,15 @@ class PstImporter:
 
     def _create_message(
         self, folder_path: str, message: pypff.message
-    ) -> ratom.Message:
+    ) -> Union[ratom.Message, None]:
         headers = message.transport_headers.strip()
         msg_from = self._extract_match(from_re, headers)
         msg_to = self._extract_match(to_re, headers)
-        sent_date = make_aware(message.delivery_time)
+        try:
+            sent_date = make_aware(message.delivery_time)
+        except pytz.NonExistentTimeError:
+            logger.exception("Failed to make datetime aware")
+            return None
         return ratom.Message(
             message_id=message,
             sent_date=sent_date,
