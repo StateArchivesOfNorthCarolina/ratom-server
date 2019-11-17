@@ -38,6 +38,7 @@ class Message(models.Model):
     msg_cc = models.TextField(blank=True)
     msg_bcc = models.TextField(blank=True)
     msg_subject = models.TextField(db_index=True)
+    msg_headers = models.TextField(blank=True)
     msg_body = models.TextField(blank=True)
     msg_tagged_body = models.TextField(blank=True)
     directory = models.TextField(blank=True, db_index=True)
