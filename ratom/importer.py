@@ -6,6 +6,8 @@ from typing import Pattern, Union, List
 
 import pypff
 import pytz
+from spacy.language import Language
+from libratom.lib.entities import load_spacy_model
 from libratom.lib.pff import PffArchive
 from django.db import transaction
 from django.utils.timezone import make_aware
@@ -21,12 +23,13 @@ title_re = re.compile(r"[a-zA-Z_]+")
 
 
 class PstImporter:
-    def __init__(self, path: str):
+    def __init__(self, path: str, spacy_model: Language):
         self.path = Path(path)
+        self.spacy_model = spacy_model
         logger.info(f"PstImporter running on {self.path.name}")
         logger.info(f"Opening archive")
         self.archive = PffArchive(self.path)
-        logger.info(f"Loaded {self.archive.message_count} messages in archive")
+        logger.info(f"Opened {self.archive.message_count} messages in archive")
 
     def get_folder_abs_path(self, folder: pypff.folder) -> str:
         """Traverse tree node parent's to build absolution path"""
@@ -45,7 +48,6 @@ class PstImporter:
     def run(self) -> None:
         self._create_collection()
         logger.info("Traversing archive folders")
-        bulk_mgr = BulkCreateManager(chunk_size=100)
         for folder in self.archive.folders():
             if not folder.name:  # skip root node
                 continue
@@ -54,10 +56,7 @@ class PstImporter:
             )
             folder_path = self.get_folder_abs_path(folder)
             for message in folder.sub_messages:
-                msg = self._create_message(folder_path, message)
-                if msg:
-                    bulk_mgr.add(msg)
-        bulk_mgr.done()
+                self._create_message(folder_path, message)
 
     def _create_collection(self) -> None:
         self.collection = get_collection(self.path)
@@ -72,22 +71,33 @@ class PstImporter:
         headers = message.transport_headers.strip()
         msg_from = self._extract_match(from_re, headers)
         msg_to = self._extract_match(to_re, headers)
+        msg_body = self.archive.format_message(message)
         try:
             sent_date = make_aware(message.delivery_time)
         except pytz.NonExistentTimeError:
             logger.exception("Failed to make datetime aware")
             return None
-        return ratom.Message(
+        message = ratom.Message.objects.create(
             message_id=message.identifier,
             sent_date=sent_date,
             msg_to=msg_to,
             msg_from=msg_from,
             msg_subject=message.subject,
-            msg_body=self.archive.format_message(message),
+            msg_body=msg_body,
             collection=self.collection,
             directory=folder_path,
             processor=ratom.Processor.objects.create(),  # TODO: likely impacts BulkCreateManager
         )
+        document = self.spacy_model(msg_body)
+        bulk_mgr = BulkCreateManager(chunk_size=100)
+        for entity in document.ents:
+            bulk_mgr.add(
+                ratom.Entity(
+                    label=entity.label_, value=entity.text.strip(), message=message
+                )
+            )
+        bulk_mgr.done()
+        return message
 
 
 def get_collection(path: Path) -> ratom.Collection:
@@ -104,11 +114,19 @@ def get_collection(path: Path) -> ratom.Collection:
 
 @transaction.atomic
 def import_psts(paths: List[str], clean: bool) -> None:
+    logger.info("Import process started")
+    spacy_model_name = "en_core_web_sm"
+    logger.info(f"Loading {spacy_model_name} spacy model")
+    spacy_model, spacy_model_version = load_spacy_model(spacy_model_name)
+    assert spacy_model
+    logger.info(
+        f"Loaded spacy model: {spacy_model_name}, version: {spacy_model_version}"
+    )
     if clean:
         collection = get_collection(Path(paths[0]))
         logger.warning(f"Deleting {collection.title} collection (if exists)")
         collection.delete()
         ratom.Processor.objects.filter(message=None).delete()
     for path in paths:
-        importer = PstImporter(path)
+        importer = PstImporter(path, spacy_model)
         importer.run()

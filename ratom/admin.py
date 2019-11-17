@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Collection, Processor, Message
+from .models import User, Collection, Processor, Message, Entity
 
 admin.site.register(User, UserAdmin)
 admin.site.register(Collection)
@@ -24,3 +24,14 @@ class MessageAdmin(admin.ModelAdmin):
 
     def recipient(self, obj: Message) -> str:
         return str(obj.msg_to[:40])
+
+
+@admin.register(Entity)
+class EntityAdmin(admin.ModelAdmin):
+    list_display = (
+        "pk",
+        "label",
+        "value",
+    )
+    list_filter = ("label",)
+    search_fields = ("value",)

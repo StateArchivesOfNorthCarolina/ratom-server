@@ -41,3 +41,19 @@ class Message(models.Model):
     msg_body = models.TextField(blank=True)
     msg_tagged_body = models.TextField(blank=True)
     directory = models.TextField(blank=True, db_index=True)
+
+
+class Entity(models.Model):
+
+    message = models.ForeignKey(
+        Message, related_name="entities", on_delete=models.CASCADE
+    )
+    label = models.CharField(max_length=128)
+    value = models.TextField()
+
+    class Meta:
+        verbose_name_plural = "Entities"
+        indexes = [models.Index(fields=["label", "value"])]
+
+    def __str__(self) -> str:
+        return f"{self.label}: {self.value}"
