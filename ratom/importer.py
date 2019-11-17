@@ -2,7 +2,7 @@ import datetime as dt
 import logging
 import re
 from pathlib import Path
-from typing import Iterable, Pattern, Union
+from typing import Pattern, Union, List
 
 import pypff
 import pytz
@@ -27,7 +27,6 @@ class PstImporter:
         logger.info(f"Opening archive")
         self.archive = PffArchive(self.path)
         logger.info(f"Loaded {self.archive.message_count} messages in archive")
-        self.collection = None
 
     def get_folder_abs_path(self, folder: pypff.folder) -> str:
         """Traverse tree node parent's to build absolution path"""
@@ -43,7 +42,6 @@ class PstImporter:
             )
         return "/".join(path)
 
-    @transaction.atomic
     def run(self) -> None:
         self._create_collection()
         logger.info("Traversing archive folders")
@@ -62,15 +60,7 @@ class PstImporter:
         bulk_mgr.done()
 
     def _create_collection(self) -> None:
-        title = self.path.with_suffix("").name
-        # attempt to clean title to just be the name
-        match = title_re.match(self.path.name)
-        if match:
-            title = match.group(0).rstrip("_")
-        collection, _ = ratom.Collection.objects.get_or_create(
-            title=title, accession_date=dt.date.today()
-        )
-        self.collection = collection
+        self.collection = get_collection(self.path)
 
     def _extract_match(self, pattern: Pattern[str], haystack: str) -> str:
         match = pattern.search(haystack)
@@ -100,7 +90,24 @@ class PstImporter:
         )
 
 
-def import_psts(paths: Iterable[str]) -> None:
+def get_collection(path: Path) -> ratom.Collection:
+    title = path.with_suffix("").name
+    # attempt to clean title to just be the name
+    match = title_re.match(path.name)
+    if match:
+        title = match.group(0).rstrip("_")
+    collection, _ = ratom.Collection.objects.get_or_create(
+        title=title, accession_date=dt.date.today()
+    )
+    return collection
+
+
+@transaction.atomic
+def import_psts(paths: List[str], clean: bool) -> None:
+    if clean:
+        collection = get_collection(Path(paths[0]))
+        logger.warning(f"Deleting {collection.title} collection (if exists)")
+        collection.delete()
     for path in paths:
         importer = PstImporter(path)
         importer.run()

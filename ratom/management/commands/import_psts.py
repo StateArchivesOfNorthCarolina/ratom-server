@@ -8,6 +8,12 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("paths", nargs="+", type=str)
+        parser.add_argument(
+            "--clean",
+            default=False,
+            action="store_true",
+            help="Clear collection records before starting import",
+        )
 
     def handle(self, *args, **options):
-        import_psts(options["paths"])
+        import_psts(paths=options["paths"], clean=options["clean"])
