@@ -78,7 +78,7 @@ class PstImporter:
             logger.exception("Failed to make datetime aware")
             return None
         return ratom.Message(
-            message_id=message,
+            message_id=message.identifier,
             sent_date=sent_date,
             msg_to=msg_to,
             msg_from=msg_from,
