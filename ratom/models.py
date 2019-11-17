@@ -11,6 +11,9 @@ class Collection(models.Model):
     title = models.CharField(max_length=200)
     accession_date = models.DateField(auto_now=False)
 
+    def __str__(self) -> str:
+        return str(self.title)
+
 
 class Processor(models.Model):
     processed = models.BooleanField(default=False)
