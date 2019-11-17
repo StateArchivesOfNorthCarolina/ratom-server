@@ -85,9 +85,21 @@ You can also use ``black`` to format on save. For example, configuration for VS 
     {
         "settings": {
             "python.formatting.provider": "black",
-            "editor.formatOnSave": true
+            "editor.formatOnSave": true,
+            "python.linting.flake8Enabled": true,
+            "python.linting.mypyEnabled": true
         }
     }
+
+
+import_psts
+-----------
+
+A management command, ``import_psts``, can be used to ``.pst`` files into RATOM.
+
+For example::
+
+    python manage.py import_psts /Volumes/Seagate/RATOM/RevisedEDRMv1_Complete/kate_symes/* --clean
 
 
 Development
