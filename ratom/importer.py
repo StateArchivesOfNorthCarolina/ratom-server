@@ -52,8 +52,9 @@ class PstImporter:
             logger.info(
                 f"Scanning {folder.number_of_sub_messages} messages in folder {folder.name}"
             )
+            folder_path = self.get_folder_abs_path(folder)
             for message in folder.sub_messages:
-                bulk_mgr.add(self._create_message(folder, message))
+                bulk_mgr.add(self._create_message(folder_path, message))
         bulk_mgr.done()
 
     def _create_collection(self) -> None:
@@ -68,13 +69,12 @@ class PstImporter:
         return match.group(1).strip() if match else ""
 
     def _create_message(
-        self, folder: pypff.folder, message: pypff.message
+        self, folder_path: str, message: pypff.message
     ) -> ratom.Message:
         headers = message.transport_headers.strip()
         msg_from = self._extract_match(from_re, headers)
         msg_to = self._extract_match(to_re, headers)
         sent_date = make_aware(message.delivery_time)
-        # folder_path = self.get_folder_abs_path(folder)
         return ratom.Message(
             message_id=message,
             sent_date=sent_date,
@@ -83,6 +83,7 @@ class PstImporter:
             msg_subject=message.subject,
             msg_body=self.archive.format_message(message),
             collection=self.collection,
+            directory=folder_path,
             processor=ratom.Processor(),
         )
 
