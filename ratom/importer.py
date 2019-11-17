@@ -73,6 +73,7 @@ class PstImporter:
         msg_to = self._extract_match(to_re, headers)
         msg_body = self.archive.format_message(message, with_headers=False)
         msg_body_combined = self.archive.format_message(message)
+        msg_subject = message.subject
         try:
             sent_date = make_aware(message.delivery_time)
         except pytz.NonExistentTimeError:
@@ -83,14 +84,15 @@ class PstImporter:
             sent_date=sent_date,
             msg_to=msg_to,
             msg_from=msg_from,
-            msg_subject=message.subject,
+            msg_subject=msg_subject,
             msg_body=msg_body,
             msg_tagged_body=msg_body_combined,
             collection=self.collection,
             directory=folder_path,
             processor=ratom.Processor.objects.create(),  # TODO: likely impacts BulkCreateManager
         )
-        document = self.spacy_model(msg_body_combined)
+        spacy_text = f"{msg_subject}\n{msg_body}"
+        document = self.spacy_model(spacy_text)
         bulk_mgr = BulkCreateManager(chunk_size=100)
         for entity in document.ents:
             bulk_mgr.add(
