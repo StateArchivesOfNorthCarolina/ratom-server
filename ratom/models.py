@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
+from ratom.managers import MessageManager
+
 
 class User(AbstractUser):
     USER_CHOICES = (("ARCHIVIST", "Archivist"), ("RESEARCHER", "Researcher"))
@@ -42,6 +44,8 @@ class Message(models.Model):
     msg_body = models.TextField(blank=True)
     msg_tagged_body = models.TextField(blank=True)
     directory = models.TextField(blank=True, db_index=True)
+
+    objects = MessageManager()
 
 
 class Entity(models.Model):

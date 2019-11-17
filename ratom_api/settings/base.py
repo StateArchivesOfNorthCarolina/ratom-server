@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.humanize",
     "django.contrib.sitemaps",
+    "django.contrib.postgres",
     "graphene_django",
     "ratom",
 ]
