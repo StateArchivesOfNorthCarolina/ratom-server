@@ -3,10 +3,7 @@ from django.contrib.auth.models import AbstractUser
 
 
 class User(AbstractUser):
-    USER_CHOICES = (
-        ('ARCHIVIST', 'Archivist'),
-        ('RESEARCHER', 'Researcher')
-    )
+    USER_CHOICES = (("ARCHIVIST", "Archivist"), ("RESEARCHER", "Researcher"))
     user_type = models.CharField(max_length=32, choices=USER_CHOICES)
 
 
@@ -21,7 +18,9 @@ class Processor(models.Model):
     has_pii = models.BooleanField(default=False)
     date_processed = models.DateTimeField(null=True)
     date_modified = models.DateTimeField(auto_now=True)
-    last_modified_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    last_modified_by = models.ForeignKey(
+        User, on_delete=models.CASCADE, null=True, blank=True
+    )
 
 
 class Message(models.Model):
@@ -35,4 +34,6 @@ class Message(models.Model):
     msg_subject = models.TextField(db_index=True)
     msg_body = models.TextField(null=True, blank=True)
     msg_tagged_body = models.TextField()
-    processor = models.OneToOneField(Processor, on_delete=models.PROTECT, null=True, blank=True)
+    processor = models.OneToOneField(
+        Processor, on_delete=models.PROTECT, null=True, blank=True
+    )
