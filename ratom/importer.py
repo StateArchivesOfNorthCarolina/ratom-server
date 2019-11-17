@@ -58,7 +58,7 @@ class PstImporter:
 
     def _create_collection(self) -> None:
         collection, _ = ratom.Collection.objects.get_or_create(
-            title=self.path.suffix, accession_date=dt.date.today()
+            title=self.path.with_suffix("").name, accession_date=dt.date.today()
         )
         collection.message_set.all().delete()  # TODO: temporary
         self.collection = collection
