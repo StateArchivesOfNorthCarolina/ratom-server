@@ -29,6 +29,9 @@ class Processor(models.Model):
 class Message(models.Model):
     message_id = models.CharField(max_length=256, blank=True)
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
+    processor = models.OneToOneField(
+        Processor, on_delete=models.PROTECT, null=True, blank=True
+    )
     sent_date = models.DateTimeField(db_index=True)
     msg_from = models.TextField(db_index=True)
     msg_to = models.TextField(db_index=True)
@@ -38,6 +41,3 @@ class Message(models.Model):
     msg_body = models.TextField(blank=True)
     msg_tagged_body = models.TextField(blank=True)
     directory = models.TextField(blank=True, db_index=True)
-    processor = models.OneToOneField(
-        Processor, on_delete=models.PROTECT, null=True, blank=True
-    )

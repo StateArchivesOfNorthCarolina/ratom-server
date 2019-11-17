@@ -11,7 +11,7 @@ admin.site.register(Processor)
 class MessageAdmin(admin.ModelAdmin):
     list_display = (
         "pk",
-        "msg_to",
+        "recipient",
         "sent_date",
         "msg_subject",
         "collection",
@@ -20,3 +20,7 @@ class MessageAdmin(admin.ModelAdmin):
     search_fields = ("msg_body",)
     date_hierarchy = "sent_date"
     ordering = ("-sent_date",)
+    raw_id_fields = ("processor",)
+
+    def recipient(self, obj: Message) -> str:
+        return str(obj.msg_to[:40])
