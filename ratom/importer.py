@@ -24,6 +24,7 @@ class PstImporter:
         logger.info(f"PstImporter running on {self.path.name}")
         logger.info(f"Opening archive")
         self.archive = PffArchive(self.path)
+        logger.info(f"Loaded {self.archive.message_count} messages in archive")
         self.collection = None
 
     def get_folder_abs_path(self, folder: pypff.folder) -> str:
@@ -52,7 +53,6 @@ class PstImporter:
                 f"Scanning {folder.number_of_sub_messages} messages in folder {folder.name}"
             )
             for message in folder.sub_messages:
-                logger.debug(f"Message from {message.sender_name}: {message.subject}")
                 bulk_mgr.add(self._create_message(folder, message))
         bulk_mgr.done()
 
