@@ -1,5 +1,7 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.fields import JSONField
+from django.db import models
 
 from ratom.managers import MessageManager
 
@@ -44,8 +46,12 @@ class Message(models.Model):
     msg_body = models.TextField(blank=True)
     msg_tagged_body = models.TextField(blank=True)
     directory = models.TextField(blank=True, db_index=True)
+    data = JSONField(null=True, blank=True, db_index=True)
 
     objects = MessageManager()
+
+    class Meta:
+        indexes = [GinIndex(fields=["data"])]
 
 
 class Entity(models.Model):
