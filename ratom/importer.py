@@ -123,7 +123,7 @@ def get_collection(path: Path) -> ratom.Collection:
     if match:
         title = match.group(0).rstrip("_")
     collection, _ = ratom.Collection.objects.get_or_create(
-        title=title, accession_date=dt.date.today()
+        title=title, accession_date=dt.date(2019, 11, 18)
     )
     return collection
 
