@@ -81,7 +81,11 @@ class PstImporter:
             return None
         # spaCy
         spacy_text = f"{msg_subject}\n{msg_body}"
-        document = self.spacy_model(spacy_text)
+        try:
+            document = self.spacy_model(spacy_text)
+        except ValueError:
+            logger.exception(f"spaCy error")
+            return None
         # spaCy jsonb (idea #1)
         labels = set()
         for entity in document.ents:
