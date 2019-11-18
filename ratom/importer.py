@@ -79,6 +79,14 @@ class PstImporter:
         except pytz.NonExistentTimeError:
             logger.exception("Failed to make datetime aware")
             return None
+        # spaCy
+        spacy_text = f"{msg_subject}\n{msg_body}"
+        document = self.spacy_model(spacy_text)
+        # spaCy jsonb (idea #1)
+        labels = set()
+        for entity in document.ents:
+            labels.add(entity.label_)
+        msg_data = {"labels": list(labels)}
         message = ratom.Message.objects.create(
             message_id=message.identifier,
             sent_date=sent_date,
@@ -89,10 +97,10 @@ class PstImporter:
             msg_tagged_body=msg_body_combined,
             collection=self.collection,
             directory=folder_path,
+            data=msg_data,
             processor=ratom.Processor.objects.create(),  # TODO: likely impacts BulkCreateManager
         )
-        spacy_text = f"{msg_subject}\n{msg_body}"
-        document = self.spacy_model(spacy_text)
+        # spaCy m2m (idea #2)
         bulk_mgr = BulkCreateManager(chunk_size=100)
         for entity in document.ents:
             bulk_mgr.add(
