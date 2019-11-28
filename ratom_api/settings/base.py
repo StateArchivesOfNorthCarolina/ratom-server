@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "django.contrib.humanize",
     "django.contrib.sitemaps",
     "django.contrib.postgres",
+    "django_elasticsearch_dsl",
     "graphene_django",
     "ratom",
 ]
@@ -193,3 +194,7 @@ SECURE_BROWSER_XSS_FILTER = True
 CSRF_COOKIE_HTTPONLY = True
 X_FRAME_OPTIONS = "DENY"
 AUTH_USER_MODEL = "ratom.User"
+
+ELASTICSEARCH_DSL = {
+    "default": {"hosts": "localhost:9200"},
+}
