@@ -1,3 +1,5 @@
+from typing import List
+
 from django_elasticsearch_dsl import Document, fields
 from django_elasticsearch_dsl.registries import registry
 from .models import Message
@@ -8,6 +10,13 @@ class MessageDocument(Document):
     collection = fields.ObjectField(
         properties={"title": fields.TextField(), "accession_date": fields.DateField()}
     )
+    labels = fields.KeywordField(multi=True)
+
+    def prepare_labels(self, instance: Message) -> List[str]:
+        labels: List[str] = []
+        if instance.data:
+            labels = list(instance.data.get("labels", []))
+        return labels
 
     class Index:
         # Name of the Elasticsearch index
