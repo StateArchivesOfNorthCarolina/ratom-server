@@ -11,6 +11,9 @@ class MessageDocument(Document):
         properties={"title": fields.TextField(), "accession_date": fields.DateField()}
     )
     labels = fields.KeywordField(multi=True)
+    # Investigate setting these to text fields
+    msg_from = fields.KeywordField()
+    directory = fields.KeywordField()
 
     def prepare_labels(self, instance: Message) -> List[str]:
         labels: List[str] = []
@@ -29,10 +32,9 @@ class MessageDocument(Document):
 
         # The fields of the model you want to be indexed in Elasticsearch
         fields = [
-            "msg_from",
             "msg_subject",
             "msg_body",
-            "directory",
+            "sent_date",
         ]
 
         # Ignore auto updating of Elasticsearch when a model is saved
