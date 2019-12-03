@@ -19,3 +19,8 @@ conf/pillar/*/deploy
 env-setup.sh
 deployment/roles/
 notebooks/.ipynb_checkpoints
+
+## JMG
+.envs/
+.idea/
+jgdc.yml
