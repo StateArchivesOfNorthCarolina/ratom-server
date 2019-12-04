@@ -7,6 +7,7 @@ Django==2.2.7  # rq.filter: >=2.2.7,<2.3
 sqlparse==0.3.0
 pytz
 graphene-django==2.6.0
+graphene-elastic==0.6
 django-filter==2.2.0
 dealer==2.0.5
 django-dotenv==1.4.2

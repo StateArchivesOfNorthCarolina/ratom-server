@@ -15,6 +15,7 @@ public/media/
 conf/pillar/*/deploy
 *.priv
 .env
+.vscode/
 .vscode
 env-setup.sh
 deployment/roles/
