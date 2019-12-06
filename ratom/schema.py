@@ -56,34 +56,12 @@ class MessageNode(ElasticsearchObjectType):
 
         # For `FilteringFilterBackend` backend
         filter_fields = {
-            "msg_from": {
-                "field": "msg_from",
-                "lookups": [
-                    LOOKUP_FILTER_TERM,
-                    LOOKUP_FILTER_TERMS,
-                    LOOKUP_FILTER_PREFIX,
-                    LOOKUP_FILTER_WILDCARD,
-                    LOOKUP_QUERY_IN,
-                    LOOKUP_QUERY_EXCLUDE,
-                ],
-                # Default lookup
-                "default_lookup": LOOKUP_FILTER_TERM,
-            },
+            "msg_from": "msg_from",
             "labels": "labels",
         }
 
         faceted_search_fields = {
-            'msg_from': 'msg_from',
-            # 'category_global': {
-            #     'field': 'category.raw',
-            #     # Setting `global` to True, makes the facet global
-            #     'global': True,
-            # },
-            'labels': {
-                'field': 'labels',
-                'enabled': True,  # Will appear in the list by default
-                'global': True,
-            },
+            'labels': 'labels',
             'sent_date': {
                 'field': 'sent_date',
                 'facet': DateHistogramFacet,
@@ -98,6 +76,7 @@ class MessageNode(ElasticsearchObjectType):
             "msg_body": {"boost": 4},
             "msg_subject": {"boost": 2},
             "msg_from": None,
+            "sent_date": None,
         }
 
         # For `OrderingFilterBackend` backend

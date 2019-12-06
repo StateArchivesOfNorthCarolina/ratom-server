@@ -92,13 +92,14 @@ class MessageDocument(Document):
     msg_from = Text()
     msg_subject = Text()
     directory = Text()
-    labels = Text(fields={"raw": Keyword()})
+    sent_date = Date()
+    labels = Keyword()#Text(fields={"raw": Keyword()})
     collection = Nested(NestedCollection)
 
-    def prepare_labels(self, instance: Message):
-        if instance.data:
-            labels = list(instance.data.get("labels", []))
-        return labels
+    # def prepare_labels(self, instance: Message):
+    #     if instance.data:
+    #         labels = list(instance.data.get("labels", []))
+    #     return labels
 
     class Index:
         name = "message"
