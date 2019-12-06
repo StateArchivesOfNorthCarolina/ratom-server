@@ -1,8 +1,9 @@
 import graphene
 
-from graphene import Node
+from graphene import Node, relay
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
+from elasticsearch_dsl import DateHistogramFacet
 
 from graphene_elastic import (
     ElasticsearchObjectType,
@@ -14,6 +15,7 @@ from graphene_elastic.filter_backends import (
     HighlightFilterBackend,
     OrderingFilterBackend,
     DefaultOrderingFilterBackend,
+    FacetedSearchFilterBackend
 )
 from graphene_elastic.constants import (
     LOOKUP_FILTER_PREFIX,
@@ -42,10 +44,11 @@ from .documents import MessageDocument
 class MessageNode(ElasticsearchObjectType):
     class Meta:
         document = MessageDocument
-        interfaces = (Node,)
+        interfaces = (relay.Node,)
         filter_backends = [
             FilteringFilterBackend,
             SearchFilterBackend,
+            FacetedSearchFilterBackend,
             # HighlightFilterBackend,
             # OrderingFilterBackend,
             DefaultOrderingFilterBackend,
@@ -67,6 +70,27 @@ class MessageNode(ElasticsearchObjectType):
                 "default_lookup": LOOKUP_FILTER_TERM,
             },
             "labels": "labels",
+        }
+
+        faceted_search_fields = {
+            'msg_from': 'msg_from',
+            # 'category_global': {
+            #     'field': 'category.raw',
+            #     # Setting `global` to True, makes the facet global
+            #     'global': True,
+            # },
+            'labels': {
+                'field': 'labels',
+                'enabled': True,  # Will appear in the list by default
+                'global': True,
+            },
+            'sent_date': {
+                'field': 'sent_date',
+                'facet': DateHistogramFacet,
+                'options': {
+                    'interval': 'year',
+                }
+            },
         }
 
         # For `SearchFilterBackend` backend
