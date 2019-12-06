@@ -51,7 +51,7 @@ class MessageNode(ElasticsearchObjectType):
             SearchFilterBackend,
             FacetedSearchFilterBackend,
             HighlightFilterBackend,
-            # OrderingFilterBackend,
+            OrderingFilterBackend,
             DefaultOrderingFilterBackend,
         ]
 
@@ -60,11 +60,16 @@ class MessageNode(ElasticsearchObjectType):
             "sent_date": "sent_date",
             "msg_from": "msg_from",
             "labels": "labels",
+            "msg_body": "msg_body"
         }
 
         highlight_fields = {
+            "msg_body": {
+                # "enabled": True,
+                "options": {"pre_tags": ["<strong>"], "post_tags": ["</strong>"],},
+            },
             "msg_subject": {
-                "enabled": True,
+                # "enabled": True,
                 "options": {"pre_tags": ["<span>"], "post_tags": ["</span>"],},
             }
         }
@@ -86,31 +91,17 @@ class MessageNode(ElasticsearchObjectType):
             "sent_date": None,
         }
 
-        # For `OrderingFilterBackend` backend
-        # ordering_fields = {
-        #     "Message Sent": "sent_date",
-        # }
-
         # For `DefaultOrderingFilterBackend` backend
-        # ordering_defaults = (
-        #     "-sent_date",  # Field name in the Elasticsearch document
-        # )
+        ordering_defaults = (
+            "_score",
+            # "-sent_date",  # Field name in the Elasticsearch document
+        )
 
-        # For `HighlightFilterBackend` backend
-        # highlight_fields = {
-        #     "msg_subject": {
-        #         "enabled": True,
-        #         "options": {"pre_tags": ["<b>"], "post_tags": ["</b>"],},
-        #     },
-        #     "msg_body": {
-        #         "options": {
-        #             "fragment_size": 50,
-        #             "number_of_fragments": 1,
-        #             "pre_tags": ["<b>"],
-        #             "post_tags": ["</b>"],
-        #         }
-        #     },
-        # }
+        # For `OrderingFilterBackend` backend
+        ordering_fields = {
+            "sent_date": "sent_date",
+        }
+
 
 
 class Query(graphene.ObjectType):

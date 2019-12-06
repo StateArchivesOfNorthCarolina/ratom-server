@@ -91,6 +91,7 @@ class NestedCollection(InnerDoc):
 class MessageDocument(Document):
     msg_from = Text()
     msg_subject = Text()
+    msg_body = Text()
     directory = Text()
     sent_date = Date()
     labels = Keyword()#Text(fields={"raw": Keyword()})
