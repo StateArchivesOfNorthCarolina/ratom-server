@@ -24,6 +24,7 @@ from graphene_elastic.constants import (
     LOOKUP_FILTER_WILDCARD,
     LOOKUP_QUERY_EXCLUDE,
     LOOKUP_QUERY_IN,
+
 )
 
 
@@ -56,6 +57,7 @@ class MessageNode(ElasticsearchObjectType):
 
         # For `FilteringFilterBackend` backend
         filter_fields = {
+            "sent_date": "sent_date",
             "msg_from": "msg_from",
             "labels": "labels",
         }
