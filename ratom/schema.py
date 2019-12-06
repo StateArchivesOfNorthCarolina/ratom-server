@@ -15,7 +15,7 @@ from graphene_elastic.filter_backends import (
     HighlightFilterBackend,
     OrderingFilterBackend,
     DefaultOrderingFilterBackend,
-    FacetedSearchFilterBackend
+    FacetedSearchFilterBackend,
 )
 from graphene_elastic.constants import (
     LOOKUP_FILTER_PREFIX,
@@ -50,7 +50,7 @@ class MessageNode(ElasticsearchObjectType):
             FilteringFilterBackend,
             SearchFilterBackend,
             FacetedSearchFilterBackend,
-            # HighlightFilterBackend,
+            HighlightFilterBackend,
             # OrderingFilterBackend,
             DefaultOrderingFilterBackend,
         ]
@@ -62,14 +62,19 @@ class MessageNode(ElasticsearchObjectType):
             "labels": "labels",
         }
 
+        highlight_fields = {
+            "msg_subject": {
+                "enabled": True,
+                "options": {"pre_tags": ["<span>"], "post_tags": ["</span>"],},
+            }
+        }
+
         faceted_search_fields = {
-            'labels': 'labels',
-            'sent_date': {
-                'field': 'sent_date',
-                'facet': DateHistogramFacet,
-                'options': {
-                    'interval': 'year',
-                }
+            "labels": "labels",
+            "sent_date": {
+                "field": "sent_date",
+                "facet": DateHistogramFacet,
+                "options": {"interval": "year",},
             },
         }
 
