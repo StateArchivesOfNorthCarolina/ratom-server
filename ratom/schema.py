@@ -1,58 +1,33 @@
+from datetime import datetime
 import graphene
-
-from graphene import Node, relay
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
+from graphql_relay.node.node import from_global_id
 from elasticsearch_dsl import DateHistogramFacet
-
+from graphene_elastic import filter_backends
 from graphene_elastic import (
     ElasticsearchObjectType,
     ElasticsearchConnectionField,
 )
-from graphene_elastic.filter_backends import (
-    FilteringFilterBackend,
-    SearchFilterBackend,
-    HighlightFilterBackend,
-    OrderingFilterBackend,
-    DefaultOrderingFilterBackend,
-    FacetedSearchFilterBackend,
-)
-from graphene_elastic.constants import (
-    LOOKUP_FILTER_PREFIX,
-    LOOKUP_FILTER_TERM,
-    LOOKUP_FILTER_TERMS,
-    LOOKUP_FILTER_WILDCARD,
-    LOOKUP_QUERY_EXCLUDE,
-    LOOKUP_QUERY_IN,
 
-)
-
-
-from .models import Collection, Processor, Message
+from .models import Processor, Message
 from .documents import MessageDocument
 
-
-# class CollectionNode(DjangoObjectType):
-#     class Meta:
-#         model = Collection
-#         filter_fields = {
-#             "title": ["exact", "iexact", "icontains", "istartswith", "iendswith"],
-#             "accession_date": ["exact", "iexact", "icontains", "gte", "lte", "range"],
-#         }
-#         interfaces = (Node,)
-
+# # # # # # # # # # # # 
+# # #   QUERIES   # # # 
+# # # # # # # # # # # # 
 
 class MessageNode(ElasticsearchObjectType):
     class Meta:
         document = MessageDocument
-        interfaces = (relay.Node,)
+        interfaces = (graphene.relay.Node,)
         filter_backends = [
-            FilteringFilterBackend,
-            SearchFilterBackend,
-            FacetedSearchFilterBackend,
-            HighlightFilterBackend,
-            OrderingFilterBackend,
-            DefaultOrderingFilterBackend,
+            filter_backends.FilteringFilterBackend,
+            filter_backends.SearchFilterBackend,
+            filter_backends.HighlightFilterBackend,
+            filter_backends.OrderingFilterBackend,
+            filter_backends.DefaultOrderingFilterBackend,
+            filter_backends.FacetedSearchFilterBackend,
         ]
 
         # For `FilteringFilterBackend` backend
@@ -108,24 +83,82 @@ class Query(graphene.ObjectType):
     all_messages = ElasticsearchConnectionField(MessageNode)
 
 
-"""
-example query:
+# # # # # # # # # # # # 
+# # #  MUTATIONS  # # # 
+# # # # # # # # # # # # 
+class ProcessorType(DjangoObjectType):
+    class Meta:
+        model = Processor
 
-query {
-  allMessages(
-		search:{query:"Thompson"}
-        # filter: {labels: {terms: ["PERSON", "MONEY"]}}
-  ) {
-    edges {
-      node {
-        msgFrom
-        # msgSubject
-        # msgBody
-        directory
-        labels
-        collection
-      }
-    }
-  }
-}
-"""
+class ProcessorMutation(graphene.Mutation):
+    class Arguments:
+        # ? so where is my request object? Where can I get the JWT??
+        message_id = graphene.ID()
+        processed = graphene.Boolean()
+        is_record = graphene.Boolean()
+        has_pii = graphene.Boolean()
+        # date_processed = graphene.Date()
+        # date_modified = graphene.Date()
+        # processor_data = ProcessorInput()
+
+    processor = graphene.Field(ProcessorType)
+
+    def mutate(self, info, message_id, **kwargs):
+        # Arguments explicitly named above are required
+        try:
+            processor = Processor.objects.create(**kwargs)
+            if (kwargs.get('processed') == True):
+                processor.date_processed = datetime.now()
+            processor.date_modified = datetime.now()
+
+            # Consider for JWT auth
+            # https://github.com/flavors/django-graphql-jwt
+
+            # processor.last_modified_by = info.context.user
+            # see https://docs.graphene-python.org/projects/django/en/latest/authorization/#user-based-queryset-filtering
+
+            processor.save()
+            _, message_pk = from_global_id(message_id)
+            import pdb; pdb.set_trace()
+            message = Message.objects.filter(pk=message_pk).first()
+            message.processor = processor
+            message.save()
+            return ProcessorMutation(processor=processor)
+        except:
+            raise Exception("Could not save Processor or Message")
+# class ProcessorInput(graphene.InputObjectType):
+#     # pass
+#     processed = graphene.Boolean()
+#     is_record = graphene.Boolean()
+#     has_pii = graphene.Boolean()
+#     date_processed = graphene.Date()
+#     date_modified = graphene.Date()
+#     # last_modified_by = graphene.ObjectType()
+
+# class CreateProcessor(graphene.Mutation):
+    # class Arguments:
+    #     message_id = graphene.ID()
+    #     processor_data = ProcessorInput()
+
+#     processor = graphene.Field(ProcessorType)
+#     Output = Processor
+
+#     @staticmethod
+#     def mutate(root, info, message_id, processor_data=None):
+#         node, message_pk = from_global_id(message_id)
+#         message = Message.objects.filter(pk=message_pk).first()
+#         if message:
+#             try:
+#                 # TODO: set date processed and date_modified to now, conditionally
+#                 created_processor = ProcessorType(**processor_data)
+#                 created = CreateProcessor(processor=created_processor)
+#                 message.processor = created_processor
+#                 # message.save()
+#             except:
+#                 return Exception("Couldn't create processor")
+
+#             # return CreateProcessor(ok=ok, processor=processor)
+
+
+class Mutation(graphene.ObjectType):
+    create_processor = ProcessorMutation.Field()
