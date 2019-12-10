@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.fields import JSONField
 from django.db import models
+from elasticsearch_dsl import Index
 
 from ratom.managers import MessageManager
 
@@ -24,7 +25,7 @@ class Processor(models.Model):
     is_record = models.BooleanField(default=True)
     has_pii = models.BooleanField(default=False)
     date_processed = models.DateTimeField(null=True)
-    date_modified = models.DateTimeField(auto_now=True)
+    date_modified = models.DateTimeField(null=True)
     last_modified_by = models.ForeignKey(
         User, on_delete=models.CASCADE, null=True, blank=True
     )
@@ -36,22 +37,29 @@ class Message(models.Model):
     processor = models.OneToOneField(
         Processor, on_delete=models.PROTECT, null=True, blank=True
     )
-    sent_date = models.DateTimeField(db_index=True)
-    msg_from = models.TextField(db_index=True)
-    msg_to = models.TextField(db_index=True)
+    sent_date = models.DateTimeField()
+    msg_from = models.TextField()
+    msg_to = models.TextField()
     msg_cc = models.TextField(blank=True)
     msg_bcc = models.TextField(blank=True)
-    msg_subject = models.TextField(db_index=True)
+    msg_subject = models.TextField()
     msg_headers = models.TextField(blank=True)
     msg_body = models.TextField(blank=True)
     msg_tagged_body = models.TextField(blank=True)
-    directory = models.TextField(blank=True, db_index=True)
-    data = JSONField(null=True, blank=True, db_index=True)
-
-    objects = MessageManager()
-
+    directory = models.TextField(blank=True)
+    data = JSONField(null=True, blank=True)
+    """
+    data = JSONField(null=True, blank=True)
+    # this seems to crash when using a simple model based query, as such:
+    class MessageType(DjangoObjectType):
     class Meta:
-        indexes = [GinIndex(fields=["data"])]
+        model = Message
+    """
+
+    # objects = MessageManager()
+
+    # class Meta:
+    #     indexes = [GinIndex(fields=["data"])]
 
 
 class Entity(models.Model):
@@ -64,7 +72,7 @@ class Entity(models.Model):
 
     class Meta:
         verbose_name_plural = "Entities"
-        indexes = [models.Index(fields=["label", "value"])]
+        # indexes = [models.Index(fields=["label", "value"])]
 
     def __str__(self) -> str:
         return f"{self.label}: {self.value}"

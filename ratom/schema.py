@@ -1,8 +1,8 @@
 from datetime import datetime
 import graphene
+from graphene import relay
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
-from graphql_relay.node.node import from_global_id
 from elasticsearch_dsl import DateHistogramFacet
 from graphene_elastic import filter_backends
 from graphene_elastic import (
@@ -10,14 +10,30 @@ from graphene_elastic import (
     ElasticsearchConnectionField,
 )
 
-from .models import Processor, Message
+from .models import Processor, Message, Collection
 from .documents import MessageDocument
 
 # # # # # # # # # # # # 
 # # #   QUERIES   # # # 
 # # # # # # # # # # # # 
+# class LabelType(graphene.ObjectType):
+#     # value = graphene.
 
-class MessageNode(ElasticsearchObjectType):
+class MessageType(DjangoObjectType):
+    labels = graphene.List(of_type=graphene.String)
+
+    def resolve_labels(self, info):
+        labels = []
+        if self.data:
+            labels = self.data.get("labels", [])
+        return labels
+
+    class Meta:
+        model = Message
+        exclude = ('data', )
+        interfaces = (relay.Node, )
+
+class MessageElasticsearchNode(ElasticsearchObjectType):
     class Meta:
         document = MessageDocument
         interfaces = (graphene.relay.Node,)
@@ -35,7 +51,9 @@ class MessageNode(ElasticsearchObjectType):
             "sent_date": "sent_date",
             "msg_from": "msg_from",
             "labels": "labels",
-            "msg_body": "msg_body"
+            "msg_body": "msg_body",
+            "pk": "pk",
+            # "processor": {} # TODO: NestedBackend does not exist in this library yet. Let's build it.
         }
 
         highlight_fields = {
@@ -78,10 +96,12 @@ class MessageNode(ElasticsearchObjectType):
         }
 
 
-
 class Query(graphene.ObjectType):
-    all_messages = ElasticsearchConnectionField(MessageNode)
+    message = graphene.Field(MessageType, pk=graphene.Int())
+    all_messages = ElasticsearchConnectionField(MessageElasticsearchNode)
 
+    def resolve_message(root, info, pk):
+        return Message.objects.filter(pk=pk).first()
 
 # # # # # # # # # # # # 
 # # #  MUTATIONS  # # # 
@@ -92,25 +112,22 @@ class ProcessorType(DjangoObjectType):
 
 class ProcessorMutation(graphene.Mutation):
     class Arguments:
-        # ? so where is my request object? Where can I get the JWT??
-        message_id = graphene.ID()
+        message_id = graphene.Int()
         processed = graphene.Boolean()
         is_record = graphene.Boolean()
         has_pii = graphene.Boolean()
-        # date_processed = graphene.Date()
-        # date_modified = graphene.Date()
-        # processor_data = ProcessorInput()
 
     processor = graphene.Field(ProcessorType)
 
     def mutate(self, info, message_id, **kwargs):
-        # Arguments explicitly named above are required
+        # args explicitly named above are required
         try:
             processor = Processor.objects.create(**kwargs)
             if (kwargs.get('processed') == True):
                 processor.date_processed = datetime.now()
             processor.date_modified = datetime.now()
 
+            # ? so where is my request object? Where can I get the JWT??
             # Consider for JWT auth
             # https://github.com/flavors/django-graphql-jwt
 
@@ -118,47 +135,12 @@ class ProcessorMutation(graphene.Mutation):
             # see https://docs.graphene-python.org/projects/django/en/latest/authorization/#user-based-queryset-filtering
 
             processor.save()
-            _, message_pk = from_global_id(message_id)
-            import pdb; pdb.set_trace()
-            message = Message.objects.filter(pk=message_pk).first()
+            message = Message.objects.filter(pk=message_id).first()
             message.processor = processor
             message.save()
             return ProcessorMutation(processor=processor)
         except:
             raise Exception("Could not save Processor or Message")
-# class ProcessorInput(graphene.InputObjectType):
-#     # pass
-#     processed = graphene.Boolean()
-#     is_record = graphene.Boolean()
-#     has_pii = graphene.Boolean()
-#     date_processed = graphene.Date()
-#     date_modified = graphene.Date()
-#     # last_modified_by = graphene.ObjectType()
-
-# class CreateProcessor(graphene.Mutation):
-    # class Arguments:
-    #     message_id = graphene.ID()
-    #     processor_data = ProcessorInput()
-
-#     processor = graphene.Field(ProcessorType)
-#     Output = Processor
-
-#     @staticmethod
-#     def mutate(root, info, message_id, processor_data=None):
-#         node, message_pk = from_global_id(message_id)
-#         message = Message.objects.filter(pk=message_pk).first()
-#         if message:
-#             try:
-#                 # TODO: set date processed and date_modified to now, conditionally
-#                 created_processor = ProcessorType(**processor_data)
-#                 created = CreateProcessor(processor=created_processor)
-#                 message.processor = created_processor
-#                 # message.save()
-#             except:
-#                 return Exception("Couldn't create processor")
-
-#             # return CreateProcessor(ok=ok, processor=processor)
-
 
 class Mutation(graphene.ObjectType):
     create_processor = ProcessorMutation.Field()
