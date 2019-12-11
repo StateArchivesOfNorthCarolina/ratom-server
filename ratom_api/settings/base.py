@@ -49,8 +49,19 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'graphql_jwt.backends.JSONWebTokenBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 # location of schema.py in our project directory
-GRAPHENE = {"SCHEMA": "ratom_api.schema.schema", "SCHEMA_OUTPUT": "schema.json"}
+GRAPHENE = {
+    "SCHEMA": "ratom_api.schema.schema", 
+    "SCHEMA_OUTPUT": "schema.json",
+    "MIDDLEWARE": [
+        "graphql_jwt.middleware.JSONWebTokenMiddleware",
+    ],
+}
 
 
 ROOT_URLCONF = "ratom_api.urls"
