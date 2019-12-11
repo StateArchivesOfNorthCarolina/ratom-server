@@ -14,6 +14,9 @@ class User(AbstractUser):
 class Collection(models.Model):
     title = models.CharField(max_length=200)
     accession_date = models.DateField(auto_now=False)
+    processed_date = models.DateField(null=True)
+    records_at_accession = models.IntegerField(blank=True)
+    processed_records = models.IntegerField(default=0)
 
     def __str__(self) -> str:
         return str(self.title)
@@ -23,7 +26,8 @@ class Processor(models.Model):
     processed = models.BooleanField(default=False)
     is_record = models.BooleanField(default=True)
     has_pii = models.BooleanField(default=False)
-    date_processed = models.DateTimeField(null=True)
+    has_restrictions = models.BooleanField(default=False)
+    sunshine_date = models.DateField(null=True)
     date_modified = models.DateTimeField(null=True)
     last_modified_by = models.ForeignKey(
         User, on_delete=models.CASCADE, null=True, blank=True
@@ -31,12 +35,21 @@ class Processor(models.Model):
 
 
 class Message(models.Model):
-    message_id = models.CharField(max_length=256, blank=True)
+    message_id = models.CharField(
+        max_length=256,
+        blank=True,
+        help_text="This is id found in the PST for this message",
+    )
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
     processor = models.OneToOneField(
         Processor, on_delete=models.PROTECT, null=True, blank=True
     )
     sent_date = models.DateTimeField()
+    sent_date_text = models.CharField(
+        max_length=32,
+        blank=True,
+        help_text="This is a fall back in case sent_date is unparseable",
+    )
     msg_from = models.TextField()
     msg_to = models.TextField()
     msg_cc = models.TextField(blank=True)

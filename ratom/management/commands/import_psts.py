@@ -7,7 +7,7 @@ from ratom.importer import import_psts
 class Command(BaseCommand):
     help = "Import .pst files"
 
-    def add_arguments(self, parser):
+    def add_arguments(self: Command, parser: CommandParser) -> None:
         parser.add_argument("paths", nargs="+", type=str)
         parser.add_argument(
             "--clean",
@@ -22,7 +22,7 @@ class Command(BaseCommand):
             help="Find and import all psts in a structure",
         )
 
-    def handle(self, *args, **options):
+    def handle(self: Command, *args: list, **options: dict) -> None:
         if options["recursive"]:
             for p in Path(options["paths"][0]).glob("**/*.pst"):
                 import_psts(paths=[p.absolute()], clean=options["clean"])
