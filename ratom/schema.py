@@ -1,23 +1,29 @@
 from datetime import datetime
+from elasticsearch_dsl import DateHistogramFacet
 import graphene
 from graphene import relay
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
-from elasticsearch_dsl import DateHistogramFacet
+import graphql_jwt
+from graphql_jwt.decorators import login_required
 from graphene_elastic import filter_backends
 from graphene_elastic import (
     ElasticsearchObjectType,
     ElasticsearchConnectionField,
 )
 
-from .models import Processor, Message, Collection
+
+from .models import User, Processor, Message, Collection
 from .documents import MessageDocument
 
 # # # # # # # # # # # # 
 # # #   QUERIES   # # # 
 # # # # # # # # # # # # 
-# class LabelType(graphene.ObjectType):
-#     # value = graphene.
+class UserType(DjangoObjectType):
+    class Meta:
+        model = User
+        interfaces = (relay.Node, )
+        exclude = ('password',)
 
 class MessageType(DjangoObjectType):
     labels = graphene.List(of_type=graphene.String)
@@ -34,6 +40,7 @@ class MessageType(DjangoObjectType):
         interfaces = (relay.Node, )
 
 class MessageElasticsearchNode(ElasticsearchObjectType):
+
     class Meta:
         document = MessageDocument
         interfaces = (graphene.relay.Node,)
@@ -100,15 +107,31 @@ class Query(graphene.ObjectType):
     message = graphene.Field(MessageType, pk=graphene.Int())
     all_messages = ElasticsearchConnectionField(MessageElasticsearchNode)
 
+    @login_required
     def resolve_message(root, info, pk):
         return Message.objects.filter(pk=pk).first()
 
+    @login_required
+    def resolve_all_messages(root, info, *args, **kwargs):
+        pass
+
 # # # # # # # # # # # # 
 # # #  MUTATIONS  # # # 
-# # # # # # # # # # # # 
+# # # # # # # # # # # #
+
+# Override JSWONWebTokenMutation to provide User in response
+class ObtainJSONWebToken(graphql_jwt.JSONWebTokenMutation):
+    user = graphene.Field(UserType)
+
+    @classmethod
+    def resolve(cls, root, info, **kwargs):
+        return cls(user=info.context.user)
+
+
 class ProcessorType(DjangoObjectType):
     class Meta:
         model = Processor
+
 
 class ProcessorMutation(graphene.Mutation):
     class Arguments:
@@ -119,6 +142,7 @@ class ProcessorMutation(graphene.Mutation):
 
     processor = graphene.Field(ProcessorType)
 
+    @login_required
     def mutate(self, info, message_id, **kwargs):
         # args explicitly named above are required
         try:
@@ -144,3 +168,4 @@ class ProcessorMutation(graphene.Mutation):
 
 class Mutation(graphene.ObjectType):
     create_processor = ProcessorMutation.Field()
+

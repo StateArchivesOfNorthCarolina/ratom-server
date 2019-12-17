@@ -63,6 +63,13 @@ GRAPHENE = {
     ],
 }
 
+# GRAPHQL_JWT = {
+#     'JWT_VERIFY_EXPIRATION': True,
+#     # Expire JWT every 
+#     'JWT_EXPIRATION_DELTA': timedelta(minutes=5),
+#     'JWT_REFRESH_EXPIRATION_DELTA': timedelta(days=7),
+# }
+
 
 ROOT_URLCONF = "ratom_api.urls"
 
