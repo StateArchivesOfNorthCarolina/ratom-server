@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 import os
+from datetime import timedelta
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 PROJECT_ROOT = os.path.abspath(os.path.join(BASE_DIR, os.pardir))
@@ -63,12 +64,11 @@ GRAPHENE = {
     ],
 }
 
-# GRAPHQL_JWT = {
-#     'JWT_VERIFY_EXPIRATION': True,
-#     # Expire JWT every 
-#     'JWT_EXPIRATION_DELTA': timedelta(minutes=5),
-#     'JWT_REFRESH_EXPIRATION_DELTA': timedelta(days=7),
-# }
+GRAPHQL_JWT = {
+    'JWT_VERIFY_EXPIRATION': True,
+    'JWT_EXPIRATION_DELTA': timedelta(minutes=5),
+    'JWT_REFRESH_EXPIRATION_DELTA': timedelta(days=7),
+}
 
 
 ROOT_URLCONF = "ratom_api.urls"

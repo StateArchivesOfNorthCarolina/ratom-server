@@ -25,6 +25,15 @@ class UserType(DjangoObjectType):
         interfaces = (relay.Node, )
         exclude = ('password',)
 
+class CollectionType(DjangoObjectType):
+    class Meta:
+        model = Collection
+        interfaces = (relay.Node, )
+
+class CollectionConnection(relay.Connection):
+    class Meta:
+        node = CollectionType
+
 class MessageType(DjangoObjectType):
     labels = graphene.List(of_type=graphene.String)
 
@@ -107,6 +116,9 @@ class Query(graphene.ObjectType):
     message = graphene.Field(MessageType, pk=graphene.Int())
     all_messages = ElasticsearchConnectionField(MessageElasticsearchNode)
 
+    all_collections = relay.ConnectionField(CollectionConnection)
+    my_collections = relay.ConnectionField(CollectionConnection)
+
     @login_required
     def resolve_message(root, info, pk):
         return Message.objects.filter(pk=pk).first()
@@ -114,6 +126,15 @@ class Query(graphene.ObjectType):
     @login_required
     def resolve_all_messages(root, info, *args, **kwargs):
         pass
+
+    @login_required
+    def resolve_all_collections(root, info):
+        return Collection.objects.all()
+    
+    @login_required
+    def resolve_my_collections(root, info):
+        # TODO: restrict to collections user=info.context.user
+        return Collection.objects.all()
 
 # # # # # # # # # # # # 
 # # #  MUTATIONS  # # # 
