@@ -43,11 +43,12 @@ class MessageDocument(Document):
         # The fields of the model you want to be indexed in Elasticsearch
         fields = [
             "id",
+            "msg_to",
             "msg_from",
             "msg_subject",
             "msg_body",
             "directory",
-            "sent_date"
+            "sent_date",
         ]
 
     # Ignore auto updating of Elasticsearch when a model is saved
@@ -60,6 +61,7 @@ class MessageDocument(Document):
     # Paginate the django queryset used to populate the index with the specified size
     # (by default it uses the database driver's default setting)
     # queryset_pagination = 5000
+
 
 @registry.register_document
 class ProcessorDocument(Document):
@@ -77,7 +79,6 @@ class ProcessorDocument(Document):
             "date_processed",
             "date_modified",
         ]
-
 
 
 ######################################################
@@ -124,15 +125,15 @@ class ProcessorDocument(Document):
 #     # last_modified_by =  Nested(NestedUser)
 
 # class MessageDocument(Document):
-    # msg_from = Text()
-    # msg_subject = Text()
-    # msg_body = Text()
-    # directory = Text()
-    # sent_date = Date()
-    # labels = Keyword()
-    # #Text(fields={"raw": Keyword()})
-    # collection = Nested(NestedCollection)
-    # processor = Nested(NestedProcessor)
+# msg_from = Text()
+# msg_subject = Text()
+# msg_body = Text()
+# directory = Text()
+# sent_date = Date()
+# labels = Keyword()
+# #Text(fields={"raw": Keyword()})
+# collection = Nested(NestedCollection)
+# processor = Nested(NestedProcessor)
 
 #     class Index:
 #         name = "message"

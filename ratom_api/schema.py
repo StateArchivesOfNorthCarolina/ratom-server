@@ -1,11 +1,12 @@
 import graphene
 import graphql_jwt
+from graphene_django.debug import DjangoDebug
 
 import ratom.schema
 
 
 class RootQuery(ratom.schema.Query, graphene.ObjectType):
-    pass
+    debug = graphene.Field(DjangoDebug, name="_debug")
 
 
 class RootMutation(ratom.schema.Mutation, graphene.ObjectType):

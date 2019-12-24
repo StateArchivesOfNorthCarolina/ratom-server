@@ -16,23 +16,32 @@ from graphene_elastic import (
 from .models import User, Processor, Message, Collection
 from .documents import MessageDocument
 
-# # # # # # # # # # # # 
-# # #   QUERIES   # # # 
-# # # # # # # # # # # # 
+
+HIGHLIGHT_TAGS = {
+    "pre_tags": ["<strong>"],
+    "post_tags": ["</strong>"],
+}
+
+# # # # # # # # # # # #
+# # #   QUERIES   # # #
+# # # # # # # # # # # #
 class UserType(DjangoObjectType):
     class Meta:
         model = User
-        interfaces = (relay.Node, )
-        exclude = ('password',)
+        interfaces = (relay.Node,)
+        exclude = ("password",)
+
 
 class CollectionType(DjangoObjectType):
     class Meta:
         model = Collection
-        interfaces = (relay.Node, )
+        interfaces = (relay.Node,)
+
 
 class CollectionConnection(relay.Connection):
     class Meta:
         node = CollectionType
+
 
 class MessageType(DjangoObjectType):
     labels = graphene.List(of_type=graphene.String)
@@ -45,11 +54,11 @@ class MessageType(DjangoObjectType):
 
     class Meta:
         model = Message
-        exclude = ('data', )
-        interfaces = (relay.Node, )
+        exclude = ("data",)
+        interfaces = (relay.Node,)
+
 
 class MessageElasticsearchNode(ElasticsearchObjectType):
-
     class Meta:
         document = MessageDocument
         interfaces = (graphene.relay.Node,)
@@ -62,6 +71,14 @@ class MessageElasticsearchNode(ElasticsearchObjectType):
             filter_backends.FacetedSearchFilterBackend,
         ]
 
+        # For `SearchFilterBackend` backend
+        search_fields = {
+            "msg_to": None,
+            "msg_from": None,
+            "msg_subject": None,
+            "msg_body": None,
+        }
+
         # For `FilteringFilterBackend` backend
         filter_fields = {
             "sent_date": "sent_date",
@@ -73,14 +90,10 @@ class MessageElasticsearchNode(ElasticsearchObjectType):
         }
 
         highlight_fields = {
-            "msg_body": {
-                # "enabled": True,
-                "options": {"pre_tags": ["<strong>"], "post_tags": ["</strong>"],},
-            },
-            "msg_subject": {
-                # "enabled": True,
-                "options": {"pre_tags": ["<span>"], "post_tags": ["</span>"],},
-            }
+            "msg_body": {"options": HIGHLIGHT_TAGS},
+            "msg_subject": {"options": HIGHLIGHT_TAGS},
+            "msg_to": {"options": HIGHLIGHT_TAGS},
+            "msg_from": {"options": HIGHLIGHT_TAGS},
         }
 
         faceted_search_fields = {
@@ -90,14 +103,6 @@ class MessageElasticsearchNode(ElasticsearchObjectType):
                 "facet": DateHistogramFacet,
                 "options": {"interval": "year",},
             },
-        }
-
-        # For `SearchFilterBackend` backend
-        search_fields = {
-            "msg_body": {"boost": 4},
-            "msg_subject": {"boost": 2},
-            "msg_from": None,
-            "sent_date": None,
         }
 
         # For `DefaultOrderingFilterBackend` backend
@@ -114,30 +119,32 @@ class MessageElasticsearchNode(ElasticsearchObjectType):
 
 class Query(graphene.ObjectType):
     message = graphene.Field(MessageType, pk=graphene.Int())
-    all_messages = ElasticsearchConnectionField(MessageElasticsearchNode)
+    filter_messages = ElasticsearchConnectionField(MessageElasticsearchNode)
 
     all_collections = relay.ConnectionField(CollectionConnection)
     my_collections = relay.ConnectionField(CollectionConnection)
 
-    @login_required
+    # @login_required
     def resolve_message(root, info, pk):
         return Message.objects.filter(pk=pk).first()
 
-    @login_required
-    def resolve_all_messages(root, info, *args, **kwargs):
+    # @login_required
+    def resolve_filter_messages(root, info, *args, **kwargs):
+        print(info.context.body)
         pass
 
-    @login_required
+    # @login_required
     def resolve_all_collections(root, info):
         return Collection.objects.all()
-    
-    @login_required
+
+    # @login_required
     def resolve_my_collections(root, info):
         # TODO: restrict to collections user=info.context.user
         return Collection.objects.all()
 
-# # # # # # # # # # # # 
-# # #  MUTATIONS  # # # 
+
+# # # # # # # # # # # #
+# # #  MUTATIONS  # # #
 # # # # # # # # # # # #
 
 # Override JSWONWebTokenMutation to provide User in response
@@ -168,7 +175,7 @@ class ProcessorMutation(graphene.Mutation):
         # args explicitly named above are required
         try:
             processor = Processor.objects.create(**kwargs)
-            if (kwargs.get('processed') == True):
+            if kwargs.get("processed") == True:
                 processor.date_processed = datetime.now()
             processor.date_modified = datetime.now()
 
@@ -187,6 +194,6 @@ class ProcessorMutation(graphene.Mutation):
         except:
             raise Exception("Could not save Processor or Message")
 
+
 class Mutation(graphene.ObjectType):
     create_processor = ProcessorMutation.Field()
-
