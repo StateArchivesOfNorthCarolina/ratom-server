@@ -71,7 +71,7 @@ class PstImporter:
         logger.info(f"Opened {self.archive.message_count} messages in archive")
 
     def get_folder_abs_path(self, folder: pypff.folder) -> str:
-        """Traverse tree node parent's to build absolution path"""
+        """Traverse tree node parent's to build absolute path"""
         path = [folder.name]
         parent = self.archive.tree.get_node(
             self.archive.tree.get_node(folder.identifier).bpointer
@@ -93,6 +93,9 @@ class PstImporter:
             logger.info(
                 f"Scanning {folder.number_of_sub_messages} messages in folder {folder.name}"
             )
+            if folder.number_of_sub_messages == 0:
+                continue
+
             folder_path = self.get_folder_abs_path(folder)
             for message in folder.sub_messages:
                 self._create_message(folder_path, message)
@@ -171,7 +174,6 @@ def get_collection(path: Path) -> ratom.Collection:
     return collection
 
 
-@transaction.atomic
 def import_psts(paths: List[str], clean: bool) -> None:
     logger.info("Import process started")
     spacy_model_name = "en_core_web_sm"
