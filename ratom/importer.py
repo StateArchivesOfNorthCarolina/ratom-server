@@ -1,11 +1,15 @@
 import datetime as dt
+import json
 import logging
 import re
 from pathlib import Path
 from typing import Pattern, Union, List
+from email import headerregistry
 
 import pypff
 import pytz
+from django.db.utils import IntegrityError
+from typing import List, Set, Dict, Tuple, Optional, ByteString
 from spacy.language import Language
 from libratom.lib.entities import load_spacy_model
 from libratom.lib.pff import PffArchive
@@ -21,6 +25,41 @@ from_re = re.compile(r"^[fF]rom:\s+(?P<value>.*)$", re.MULTILINE)
 to_re = re.compile(r"^[tT]o:\s+(?P<value>.*)$", re.MULTILINE)
 title_re = re.compile(r"[a-zA-Z_]+")
 
+
+def clean_null_chars(obj: str) -> str:
+    """Cleans strings of postgres breaking null chars.
+    
+    Arguments:
+        obj {str} 
+    
+    Returns:
+        str
+    """
+    return re.sub('\x00', "", obj)
+
+class MessageHeader:
+    """Provides a consistent interface to the mail and MIME headers from a pypff message.
+    """
+
+    def __init__(self, headers: str) -> None:
+        self.raw_headers = headers
+        self.parsed_headers: Dict[str, str] = {}
+        self.decompose_headers()
+
+    def decompose_headers(self) -> None:
+        """[summary]
+        """
+        if self.raw_headers:
+            decomp = re.split(r'\r\n', re.sub(r'\r\n\s', '\t', self.raw_headers.strip()))
+            for header_item in decomp:
+                s = header_item.split(":", 1)
+                self.parsed_headers[s[0]] = s[1]
+    
+    def get_header(self, key: str) -> str:
+        return self.parsed_headers.get(key, "")
+    
+    def get_full_headers(self) -> str:
+        return json.dumps(self.parsed_headers)
 
 class PstImporter:
     def __init__(self, path: str, spacy_model: Language):
@@ -61,21 +100,19 @@ class PstImporter:
     def _create_collection(self) -> None:
         self.collection = get_collection(self.path)
 
-    def _extract_match(self, pattern: Pattern[str], haystack: str) -> str:
-        match = pattern.search(haystack)
-        return match.group(1).strip() if match else ""
-
     def _create_message(
-        self, folder_path: str, message: pypff.message
+        self, folder_path: str, pypff_message: pypff.message
     ) -> Union[ratom.Message, None]:
-        headers = message.transport_headers.strip()
-        msg_from = self._extract_match(from_re, headers)
-        msg_to = self._extract_match(to_re, headers)
-        msg_body = self.archive.format_message(message, with_headers=False)
-        msg_body_combined = self.archive.format_message(message)
-        msg_subject = message.subject
         try:
-            sent_date = make_aware(message.delivery_time)
+            headers = MessageHeader(pypff_message.transport_headers)
+        except AttributeError as e:
+            logger.exception(f"{e}")
+        msg_from = headers.get_header('from')
+        msg_to = headers.get_header('to')
+        msg_body = self.archive.format_message(pypff_message, with_headers=False)
+        msg_subject = headers.get_header('subject')
+        try:
+            sent_date = make_aware(pypff_message.delivery_time)
         except pytz.NonExistentTimeError:
             logger.exception("Failed to make datetime aware")
             return None
@@ -90,31 +127,37 @@ class PstImporter:
         labels = set()
         for entity in document.ents:
             labels.add(entity.label_)
-        msg_data = {"labels": list(labels)}
-        message = ratom.Message.objects.create(
-            message_id=message.identifier,
-            sent_date=sent_date,
-            msg_to=msg_to,
-            msg_from=msg_from,
-            msg_subject=msg_subject,
-            msg_body=msg_body,
-            msg_tagged_body=msg_body_combined,
-            collection=self.collection,
-            directory=folder_path,
-            data=msg_data,
-            processor=ratom.Processor.objects.create(),  # TODO: likely impacts BulkCreateManager
-        )
-        # spaCy m2m (idea #2)
-        bulk_mgr = BulkCreateManager(chunk_size=100)
-        for entity in document.ents:
-            bulk_mgr.add(
-                ratom.Entity(
-                    label=entity.label_, value=entity.text.strip(), message=message
-                )
-            )
-        bulk_mgr.done()
-        return message
 
+        msg_data = {"labels": list(labels)}
+        try:
+            ratom_message = ratom.Message.objects.create(
+                message_id=pypff_message.identifier,
+                sent_date=sent_date,
+                msg_to=msg_to,
+                msg_from=msg_from,
+                msg_subject=msg_subject,
+                msg_body=clean_null_chars(msg_body),
+                msg_headers=headers.get_full_headers(),
+                collection=self.collection,
+                directory=folder_path,
+                data=msg_data,
+            )  # type: ratom.Message
+        except IntegrityError as e:
+            logger.exception(f"{pypff_message.identifier}: \t {e}")
+            return None
+        except ValueError as e:
+            import pudb; pudb.set_trace()
+            logger.exception(f"{pypff_message.identifier}: \t {e}")
+            return None
+        # # spaCy m2m (idea #2)
+        # bulk_mgr = BulkCreateManager(chunk_size=100)
+        # for entity in document.ents:
+        #     bulk_mgr.add(
+        #         ratom.Entity(
+        #             label=entity.label_, value=entity.text.strip(), message=ratom_message
+        #         )
+        #     )
+        # bulk_mgr.done()
 
 def get_collection(path: Path) -> ratom.Collection:
     title = path.with_suffix("").name
