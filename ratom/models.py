@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models
 from elasticsearch_dsl import Index
 
@@ -75,3 +75,15 @@ class Entity(models.Model):
 
     def __str__(self) -> str:
         return f"{self.label}: {self.value}"
+
+class MessageProcessingState(models.Model):
+    account = models.ForeignKey(Collection, null=False, on_delete=models.CASCADE)
+    folder_name = models.CharField(max_length=512, blank=True)
+    ingesting_folder = models.IntegerField(null=False)
+    ingesting_messages = ArrayField(models.IntegerField(), null=True)
+
+    class Meta:
+        unique_together = ['account', 'ingesting_folder']
+
+    def __str__(self) -> str:
+        return f"folder_id: {self.ingesting_folder}({len(self.ingesting_messages)})"
