@@ -4,6 +4,7 @@ from django.db import models
 from elasticsearch_dsl import Index
 
 from ratom.managers import MessageManager
+from simple_history.models import HistoricalRecords
 
 
 class User(AbstractUser):
@@ -11,13 +12,26 @@ class User(AbstractUser):
     user_type = models.CharField(max_length=32, choices=USER_CHOICES)
 
 
-class Collection(models.Model):
+class Account(models.Model):
     title = models.CharField(max_length=200)
-    accession_date = models.DateField(auto_now=False)
+    collection_name = models.CharField(max_length=512)
+    date_of_first_message = models.DateField(null=True)
+    date_of_last_message = models.DateField(null=True)
+    history = HistoricalRecords()
 
     def __str__(self) -> str:
         return str(self.title)
 
+
+class File(models.Model):
+    filename = models.CharField(max_length=256, null=False)
+    accession_date = models.DateField(auto_now=False)
+    total_messages = models.IntegerField(null=True)
+    messages_processed = models.IntegerField(default=0)
+    date_of_first_message = models.DateField(null=True)
+    date_of_last_message = models.DateField(null=True)
+    axaem_id = models.IntegerField(null=True)
+    history = HistoricalRecords()
 
 class Processor(models.Model):
     processed = models.BooleanField(default=False)
@@ -32,7 +46,7 @@ class Processor(models.Model):
 
 class Message(models.Model):
     message_id = models.CharField(max_length=256, blank=True)
-    collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
     processor = models.OneToOneField(
         Processor, on_delete=models.PROTECT, null=True, blank=True
     )

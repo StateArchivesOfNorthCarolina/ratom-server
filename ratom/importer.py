@@ -21,6 +21,7 @@ from django.utils.timezone import make_aware
 
 from ratom import models as ratom
 from ratom.util.bulk_create_manager import BulkCreateManager
+from msg_parser import MsOxMessage
 
 
 logger = logging.getLogger(__name__)
@@ -138,10 +139,10 @@ class MessageManager:
             )
         return Path("/".join(path))
 
-    def keyboard_interrupt_handler(signal: signal, frame):
-        import pudb; pudb.set_trace()
+    def keyboard_interrupt_handler(signal: signal, frame: object) -> None:
         logger.fatal("Caught Keyboard interrupt: saving state")
         # save the object
+
 
 class PstImporter:
     
@@ -152,7 +153,6 @@ class PstImporter:
         logger.info(f"Opening archive")
         self.archive = PffArchive(self.path)
         logger.info(f"Opened {self.archive.message_count} messages in archive")
-
 
     def run(self) -> None:
         self._create_collection()
@@ -171,16 +171,16 @@ class PstImporter:
                 message_manager.build_map(folder)
         self._create_messages(message_manager)
 
-
     def _create_collection(self) -> None:
         self.collection = get_collection(self.path)
-    
-    def _create_messages(self, message_manager: MessageManager) -> bool:
+
+    def _create_messages(self, message_manager: MessageManager) -> None:
         for m in message_manager.process_messages_for_account(self.archive):
             try:
                 headers = MessageHeader(m.transport_headers)
             except AttributeError as e:
                 logger.exception(f"{e}")
+                message_manager.add_failed_id(m.id)
             msg_from = headers.get_header('from')
             msg_to = headers.get_header('to')
             msg_body = self.archive.format_message(m, with_headers=False)
@@ -189,14 +189,17 @@ class PstImporter:
                 sent_date = make_aware(m.delivery_time)
             except pytz.NonExistentTimeError:
                 logger.exception("Failed to make datetime aware")
+                message_manager.add_failed_id(m.id)
             except pytz.AmbiguousTimeError:
                 logger.exception("Ambiguous Time Could not parse")
+                message_manager.add_failed_id(m.id)
             # spaCy
             spacy_text = f"{msg_subject}\n{msg_body}"
             try:
                 document = self.spacy_model(spacy_text)
             except ValueError:
                 logger.exception(f"spaCy error")
+                message_manager.add_failed_id(m.id)
             # spaCy jsonb (idea #1)
             labels = set()
             for entity in document.ents:
@@ -218,8 +221,10 @@ class PstImporter:
                 )  # type: ratom.Message
             except IntegrityError as e:
                 logger.exception(f"{m.identifier}: \t {e}")
+                message_manager.add_failed_id(m.id)
             except ValueError as e:
                 logger.exception(f"{m.identifier}: \t {e}")
+                message_manager.add_failed_id(m.id)
 
 
 
