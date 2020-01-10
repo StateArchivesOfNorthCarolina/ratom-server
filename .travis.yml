@@ -13,7 +13,6 @@ install:
   - pip install -r requirements/base.txt
 
 script:
-  - export SECRET_KEY=$SECRET_KEY
   - python manage.py test
 
 deploy:
