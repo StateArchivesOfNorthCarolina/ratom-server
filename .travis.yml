@@ -9,6 +9,9 @@ python:
 before_install:
   - docker build -t govsanc/ratom-server .
 
+install:
+  pip install -r requirements/base.txt
+
 deploy:
   provider: script
   script: bash docker_push.sh
