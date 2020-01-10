@@ -12,6 +12,9 @@ before_install:
 install:
   - pip install -r requirements/base.txt
 
+script:
+  - run_tests.sh
+
 deploy:
   provider: script
   script: bash docker_push.sh
