@@ -6,6 +6,10 @@ services:
 python:
   - "3.7"
 
+env:
+  global:
+    - SECRET_KEY=$SECRET_KEY
+
 before_install:
   - docker build -t govsanc/ratom-server .
 
