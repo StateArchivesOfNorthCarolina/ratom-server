@@ -150,3 +150,25 @@ if SENTRY_DSN:
     from sentry_sdk.integrations.django import DjangoIntegration
 
     sentry_sdk.init(dsn=SENTRY_DSN, integrations=[DjangoIntegration()])
+
+AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "us-east-1")
+
+if "amazonaws.com" in ELASTICSEARCH_URL:
+    from boto3 import session
+    from requests_aws_sign import AWSV4Sign
+    from elasticsearch import RequestsHttpConnection
+
+    session = session.Session()
+    credentials = session.get_credentials()
+    region = session.region_name or AWS_S3_REGION_NAME
+    http_auth = AWSV4Sign(credentials, region, "es")
+    ELASTICSEARCH_DSL = {
+        "default": {
+            "hosts": ELASTICSEARCH_URL,
+            "http_auth": http_auth,
+            "connection_class": RequestsHttpConnection,
+            "port": 433,
+            "use_ssl": True,
+            "verify_ssl": True,
+        },
+    }
