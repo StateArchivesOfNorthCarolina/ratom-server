@@ -1,0 +1,19 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Build and push ratom-server Docker image to DockerHub
+      docker_image:
+        name: ratom-server
+        build:
+          pull: no
+          path: ../
+        source: build
+        tag: "{{ item }}"
+        force_tag: yes
+        repository: "govsanc/ratom-server"
+        push: yes
+      loop:
+        - latest
+        - v0.0.2
