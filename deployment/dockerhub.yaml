@@ -15,5 +15,5 @@
         repository: "govsanc/ratom-server"
         push: yes
       loop:
+        - v0.0.3
         - latest
-        - v0.0.2
