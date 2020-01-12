@@ -216,5 +216,5 @@ X_FRAME_OPTIONS = "DENY"
 AUTH_USER_MODEL = "ratom.User"
 
 ELASTICSEARCH_DSL = {
-    "default": {"hosts": "localhost:9200"},
+    "default": {"hosts": os.environ.get("ELASTICSEARCH_URL", "localhost:9200")},
 }

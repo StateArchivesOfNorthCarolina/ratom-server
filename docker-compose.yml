@@ -22,6 +22,7 @@ services:
       ENVIRONMENT: local
       DJANGO_SECRET_KEY: insecure-dev-key
       DOMAIN: localhost
+      ELASTICSEARCH_URL: elasticsearch:9200
     build:
       context: .
       dockerfile: ./Dockerfile
@@ -44,10 +45,10 @@ services:
         soft: -1
         hard: -1
     ports:
-      - 9200:9200
-      - 9300:9300
+      - "9200:9200"
+      - "9300:9300"
   kibana:
     image: docker.elastic.co/kibana/kibana:7.4.2
     container_name: kibana
     ports:
-      - 5601:5601
+      - "5601:5601"
