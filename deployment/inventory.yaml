@@ -25,3 +25,4 @@ all:
             CACHE_HOST: memcached:11211
             DOMAIN: "{{ k8s_domain_names[0] }}"
             SENTRY_DSN: https://a0ca0bdd3f3d4d66b0bb7baaaa322a81@sentry.caktus-built.com/18
+            ELASTICSEARCH_URL: https://search-ratom-d-elasti-17cjvo4hw4602-qdfrbekuggyn5fi3bo4hrusqga.us-east-1.es.amazonaws.com
