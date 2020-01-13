@@ -3,9 +3,9 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: Build and push ratom-server Docker image to DockerHub
+    - name: Build and tag an image for Travis to deploy
       docker_image:
-        name: ratom-server
+        name: govsanc/ratom-server
         build:
           pull: no
           path: ../
