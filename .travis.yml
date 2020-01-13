@@ -12,12 +12,11 @@ before_install:
   - ansible-playbook deployment/docker-build-tag.yaml -vv
   - docker images
 
-install:
-  - echo 0
-
 script:
-  - echo 0
-
+  - docker-compose up -d
+  - docker-compose exec db /bin/bash -c "until psql -l; do echo 'db unavailable. sleeping'; sleep 1; done"
+  - docker-compose exec app /bin/bash -c "code/python manage.py test"
+  
 deploy:
   provider: script
   script: bash deployment/ci_deployment.sh
