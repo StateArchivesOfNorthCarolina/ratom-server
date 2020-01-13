@@ -13,6 +13,9 @@ before_install:
   - ansible-playbook dockerhub.yaml -vv
   - docker images
 
+install:
+  - echo 0
+
 script:
   - docker run -it govsanc/ratom-server /code/python manage.py test
 
