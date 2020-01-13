@@ -9,9 +9,9 @@ python:
 before_install:
   - cd deployment
   - pip install -r requirements.txt
-
-install:
-  - pip install -r requirements/base.txt
+  - export TAG=${TRAVIS_BRANCH}-${TRAVIS_COMMIT:0:7}
+  - ansible-playbook dockerhub.yaml -vv
+  - docker images
 
 script:
   - docker run -it govsanc/ratom-server /code/python manage.py test

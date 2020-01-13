@@ -12,8 +12,8 @@
         source: build
         tag: "{{ item }}"
         force_tag: yes
-        repository: "govsanc/ratom-server"
-        push: yes
+        #repository: "govsanc/ratom-server"
+        #push: yes
       loop:
-        - v0.0.3
+        - "{{ lookup('env', 'TAG') }}"
         - latest
