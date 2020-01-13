@@ -10,13 +10,14 @@ env:
   - DJANGO_SECRET_KEY='asldjklkakjsdlkjadsinjaidnlkasdf'
 
 before_install:
+  - echo $DOCKER_PASSWORD
   - docker build --build-arg DJANGO_SECRET_KEY=$DJANGO_SECRET_KEY -t govsanc/ratom-server .
 
 install:
   - pip install -r requirements/base.txt
 
 script:
-  - echo 0
+  - docker run -it govsanc/ratom-server /code/python manage.py test
 
 deploy:
   provider: script
