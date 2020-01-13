@@ -17,7 +17,7 @@ install:
   - echo 0
 
 script:
-  - docker run -it govsanc/ratom-server /code/python manage.py test
+  - echo 0
 
 deploy:
   provider: script
