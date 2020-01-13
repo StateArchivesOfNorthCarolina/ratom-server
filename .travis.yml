@@ -10,7 +10,7 @@ before_install:
   - cd deployment
   - pip install -r requirements.txt
   - export TAG=${TRAVIS_BRANCH}-${TRAVIS_COMMIT:0:7}
-  - ansible-playbook dockerhub.yaml -vv
+  - ansible-playbook docker-build-tag.yaml -vv
   - docker images
 
 install:
