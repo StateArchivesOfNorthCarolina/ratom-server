@@ -7,10 +7,10 @@ python:
   - "3.7"
 
 env:
-  - SECRET_KEY='asldjklkakjsdlkjadsinjaidnlkasdf'
+  - DJANGO_SECRET_KEY='asldjklkakjsdlkjadsinjaidnlkasdf'
 
 before_install:
-  - docker build --build-arg SECRET_KEY=$SECRET_KEY -t govsanc/ratom-server .
+  - docker build --build-arg DJANGO_SECRET_KEY=$DJANGO_SECRET_KEY -t govsanc/ratom-server .
 
 install:
   - pip install -r requirements/base.txt
