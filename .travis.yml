@@ -21,3 +21,6 @@ script:
 deploy:
   provider: script
   script: bash docker_push.sh
+  on:
+    repo: StateArchivesOfNorthCarolina/ratom-server
+    all_branches: true
