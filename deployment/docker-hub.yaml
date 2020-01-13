@@ -3,17 +3,14 @@
   connection: local
   gather_facts: no
   tasks:
-    - name: Build and push ratom-server Docker image to DockerHub
+    - name: Push built images to dockerhub
       docker_image:
-        name: ratom-server
-        build:
-          pull: no
-          path: ../
-        source: build
+        name: govsanc/ratom-server
+        source: local
         tag: "{{ item }}"
         force_tag: yes
         repository: "govsanc/ratom-server"
         push: yes
       loop:
-        - v0.0.3
+        - "{{ lookup('env', 'TAG') }}"
         - latest
