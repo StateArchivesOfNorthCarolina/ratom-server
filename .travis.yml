@@ -9,7 +9,7 @@ python:
 before_install:
   - pip install -r deployment/requirements.txt
   - export TAG=${TRAVIS_BRANCH}-${TRAVIS_COMMIT:0:7}
-  - ansible-playbook docker-build-tag.yaml -vv
+  - ansible-playbook deployment/docker-build-tag.yaml -vv
   - docker images
 
 install:
