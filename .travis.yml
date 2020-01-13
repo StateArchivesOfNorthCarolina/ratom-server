@@ -12,6 +12,7 @@ before_install:
   - export TAG=${TRAVIS_BRANCH}-${TRAVIS_COMMIT:0:7}
   - ansible-playbook docker-build-tag.yaml -vv
   - docker images
+  - cd ..
 
 install:
   - echo 0
