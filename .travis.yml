@@ -7,12 +7,10 @@ python:
   - "3.7"
 
 before_install:
-  - cd deployment
-  - pip install -r requirements.txt
+  - pip install -r deployment/requirements.txt
   - export TAG=${TRAVIS_BRANCH}-${TRAVIS_COMMIT:0:7}
   - ansible-playbook docker-build-tag.yaml -vv
   - docker images
-  - cd ..
 
 install:
   - echo 0
@@ -26,3 +24,4 @@ deploy:
   on:
     repo: StateArchivesOfNorthCarolina/ratom-server
     all_branches: true
+    condition: $TRAVIS_BRANCH =~ ^(develop|master)$
