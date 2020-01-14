@@ -25,6 +25,7 @@ ansible-playbook -i deployment/inventory.yaml deployment/docker-hub.yaml -vv
         kubectl config use-context $K8S_AUTH_CONTEXT
     fi
 
+    kubectl config view
     ansible-galaxy install -r requirements.yaml
     ansible-playbook deploy.yaml -l ratom-staging -vvvv
 
