@@ -12,20 +12,25 @@ env:
   global:
     - CLOUDSDK_CORE_DISABLE_PROMPTS=1
 
-before_install:
-  - curl https://sdk.cloud.google.com | bash > /dev/null
-  - source $HOME/google-cloud-sdk/path.bash.inc
-  - gcloud components install kubectl
+install:
   - pip install -r deployment/requirements.txt
-  - export TAG=${TRAVIS_BRANCH}-${TRAVIS_COMMIT:0:7}
-  - ansible-playbook deployment/docker-build-tag.yaml -vv
-  - docker images
+
+before_script:
+  - docker build --pull -t govsanc/ratom-server .
 
 script:
   - echo 0
   # - docker-compose up -d
   # - docker-compose exec db /bin/bash -c "until psql -l; do echo 'db unavailable. sleeping'; sleep 1; done"
   # - docker-compose exec app /bin/bash -c "code/python manage.py test"
+
+before_deploy:
+  - curl https://sdk.cloud.google.com | bash > /dev/null
+  - source $HOME/google-cloud-sdk/path.bash.inc
+  - gcloud components install kubectl
+  - export TAG=${TRAVIS_BRANCH}-${TRAVIS_COMMIT:0:7}
+  - ansible-playbook deployment/docker-build-tag.yaml -vv
+  - docker images
 
 deploy:
   provider: script
