@@ -38,3 +38,13 @@ GRAPHQL_JWT = {
     "JWT_EXPIRATION_DELTA": timedelta(days=365),
     "JWT_REFRESH_EXPIRATION_DELTA": timedelta(days=365 * 7),
 }
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": "ratomapi",
+        "USER": "postgres",
+        "HOST": "localhost",
+        "PORT": "54330",
+    }
+}
