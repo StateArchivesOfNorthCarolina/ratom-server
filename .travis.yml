@@ -6,7 +6,15 @@ services:
 python:
   - "3.7"
 
+env:
+  global:
+    - CLOUDSDK_CORE_DISABLE_PROMPTS=1
+
 before_install:
+  - curl https://sdk.cloud.google.com | bash > /dev/null
+  - source $HOME/google-cloud-sdk/path.bash.inc
+  - gcloud components install kubectl
+  - kubectl version
   - pip install -r deployment/requirements.txt
   - export TAG=${TRAVIS_BRANCH}-${TRAVIS_COMMIT:0:7}
   - ansible-playbook deployment/docker-build-tag.yaml -vv
