@@ -11,12 +11,19 @@ class User(AbstractUser):
     user_type = models.CharField(max_length=32, choices=USER_CHOICES)
 
 
-class Collection(models.Model):
+class Account(models.Model):
     title = models.CharField(max_length=200)
-    accession_date = models.DateField(auto_now=False)
 
     def __str__(self) -> str:
         return str(self.title)
+
+
+class File(models.Model):
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    filename = models.CharField()
+    reported_total_messages = models.IntegerField()
+    accession_date = models.DateField()
+    file_size = models.IntegerField()
 
 
 class Processor(models.Model):
@@ -31,8 +38,9 @@ class Processor(models.Model):
 
 
 class Message(models.Model):
-    message_id = models.CharField(max_length=256, blank=True)
-    collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
+    source_id = models.CharField(max_length=256, blank=True)
+    file = models.ForeignKey(File, on_delete=models.CASCADE)
+    account = models.ForeignKey(File, on_delete=models.CASCADE)
     processor = models.OneToOneField(
         Processor, on_delete=models.PROTECT, null=True, blank=True
     )
@@ -41,24 +49,10 @@ class Message(models.Model):
     msg_to = models.TextField()
     msg_cc = models.TextField(blank=True)
     msg_bcc = models.TextField(blank=True)
-    msg_subject = models.TextField()
-    msg_headers = models.TextField(blank=True)
+    msg_subject = models.TextField(blank=True)
     msg_body = models.TextField(blank=True)
-    msg_tagged_body = models.TextField(blank=True)
     directory = models.TextField(blank=True)
     data = JSONField(null=True, blank=True)
-    """
-    data = JSONField(null=True, blank=True)
-    # this seems to crash when using a simple model based query, as such:
-    class MessageType(DjangoObjectType):
-    class Meta:
-        model = Message
-    """
-
-    # objects = MessageManager()
-
-    # class Meta:
-    #     indexes = [GinIndex(fields=["data"])]
 
 
 class Entity(models.Model):
