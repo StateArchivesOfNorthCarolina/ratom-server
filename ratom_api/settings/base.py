@@ -215,6 +215,7 @@ CSRF_COOKIE_HTTPONLY = True
 X_FRAME_OPTIONS = "DENY"
 AUTH_USER_MODEL = "ratom.User"
 
+ELASTICSEARCH_URL = os.getenv("ELASTICSEARCH_URL", "localhost:9200")
 ELASTICSEARCH_DSL = {
     "default": {"hosts": "localhost:9200"},
 }
