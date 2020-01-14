@@ -14,7 +14,6 @@ from datetime import timedelta
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 PROJECT_ROOT = os.path.abspath(os.path.join(BASE_DIR, os.pardir))
-SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -216,7 +215,6 @@ CSRF_COOKIE_HTTPONLY = True
 X_FRAME_OPTIONS = "DENY"
 AUTH_USER_MODEL = "ratom.User"
 
-ELASTICSEARCH_URL = os.getenv("ELASTICSEARCH_URL", "localhost:9200")
 ELASTICSEARCH_DSL = {
-    "default": {"hosts": ELASTICSEARCH_URL},
+    "default": {"hosts": "localhost:9200"},
 }
