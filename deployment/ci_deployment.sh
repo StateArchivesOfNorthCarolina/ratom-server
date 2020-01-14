@@ -25,9 +25,7 @@ ansible-playbook -i deployment/inventory.yaml deployment/docker-hub.yaml -vv
         kubectl config use-context $KUBE_AUTH_CONTEXT
     fi
 
-    kubectl config view
-    kubectl cluster-info
     ansible-galaxy install -r requirements.yaml
-    ansible-playbook deploy.yaml -l ratom-staging -vvvv
+    ansible-playbook deploy.yaml -l ratom-staging -vv
 
 # fi
