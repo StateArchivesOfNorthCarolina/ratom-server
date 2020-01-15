@@ -28,4 +28,4 @@ else
 fi
 
 ansible-galaxy install -r requirements.yaml
-ansible-playbook deploy.yaml -l ratom-staging -vv
+ansible-playbook deploy.yaml -l ratom-staging -e k8s_container_image_tag=$TAG
