@@ -24,7 +24,6 @@ def user_detail(request):
     """
     Show details of single user
     """
-    print(request.headers)
     try:
         user_pk = request.user.pk
         user = User.objects.get(pk=user_pk)
