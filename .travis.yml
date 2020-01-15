@@ -1,0 +1,27 @@
+language: python
+
+services:
+  - docker
+
+python:
+  - "3.7"
+
+before_install:
+  - pip install -r deployment/requirements.txt
+  - export TAG=${TRAVIS_BRANCH}-${TRAVIS_COMMIT:0:7}
+  - ansible-playbook deployment/docker-build-tag.yaml -vv
+  - docker images
+
+script:
+  - echo 0
+  # - docker-compose up -d
+  # - docker-compose exec db /bin/bash -c "until psql -l; do echo 'db unavailable. sleeping'; sleep 1; done"
+  # - docker-compose exec app /bin/bash -c "code/python manage.py test"
+
+deploy:
+  provider: script
+  script: bash deployment/ci_deployment.sh
+  on:
+    repo: StateArchivesOfNorthCarolina/ratom-server
+    all_branches: true
+    condition: $TRAVIS_BRANCH =~ ^(develop|master)$

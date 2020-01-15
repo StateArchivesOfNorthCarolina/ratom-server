@@ -20,3 +20,5 @@ libratom==0.2.2
 pandas==0.25.3
 django-elasticsearch-dsl==7.1.0
 django-graphql-jwt==0.3.0
+boto3==1.11.0
+requests-aws-sign==0.1.5
