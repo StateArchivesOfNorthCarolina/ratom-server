@@ -17,6 +17,7 @@ conf/pillar/*/deploy
 .env
 .vscode/
 .vscode
+.python-version
 env-setup.sh
 deployment/roles/
 notebooks/.ipynb_checkpoints
