@@ -20,11 +20,12 @@ class UserTEnum(Enum):
     RESEARCHER = "Researcher"
 
 
-class RecordStatus(Enum):
-    NON_RECORD = "Non Record"
-    RECORD = "Record"
-    RECORD_RES = "Restricted Record"
-    RECORD_RED = "Redacted Record"
+# class RecordStatus(Enum):
+#     NON_RECORD = "Non Record"
+#     RECORD = "Record"
+#     RECORD_RES = "Restricted Record"
+#     RECORD_RED = "Redacted Record"
+#     RECORD_RES_RED = "Restricted and Redactions"
 
 
 class User(AbstractUser):
@@ -92,6 +93,11 @@ class MessagesHaveRestrictions(models.Manager):
         return super().get_queryset().filter(restrictions__is_null=False)
 
 
+class MessagesAreValid(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(data__errors__is_null=True)
+
+
 class Message(models.Model):
     """A model to store individual email messages.
     The unique item in this model is the data field which will be a fairly
@@ -127,7 +133,6 @@ class Message(models.Model):
         RestrictionAuthority, null=True, on_delete=models.CASCADE
     )
     redaction = models.ForeignKey(Redaction, null=True, on_delete=models.CASCADE)
-    is_record = models.BooleanField(null=True)
     sent_date = models.DateTimeField(null=True)
     msg_from = models.TextField(null=True)
     msg_to = models.TextField(null=True)
@@ -143,6 +148,7 @@ class Message(models.Model):
     objects = models.Manager()
     unprocessed = MessagesNotProcessed()
     restricted = MessagesHaveRestrictions()
+    valid = MessagesAreValid()
 
 
 def upload_directory_path(instance, filename):
@@ -153,7 +159,7 @@ def upload_directory_path(instance, filename):
     :param filename:
     :return:
     """
-    return f"{instance.message.pk}/{instance.hashed_name}"
+    return f"{instance.hashed_name}"
 
 
 class Attachments(models.Model):
