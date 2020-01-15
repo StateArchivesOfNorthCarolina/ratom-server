@@ -77,6 +77,11 @@ class RestrictionAuthority(models.Model):
     authorities = ArrayField(base_field=models.CharField(max_length=128, blank=True))
 
 
+class Redaction(models.Model):
+    redacted_subject = models.TextField(null=True)
+    redacted_body = models.TextField(null=True)
+
+
 class MessagesNotProcessed(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(is_record__is_null=True)
@@ -116,8 +121,13 @@ class Message(models.Model):
     """
 
     source_id = models.CharField(max_length=256, blank=True)
-    file = models.ForeignKey(File, on_delete=models.CASCADE)
-    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    file = models.ForeignKey(File, on_delete=models.PROTECT)
+    account = models.ForeignKey(Account, on_delete=models.PROTECT)
+    restrictions = models.ForeignKey(
+        RestrictionAuthority, null=True, on_delete=models.CASCADE
+    )
+    redaction = models.ForeignKey(Redaction, null=True, on_delete=models.CASCADE)
+    is_record = models.BooleanField(null=True)
     sent_date = models.DateTimeField(null=True)
     msg_from = models.TextField(null=True)
     msg_to = models.TextField(null=True)
@@ -126,10 +136,6 @@ class Message(models.Model):
     msg_subject = models.TextField(blank=True)
     msg_body = models.TextField(blank=True)
     directory = models.TextField(blank=True)
-    is_record = models.BooleanField(null=True)
-    restrictions = models.ForeignKey(
-        RestrictionAuthority, null=True, on_delete=models.CASCADE
-    )
     data = JSONField(null=True, blank=True)
     history = HistoricalRecords()
 
