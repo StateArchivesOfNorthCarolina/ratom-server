@@ -27,5 +27,6 @@ else
     kubectl config use-context $KUBE_AUTH_CONTEXT
 fi
 
+echo $VAULT_PASS > .vault_pass
 ansible-galaxy install -r requirements.yaml
 ansible-playbook deploy.yaml -l ratom-staging -e k8s_container_image_tag=$TAG
