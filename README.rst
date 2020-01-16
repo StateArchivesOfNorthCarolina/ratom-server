@@ -1,11 +1,4 @@
-
-
-.. EDIT the below links to use the project's github repo path. Or just remove them.
-
-.. image:: https://requires.io/github/GITHUB_ORG/ratom_api/requirements.svg?branch=master
-.. image:: https://requires.io/github/GITHUB_ORG/ratom_api/requirements.svg?branch=develop
-
-Ratom_Api
+RATOM API
 ========================
 
 Below you will find basic setup and deployment instructions for the ratom_api
