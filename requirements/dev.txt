@@ -31,3 +31,5 @@ kubernetes-validate==1.16.0
 
 # For Jupyter notebooks
 jupyterlab==1.2.2
+
+django-cors-headers==3.2.1

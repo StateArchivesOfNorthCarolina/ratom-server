@@ -88,8 +88,8 @@ class PstImporter:
             return None
         # spaCy jsonb (idea #1)
         labels = set()
-        # for entity in document.ents:
-        #     labels.add(entity.label_)
+        for entity in document.ents:
+            labels.add(entity.label_)
         msg_data = {"labels": list(labels)}
         message = ratom.Message.objects.create(
             message_id=message.identifier,
@@ -104,12 +104,6 @@ class PstImporter:
         )
         # spaCy m2m (idea #2)
         bulk_mgr = BulkCreateManager(chunk_size=100)
-        # for entity in document.ents:
-        #     bulk_mgr.add(
-        #         ratom.Entity(
-        #             label=entity.label_, value=entity.text.strip(), message=message
-        #         )
-        #     )
         bulk_mgr.done()
         return message
 

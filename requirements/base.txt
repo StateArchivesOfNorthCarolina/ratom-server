@@ -6,8 +6,14 @@ Django==2.2.7  # rq.filter: >=2.2.7,<2.3
 # Required by Django
 sqlparse==0.3.0
 pytz
-graphene-django==2.6.0
-graphene-elastic==0.6
+
+# DRF
+djangorestframework==3.11.0
+
+# elasticsearch
+django-elasticsearch-dsl==7.1.0
+django-elasticsearch-dsl-drf==0.20.5
+
 django-filter==2.2.0
 dealer==2.0.5
 django-dotenv==1.4.2
@@ -18,5 +24,3 @@ whitenoise==4.1.4
 lxml==4.4.1
 libratom==0.2.2
 pandas==0.25.3
-django-elasticsearch-dsl==7.1.0
-django-graphql-jwt==0.3.0
