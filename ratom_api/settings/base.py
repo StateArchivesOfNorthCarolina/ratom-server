@@ -76,8 +76,9 @@ REST_FRAMEWORK = {
 }
 
 # Elasticsearch configuration
+ELASTICSEARCH_URL = os.getenv("ELASTICSEARCH_URL", "localhost:9200")
 ELASTICSEARCH_DSL = {
-    "default": {"hosts": "localhost:9200"},
+    "default": {"hosts": ELASTICSEARCH_URL},
 }
 
 SIMPLE_JWT = {
