@@ -37,7 +37,6 @@ class MessageDocument(Document):
         multi=True,
     )
 
-    # Country object
     account = fields.NestedField(
         attr="account_indexing",
         properties={

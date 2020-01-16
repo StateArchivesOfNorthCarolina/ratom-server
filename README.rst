@@ -92,7 +92,7 @@ You can also use ``black`` to format on save. For example, configuration for VS 
     }
 
 
-import_psts
+Import
 -----------
 
 A management command, ``import_psts``, can be used to ``.pst`` files into RATOM.
@@ -100,6 +100,10 @@ A management command, ``import_psts``, can be used to ``.pst`` files into RATOM.
 For example::
 
     python manage.py import_psts /Volumes/Seagate/RATOM/RevisedEDRMv1_Complete/kate_symes/* --clean
+
+The search index can be rebuilt with::
+
+    python manage.py search_index -f --rebuild --parallel
 
 
 Development
