@@ -17,8 +17,7 @@ class MessageAdmin(admin.ModelAdmin):
         "subject",
         "account",
     )
-    # list_filter = ("sent_date", "collection")
-    # search_fields = ("msg_body",)
-    # date_hierarchy = "sent_date"
-    # ordering = ("-sent_date",)
-    # raw_id_fields = ("processor",)
+    list_filter = ("sent_date", "account")
+    search_fields = ("msg_body",)
+    date_hierarchy = "sent_date"
+    ordering = ("-sent_date",)
