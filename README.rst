@@ -31,19 +31,19 @@ Getting Started
 
 First clone the repository from Github and switch to the new directory::
 
-    $ git clone git@github.com:[ORGANIZATION]/ratom_api.git
+    $ git clone git@github.com:StateArchivesOfNorthCarolina/ratom-server.git
     $ cd ratom_api
 
-To setup your local environment you can use the quickstart make target `setup`, which will
-install Python dependencies (via pip) into a virtualenv named
+To setup your local environment you can use the quickstart make target `setup`,
+which will install Python dependencies (via pip) into a virtualenv named
 "ratom_api", configure a local django settings file, and create a database via
 Postgres named "ratom_api" with all migrations run::
 
     $ make setup
     $ workon ratom_api
 
-If you require a non-standard setup, you can walk through the manual setup steps below making
-adjustments as necessary to your needs.
+If you require a non-standard setup, you can walk through the manual setup steps
+below making adjustments as necessary to your needs.
 
 To setup your local environment you should create a virtualenv and install the
 necessary requirements::
@@ -54,9 +54,10 @@ necessary requirements::
     (ratom_api)$ pip install -r requirements/dev.txt
 
 Next, we'll set up our local environment variables. We use `django-dotenv
-<https://github.com/jpadilla/django-dotenv>`_ to help with this. It reads environment variables
-located in a file name ``.env`` in the top level directory of the project. The only variable we need
-to start is ``DJANGO_SETTINGS_MODULE``::
+<https://github.com/jpadilla/django-dotenv>`_ to help with this. It reads
+environment variables located in a file name ``.env`` in the top level directory
+of the project. The only variable we need to start is
+``DJANGO_SETTINGS_MODULE``::
 
     (ratom_api)$ cp ratom_api/settings/local.example.py ratom_api/settings/local.py
     (ratom_api)$ echo "DJANGO_SETTINGS_MODULE=ratom_api.settings.local" > .env
@@ -109,7 +110,7 @@ Development
 
 
 Deployment
-~~~~~~~~~~
+----------
 
 Deployment for this project is done by TravisCI on each merge to ``develop``.
 You can inspect the ``.travis.yml`` file to see how it's done, or to update the
