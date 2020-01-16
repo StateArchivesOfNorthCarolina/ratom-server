@@ -134,7 +134,6 @@ def import_psts(paths: List[str], clean: bool) -> None:
         account = get_account(Path(paths[0]))
         logger.warning(f"Deleting {account.title} account (if exists)")
         account.delete()
-        ratom.Processor.objects.filter(message=None).delete()
     for path in paths:
         importer = PstImporter(path, spacy_model)
         importer.run()
