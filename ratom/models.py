@@ -64,4 +64,3 @@ class Message(models.Model):
         if self.data:
             labels = list(self.data.get("labels", []))
         return labels
-        # return [tag.title for tag in self.tags.all()]
