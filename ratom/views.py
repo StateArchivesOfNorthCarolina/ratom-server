@@ -3,11 +3,13 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from django.conf import settings
 from django_elasticsearch_dsl_drf import constants, filter_backends
 from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
-from elasticsearch_dsl import DateHistogramFacet, RangeFacet, TermsFacet
+from elasticsearch_dsl import DateHistogramFacet, TermsFacet
 
 from .documents.message import MessageDocument
+from .search_utils import LoggingPageNumberPagination
 from .models import User, Account, Message
 from .serializers import (
     UserSerializer,
@@ -119,6 +121,8 @@ class MessageDocumentView(DocumentViewSet):
         filter_backends.FacetedSearchFilterBackend,
         filter_backends.HighlightBackend,
     ]
+    if settings.ELASTICSEARCH_LOG_QUERIES:
+        pagination_class = LoggingPageNumberPagination
 
     # Define search fields
     search_fields = (
@@ -133,7 +137,7 @@ class MessageDocumentView(DocumentViewSet):
             # "field": "labels.raw",
             "field": "labels",
             "facet": TermsFacet,
-            # "enabled": True,
+            "enabled": True,
         },
         "sent_date": {
             "field": "sent_date",
@@ -165,7 +169,7 @@ class MessageDocumentView(DocumentViewSet):
     }
 
     highlight_fields = {
-        "body": {"options": HIGHLIGHT_TAGS},
+        "body": {"enabled": True, "options": HIGHLIGHT_TAGS},
         "subject": {"options": HIGHLIGHT_TAGS},
         "msg_to": {"options": HIGHLIGHT_TAGS},
         "msg_from": {"options": HIGHLIGHT_TAGS},

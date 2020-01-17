@@ -55,6 +55,7 @@ class MessageDocumentSerializer(serializers.Serializer):
     body = serializers.CharField(read_only=True)
     directory = serializers.CharField(read_only=True)
     labels = serializers.SerializerMethodField()
+    highlight = serializers.SerializerMethodField()
 
     def get_labels(self, obj):
         """Get labels."""
@@ -63,15 +64,16 @@ class MessageDocumentSerializer(serializers.Serializer):
         else:
             return []
 
-    # account = serializers...
+    def get_highlight(self, obj):
+        if hasattr(obj.meta, "highlight"):
+            return obj.meta.highlight.__dict__["_d_"]
+        return {}
 
     class Meta(object):
         document = MessageDocument
-
         fields = (
             "id",
             "message_id",
-            # "account",
             "sent_date",
             "msg_from",
             "msg_to",
@@ -80,4 +82,5 @@ class MessageDocumentSerializer(serializers.Serializer):
             "body",
             "directory",
             "labels",
+            "highlight",
         )
