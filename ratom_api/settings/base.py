@@ -15,7 +15,6 @@ ADMINS = (
 
 INSTALLED_APPS = [
     "django.contrib.auth",
-    "corsheaders",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
@@ -25,9 +24,7 @@ INSTALLED_APPS = [
     "django.contrib.sitemaps",
     "django.contrib.postgres",
     "rest_framework",
-    # Django Elasticsearch integration
     "django_elasticsearch_dsl",
-    # Django REST framework Elasticsearch integration (this package)
     "django_elasticsearch_dsl_drf",
     "ratom",
 ]
@@ -35,7 +32,6 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -60,7 +56,6 @@ CORS_ALLOW_HEADERS = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    # "graphql_jwt.backends.JSONWebTokenBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
 
@@ -69,23 +64,27 @@ ELASTICSEARCH_INDEX_NAMES = {
     "ratom.documents.message": "message",
 }
 
+PAGINATION_PAGE_SIZE = 4
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    "PAGE_SIZE": 100,
+    "PAGE_SIZE": PAGINATION_PAGE_SIZE,
     "ORDERING_PARAM": "ordering",
 }
 
 # Elasticsearch configuration
+ELASTICSEARCH_URL = os.getenv("ELASTICSEARCH_URL", "localhost:9200")
 ELASTICSEARCH_DSL = {
-    "default": {"hosts": "localhost:9200"},
+    "default": {"hosts": ELASTICSEARCH_URL},
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=120),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=14),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
 }
 
 ROOT_URLCONF = "ratom_api.urls"

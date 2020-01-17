@@ -6,7 +6,6 @@ from rest_framework.response import Response
 from django_elasticsearch_dsl_drf import constants, filter_backends
 from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
 from elasticsearch_dsl import DateHistogramFacet, RangeFacet, TermsFacet
-from ratom.permissions import IsOwnerOrReadOnly
 
 from .documents.message import MessageDocument
 from .models import User, Account, Message
@@ -24,7 +23,6 @@ def user_detail(request):
     """
     Show details of single user
     """
-    print(request.headers)
     try:
         user_pk = request.user.pk
         user = User.objects.get(pk=user_pk)
