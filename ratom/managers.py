@@ -5,6 +5,10 @@ from django.contrib.postgres.search import (
 )
 from django.db import models
 
+""""
+Experimental?
+"""
+
 search_vectors = (
     SearchVector("msg_subject", weight="A")
     + SearchVector("msg_body", weight="B")

@@ -35,8 +35,8 @@ INSTALLED_APPS = [
     "django.contrib.sitemaps",
     "django.contrib.postgres",
     "django_elasticsearch_dsl",
-    "graphene_django",
     "simple_history",
+    "graphene_django",
     "ratom",
 ]
 

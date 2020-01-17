@@ -1,22 +1,41 @@
+from enum import Enum
 from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models
+from simple_history.models import HistoricalRecords
 from elasticsearch_dsl import Index
 
 from ratom.managers import MessageManager
-from simple_history.models import HistoricalRecords
+
+
+class FileImportStatus(Enum):
+    CREATED = "Created"
+    IMPORTING = "Importing"
+    COMPLETE = "Complete"
+    FAILED = "Failed"
+
+
+class UserTEnum(Enum):
+    ARCHIVIST = "Archivist"
+    RESEARCHER = "Researcher"
+
+
+# class RecordStatus(Enum):
+#     NON_RECORD = "Non Record"
+#     RECORD = "Record"
+#     RECORD_RES = "Restricted Record"
+#     RECORD_RED = "Redacted Record"
+#     RECORD_RES_RED = "Restricted and Redactions"
 
 
 class User(AbstractUser):
-    USER_CHOICES = (("ARCHIVIST", "Archivist"), ("RESEARCHER", "Researcher"))
-    user_type = models.CharField(max_length=32, choices=USER_CHOICES)
+    user_type = models.CharField(
+        max_length=32, choices=[(tag, tag.value) for tag in UserTEnum]
+    )
 
 
 class Account(models.Model):
     title = models.CharField(max_length=200)
-    collection_name = models.CharField(max_length=512)
-    date_of_first_message = models.DateField(null=True)
-    date_of_last_message = models.DateField(null=True)
     history = HistoricalRecords()
 
     def __str__(self) -> str:
@@ -24,15 +43,30 @@ class Account(models.Model):
 
 
 class File(models.Model):
-    filename = models.CharField(max_length=256, null=False)
-    accession_date = models.DateField(auto_now=False)
-    total_messages = models.IntegerField(null=True)
-    messages_processed = models.IntegerField(default=0)
-    date_of_first_message = models.DateField(null=True)
-    date_of_last_message = models.DateField(null=True)
-    axaem_id = models.IntegerField(null=True)
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    filename = models.CharField(max_length=200)
+    original_path = models.CharField(max_length=500)
+    reported_total_messages = models.IntegerField(null=True)
+    accession_date = models.DateField(null=True)
+    file_size = models.IntegerField(null=True)
+    md5_hash = models.CharField(max_length=32)
+    import_status = models.CharField(
+        max_length=32,
+        choices=[(tag, tag.value) for tag in FileImportStatus],
+        default=FileImportStatus.CREATED,
+    )
     history = HistoricalRecords()
 
+    class Meta:
+        unique_together = ["account", "filename"]
+
+    @property
+    def percent_complete(self) -> object:
+        pass
+
+
+# Keeping this in place since some GraphQl items depend at the moment.
+# This is however deprecated based on current modeling.
 class Processor(models.Model):
     processed = models.BooleanField(default=False)
     is_record = models.BooleanField(default=True)
@@ -44,60 +78,104 @@ class Processor(models.Model):
     )
 
 
+class RestrictionAuthority(models.Model):
+    authorities = ArrayField(base_field=models.CharField(max_length=128, blank=True))
+
+
+class Redaction(models.Model):
+    redacted_subject = models.TextField(null=True)
+    redacted_body = models.TextField(null=True)
+
+
+class MessagesNotProcessed(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_record__is_null=True)
+
+
+class MessagesHaveRestrictions(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(restrictions__is_null=False)
+
+
+class MessagesAreValid(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(data__errors__is_null=True)
+
+
 class Message(models.Model):
-    message_id = models.CharField(max_length=256, blank=True)
-    account = models.ForeignKey(Account, on_delete=models.CASCADE)
-    processor = models.OneToOneField(
-        Processor, on_delete=models.PROTECT, null=True, blank=True
+    """A model to store individual email messages.
+    The unique item in this model is the data field which will be a fairly
+    complex data structure.
+
+    EXAMPLE:
+        data= {
+            headers: [{
+                string: string,
+                ...,
+            }],
+            labels: {
+                nlp: [{
+                    string: string,
+                    ...,
+                }],
+                user: [{
+                    string: string,
+                    ...,
+                }],
+            },
+            errors: [string, string],
+            raw: string ## Text dump of an errored message,
+        }
+    """
+
+    source_id = models.CharField(max_length=256, blank=True)
+    file = models.ForeignKey(File, on_delete=models.PROTECT)
+    account = models.ForeignKey(Account, on_delete=models.PROTECT)
+    restrictions = models.ForeignKey(
+        RestrictionAuthority, null=True, on_delete=models.CASCADE
     )
-    sent_date = models.DateTimeField()
-    msg_from = models.TextField()
-    msg_to = models.TextField()
+    redaction = models.ForeignKey(Redaction, null=True, on_delete=models.CASCADE)
+    sent_date = models.DateTimeField(null=True)
+    msg_from = models.TextField(null=True)
+    msg_to = models.TextField(null=True)
     msg_cc = models.TextField(blank=True)
     msg_bcc = models.TextField(blank=True)
-    msg_subject = models.TextField()
-    msg_headers = models.TextField(blank=True)
+    msg_subject = models.TextField(blank=True)
     msg_body = models.TextField(blank=True)
-    msg_tagged_body = models.TextField(blank=True)
     directory = models.TextField(blank=True)
     data = JSONField(null=True, blank=True)
+    history = HistoricalRecords()
+
+    # Managers
+    objects = models.Manager()
+    unprocessed = MessagesNotProcessed()
+    restricted = MessagesHaveRestrictions()
+    valid = MessagesAreValid()
+
+
+def upload_directory_path(instance, filename):
     """
-    data = JSONField(null=True, blank=True)
-    # this seems to crash when using a simple model based query, as such:
-    class MessageType(DjangoObjectType):
-    class Meta:
-        model = Message
+    This is just stubbed out based on django examples. Will need to plan
+    how this will work with S3.
+    :param instance:
+    :param filename:
+    :return:
+    """
+    return f"{instance.hashed_name}"
+
+
+class Attachments(models.Model):
+    """A model to track email attachments
+    Attributes:
+        message: the message to which it was attached
+        file_name: it's reported filename
+        hashed_name: the md5 hash value of the binary (used for storage and dedupe)
+        mime_type: the reported mime_type of the attachment
+        upload = the location of the file (S3, local, ???).
     """
 
-    # objects = MessageManager()
-
-    # class Meta:
-    #     indexes = [GinIndex(fields=["data"])]
-
-
-class Entity(models.Model):
-
-    message = models.ForeignKey(
-        Message, related_name="entities", on_delete=models.CASCADE
-    )
-    label = models.CharField(max_length=128)
-    value = models.TextField()
-
-    class Meta:
-        verbose_name_plural = "Entities"
-        # indexes = [models.Index(fields=["label", "value"])]
-
-    def __str__(self) -> str:
-        return f"{self.label}: {self.value}"
-
-class MessageProcessingState(models.Model):
-    account = models.ForeignKey(Collection, null=False, on_delete=models.CASCADE)
-    folder_name = models.CharField(max_length=512, blank=True)
-    ingesting_folder = models.IntegerField(null=False)
-    ingesting_messages = ArrayField(models.IntegerField(), null=True)
-
-    class Meta:
-        unique_together = ['account', 'ingesting_folder']
-
-    def __str__(self) -> str:
-        return f"folder_id: {self.ingesting_folder}({len(self.ingesting_messages)})"
+    message = models.ForeignKey(Message, on_delete=models.PROTECT)
+    file_name = models.CharField(max_length=256, blank=True)
+    hashed_name = models.CharField(max_length=32, blank=False)
+    mime_type = models.CharField(max_length=64)
+    upload = models.FileField(upload_to=upload_directory_path)

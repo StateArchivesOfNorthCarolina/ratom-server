@@ -13,7 +13,7 @@ from graphene_elastic import (
 )
 
 
-from .models import User, Processor, Message, Collection
+from .models import User, Processor, Message, Account
 from .documents import MessageDocument
 
 
@@ -34,7 +34,7 @@ class UserType(DjangoObjectType):
 
 class CollectionType(DjangoObjectType):
     class Meta:
-        model = Collection
+        model = Account
         interfaces = (relay.Node,)
 
 

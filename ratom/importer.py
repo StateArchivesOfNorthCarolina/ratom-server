@@ -32,14 +32,15 @@ title_re = re.compile(r"[a-zA-Z_]+")
 
 def clean_null_chars(obj: str) -> str:
     """Cleans strings of postgres breaking null chars.
-    
+
     Arguments:
-        obj {str} 
-    
+        obj {str}
+
     Returns:
         str
     """
-    return re.sub('\x00', "", obj)
+    return re.sub("\x00", "", obj)
+
 
 class MessageHeader:
     """Provides a consistent interface to the mail and MIME headers from a pypff message.
@@ -54,7 +55,9 @@ class MessageHeader:
         """[summary]
         """
         if self.raw_headers:
-            decomp = re.split(r'\r\n', re.sub(r'\r\n\s', '\t', self.raw_headers.strip()))
+            decomp = re.split(
+                r"\r\n", re.sub(r"\r\n\s", "\t", self.raw_headers.strip())
+            )
             for header_item in decomp:
                 s = header_item.split(":", 1)
                 self.parsed_headers[s[0]] = s[1]
@@ -86,7 +89,7 @@ class MessageManager:
     def _set_in_process_map(self) -> None:
         qs = ratom.MessageProcessingState.objects.filter(account=self.account_id)
         if qs:
-            for mps in qs:   # type: ratom.MessageProcessingState
+            for mps in qs:  # type: ratom.MessageProcessingState
                 self.account_map[mps.ingesting_folder] = mps.ingesting_messages
 
     def build_map(self, folder: pypff.folder):
@@ -101,7 +104,9 @@ class MessageManager:
     def process_messages_for_account(self, archive: PffArchive) -> pypff.message:
         try:
             for folder, messages in self.account_map.items():
-                self.folder_path = self.get_folder_abs_path(archive.tree.get_node(folder), archive)
+                self.folder_path = self.get_folder_abs_path(
+                    archive.tree.get_node(folder), archive
+                )
                 self.current_folder = folder
                 while True:
                     try:
@@ -122,22 +127,22 @@ class MessageManager:
             ratom.MessageProcessingState.update_or_create(
                 account=self.account_id,
                 ingesting_folder=self.current_folder,
-                ingesting_messages=remaining_ids
+                ingesting_messages=remaining_ids,
             )
 
-    def get_folder_abs_path(self, folder: pypff.folder, archive: PffArchive) -> Path:
-        """Traverse tree node parent's to build absolute path"""
-        path = [folder.tag]
-        parent = archive.tree.get_node(
-            archive.tree.get_node(folder.identifier).bpointer
-        )
-        while parent:
-            tag = parent.tag if parent.tag != "root" else ""
-            path.insert(0, tag)
-            parent = archive.tree.get_node(
-                archive.tree.get_node(parent.identifier).bpointer
-            )
-        return Path("/".join(path))
+    # def get_folder_abs_path(self, folder: pypff.folder, archive: PffArchive) -> Path:
+    #     """Traverse tree node parent's to build absolute path"""
+    #     path = [folder.tag]
+    #     parent = archive.tree.get_node(
+    #         archive.tree.get_node(folder.identifier).bpointer
+    #     )
+    #     while parent:
+    #         tag = parent.tag if parent.tag != "root" else ""
+    #         path.insert(0, tag)
+    #         parent = archive.tree.get_node(
+    #             archive.tree.get_node(parent.identifier).bpointer
+    #         )
+    #     return Path("/".join(path))
 
     def keyboard_interrupt_handler(signal: signal, frame: object) -> None:
         logger.fatal("Caught Keyboard interrupt: saving state")
@@ -145,102 +150,116 @@ class MessageManager:
 
 
 class PstImporter:
-    
-    def __init__(self, path: str, spacy_model: Language) -> None:
-        self.path = Path(path)
+    def __init__(self, file: ratom.File, spacy_model: Language) -> None:
+        self.file = file
+        self.path = file.original_path
         self.spacy_model = spacy_model
-        logger.info(f"PstImporter running on {self.path.name}")
+        logger.info(f"PstImporter running on {file.filename}")
         logger.info(f"Opening archive")
         self.archive = PffArchive(self.path)
         logger.info(f"Opened {self.archive.message_count} messages in archive")
+        self.errors = []
+        self.data = {}
 
     def run(self) -> None:
-        self._create_collection()
-        # import pudb; pudb.set_trace()
-        message_manager = MessageManager(self.collection)
-        if not message_manager.account_map:
-            logger.info("Traversing archive folders")
-            for folder in self.archive.folders():  # type: pypff.folder
-                if not folder.name:  # skip root node
-                    continue
-                logger.info(
-                    f"Scanning {folder.number_of_sub_messages} messages in folder {folder.name}"
-                )
-                if folder.number_of_sub_messages == 0:
-                    continue
-                message_manager.build_map(folder)
-        self._create_messages(message_manager)
+        # for folder in self.archive.folders():
+        #     if not folder.name:  # skip root node
+        #         continue
+        #     logger.info(
+        #         f"Scanning {folder.number_of_sub_messages} messages in folder {folder.name}"
+        #     )
+        #     folder_path = self.get_folder_abs_path(folder)
+        self._create_messages()
 
-    def _create_collection(self) -> None:
-        self.collection = get_collection(self.path)
+    def get_folder_abs_path(self, folder: pypff.folder) -> str:
+        """Traverse tree node parent's to build absolution path"""
+        path = [folder.name]
+        parent = self.archive.tree.get_node(
+            self.archive.tree.get_node(folder.identifier).bpointer
+        )
+        while parent:
+            tag = parent.tag if parent.tag != "root" else ""
+            path.insert(0, tag)
+            parent = self.archive.tree.get_node(
+                self.archive.tree.get_node(parent.identifier).bpointer
+            )
+        return "/".join(path)
 
-    def _create_messages(self, message_manager: MessageManager) -> None:
-        for m in message_manager.process_messages_for_account(self.archive):
+    def _create_messages(self) -> None:
+        for m in self.archive.messages():
             try:
                 headers = MessageHeader(m.transport_headers)
             except AttributeError as e:
                 logger.exception(f"{e}")
-                message_manager.add_failed_id(m.id)
-            msg_from = headers.get_header('from')
-            msg_to = headers.get_header('to')
+                self.errors.append(e)
+            msg_from = headers.get_header("from")
+            msg_to = headers.get_header("to")
             msg_body = self.archive.format_message(m, with_headers=False)
-            msg_subject = headers.get_header('subject')
+            msg_subject = headers.get_header("subject")
             try:
                 sent_date = make_aware(m.delivery_time)
             except pytz.NonExistentTimeError:
                 logger.exception("Failed to make datetime aware")
-                message_manager.add_failed_id(m.id)
+                self.errors.append("Failed to make datetime aware")
             except pytz.AmbiguousTimeError:
                 logger.exception("Ambiguous Time Could not parse")
-                message_manager.add_failed_id(m.id)
+                self.errors.append("Ambiguous time could not parse")
             # spaCy
             spacy_text = f"{msg_subject}\n{msg_body}"
             try:
                 document = self.spacy_model(spacy_text)
             except ValueError:
                 logger.exception(f"spaCy error")
-                message_manager.add_failed_id(m.id)
-            # spaCy jsonb (idea #1)
+                self.errors.append("spaCy Error")
             labels = set()
             for entity in document.ents:
                 labels.add(entity.label_)
 
             msg_data = {"labels": list(labels)}
+            msg_data["headers"] = headers.raw_headers
             try:
                 ratom_message = ratom.Message.objects.create(
-                    message_id=m.identifier,
+                    source_id=m.identifier,
+                    file=self.file,
+                    account=self.file.account,
                     sent_date=sent_date,
                     msg_to=msg_to,
                     msg_from=msg_from,
                     msg_subject=msg_subject,
                     msg_body=clean_null_chars(msg_body),
-                    msg_headers=headers.get_full_headers(),
-                    collection=self.collection,
-                    directory=str(message_manager.folder_path),
+                    directory=headers.parsed_headers.get("folder", ""),
                     data=msg_data,
                 )  # type: ratom.Message
             except IntegrityError as e:
                 logger.exception(f"{m.identifier}: \t {e}")
-                message_manager.add_failed_id(m.id)
             except ValueError as e:
                 logger.exception(f"{m.identifier}: \t {e}")
-                message_manager.add_failed_id(m.id)
+
+            if m.attachments:
+                # Store attachments
+                print()
 
 
+def get_account(account: str) -> ratom.Account:
+    return ratom.Account.objects.get_or_create(title=account)
 
-def get_collection(path: Path) -> ratom.Collection:
-    title = path.with_suffix("").name
-    # attempt to clean title to just be the name
-    match = title_re.match(path.name)
-    if match:
-        title = match.group(0).rstrip("_")
-    collection, _ = ratom.Collection.objects.get_or_create(
-        title=title, accession_date=dt.date(2019, 11, 18)
+
+def get_files(account: ratom.Account) -> Union[List[ratom.File], List]:
+    if account.file_set:
+        return account.file_set
+    return []
+
+
+def create_file(path: Path, account: ratom.Account) -> ratom.File:
+    return ratom.File.objects.get_or_create(
+        account=account,
+        filename=str(path.name),
+        original_path=str(path.absolute()),
+        file_size=path.stat().st_size,
     )
-    return collection
 
 
-def import_psts(paths: List[str], clean: bool) -> None:
+def import_psts(paths: List[Path], account: str, clean: bool) -> None:
     logger.info("Import process started")
     spacy_model_name = "en_core_web_sm"
     logger.info(f"Loading {spacy_model_name} spacy model")
@@ -249,11 +268,17 @@ def import_psts(paths: List[str], clean: bool) -> None:
     logger.info(
         f"Loaded spacy model: {spacy_model_name}, version: {spacy_model_version}"
     )
+    import pudb
+
+    pudb.set_trace()
+    account, created = get_account(account)
     if clean:
-        collection = get_collection(Path(paths[0]))
-        logger.warning(f"Deleting {collection.title} collection (if exists)")
-        collection.delete()
-        ratom.Processor.objects.filter(message=None).delete()
+        files = get_files(account)
+        logger.warning(f"Deleting {account.title} Account (if exists)")
+        for f in files:
+            f.delete()
+        account.delete()
     for path in paths:
-        importer = PstImporter(path, spacy_model)
+        file, created = create_file(path, account)
+        importer = PstImporter(file, spacy_model)
         importer.run()
