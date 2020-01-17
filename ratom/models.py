@@ -62,6 +62,9 @@ class File(models.Model):
     class Meta:
         unique_together = ["account", "filename"]
 
+    def __str__(self):
+        return f"{self.account.title}-{self.filename}"
+
     @property
     def percent_complete(self) -> object:
         pass
@@ -101,7 +104,7 @@ class MessagesHaveRestrictions(models.Manager):
 
 class MessagesAreValid(models.Manager):
     def get_queryset(self):
-        return super().get_queryset().filter(data__errors__is_null=True)
+        return super().get_queryset().filter(data_error_isnull=True)
 
 
 class Message(models.Model):
@@ -195,6 +198,9 @@ class Attachments(models.Model):
     hashed_name = models.CharField(max_length=32, blank=False)
     mime_type = models.CharField(max_length=64)
     upload = models.FileField(upload_to=upload_directory_path)
+
+    def __str__(self):
+        return self.file_name
 
     @property
     def labels_indexing(self):

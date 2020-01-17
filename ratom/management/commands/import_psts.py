@@ -24,7 +24,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if options["recursive"]:
-            # import pudb; pudb.set_trace()
             for p in Path(options["paths"][0]).glob("**/*.pst"):
                 import_psts(paths=[p], account=p.parent.stem, clean=options["clean"])
         else:

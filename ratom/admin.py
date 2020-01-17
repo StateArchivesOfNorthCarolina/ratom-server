@@ -14,7 +14,7 @@ class MessageAdmin(admin.ModelAdmin):
         "msg_to",
         "msg_from",
         "sent_date",
-        "subject",
+        "msg_subject",
         "account",
     )
     list_filter = ("sent_date", "account")

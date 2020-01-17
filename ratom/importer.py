@@ -7,6 +7,8 @@ from typing import Pattern, Union, List
 from email import headerregistry
 from collections import deque
 import signal
+import mimetypes
+from hashlib import md5
 
 import pypff
 import pytz
@@ -60,93 +62,13 @@ class MessageHeader:
             )
             for header_item in decomp:
                 s = header_item.split(":", 1)
-                self.parsed_headers[s[0]] = s[1]
+                self.parsed_headers[s[0]] = s[1].lstrip()
 
     def get_header(self, key: str) -> str:
         return self.parsed_headers.get(key, "")
 
     def get_full_headers(self) -> str:
         return json.dumps(self.parsed_headers)
-
-
-class MessageManager:
-    def __init__(self, account_id: int) -> None:
-        self.account_id = account_id
-        self.folder_path: Union[str, None] = None
-        self.folder_id: Union[int, None] = None
-        self.folder_ids: deque[int] = deque()
-        self.message_ids: deque[int] = deque()
-        self.failed_ids: deque[int] = deque()
-        self.account_map: Dict[int, deque[int]] = {}
-        self.current_folder: Union[int, None] = None
-        self.current_messages: Union[deque[int], None] = None
-        self._set_in_process_map()
-
-    def add_failed_id(self, msg_id: int):
-        if msg_id not in self.failed_ids:
-            self.failed_ids.append(msg_id)
-
-    def _set_in_process_map(self) -> None:
-        qs = ratom.MessageProcessingState.objects.filter(account=self.account_id)
-        if qs:
-            for mps in qs:  # type: ratom.MessageProcessingState
-                self.account_map[mps.ingesting_folder] = mps.ingesting_messages
-
-    def build_map(self, folder: pypff.folder):
-        self.current_folder = folder.identifier
-        self.current_messages = deque()
-        for message in folder.sub_messages:  # type: pypff.message
-            self.current_messages.append(message.identifier)
-        self.account_map[self.current_folder] = self.current_messages
-        self.current_messages = deque()
-        self.current_folder = None
-
-    def process_messages_for_account(self, archive: PffArchive) -> pypff.message:
-        try:
-            for folder, messages in self.account_map.items():
-                self.folder_path = self.get_folder_abs_path(
-                    archive.tree.get_node(folder), archive
-                )
-                self.current_folder = folder
-                while True:
-                    try:
-                        mess = messages.popleft()
-                        mess = archive.tree.get_node(mess)
-                        yield mess.data
-                    except IndexError:
-                        break
-                self.account_map[folder] = messages
-        except Exception as e:
-            pass
-        finally:
-            self.save_state()
-
-    def save_state(self):
-        remaining_ids = self.failed_ids + self.current_messages
-        if remaining_ids:
-            ratom.MessageProcessingState.update_or_create(
-                account=self.account_id,
-                ingesting_folder=self.current_folder,
-                ingesting_messages=remaining_ids,
-            )
-
-    # def get_folder_abs_path(self, folder: pypff.folder, archive: PffArchive) -> Path:
-    #     """Traverse tree node parent's to build absolute path"""
-    #     path = [folder.tag]
-    #     parent = archive.tree.get_node(
-    #         archive.tree.get_node(folder.identifier).bpointer
-    #     )
-    #     while parent:
-    #         tag = parent.tag if parent.tag != "root" else ""
-    #         path.insert(0, tag)
-    #         parent = archive.tree.get_node(
-    #             archive.tree.get_node(parent.identifier).bpointer
-    #         )
-    #     return Path("/".join(path))
-
-    def keyboard_interrupt_handler(signal: signal, frame: object) -> None:
-        logger.fatal("Caught Keyboard interrupt: saving state")
-        # save the object
 
 
 class PstImporter:
@@ -160,6 +82,7 @@ class PstImporter:
         logger.info(f"Opened {self.archive.message_count} messages in archive")
         self.errors = []
         self.data = {}
+        self.seen_hashes = []
 
     def run(self) -> None:
         # for folder in self.archive.folders():
@@ -185,8 +108,20 @@ class PstImporter:
             )
         return "/".join(path)
 
+    def _hash_attachment(self, attachment: pypff.attachment):
+        hasher = md5()
+        while True:
+            buff = attachment.read_buffer(1024)
+            if buff:
+                hasher.update(buff)
+                continue
+            break
+        return hasher.hexdigest()
+
     def _create_messages(self) -> None:
         for m in self.archive.messages():
+            self.errors = []
+            self.data = {}
             try:
                 headers = MessageHeader(m.transport_headers)
             except AttributeError as e:
@@ -204,8 +139,9 @@ class PstImporter:
             except pytz.AmbiguousTimeError:
                 logger.exception("Ambiguous Time Could not parse")
                 self.errors.append("Ambiguous time could not parse")
-            # spaCy
+
             spacy_text = f"{msg_subject}\n{msg_body}"
+
             try:
                 document = self.spacy_model(spacy_text)
             except ValueError:
@@ -216,7 +152,10 @@ class PstImporter:
                 labels.add(entity.label_)
 
             msg_data = {"labels": list(labels)}
-            msg_data["headers"] = headers.raw_headers
+            msg_data["headers"] = headers.get_full_headers()
+            if self.errors:
+                msg_data["errors"] = "\t".join(self.errors)
+
             try:
                 ratom_message = ratom.Message.objects.create(
                     source_id=m.identifier,
@@ -234,10 +173,30 @@ class PstImporter:
                 logger.exception(f"{m.identifier}: \t {e}")
             except ValueError as e:
                 logger.exception(f"{m.identifier}: \t {e}")
+                ratom_message = ratom.Message.objects.create(
+                    source_id=m.identifier,
+                    file=self.file,
+                    account=self.file.account,
+                    msg_to=msg_to,
+                    msg_from=msg_from,
+                    msg_subject=msg_subject,
+                    msg_body=clean_null_chars(msg_body),
+                    directory=headers.parsed_headers.get("folder", ""),
+                    data=msg_data,
+                )
 
-            if m.attachments:
-                # Store attachments
-                print()
+            if ratom_message:
+                for a in m.attachments:  # type: pypff.attachment
+                    mime, encoding = mimetypes.guess_type(a.name)
+                    if not mime:
+                        mime = "Unknown"
+                    attachment = ratom.Attachments.objects.create(
+                        message=ratom_message,
+                        file_name=a.name,
+                        mime_type=mime,
+                        hashed_name=self._hash_attachment(a),
+                    )
+                    print(a.name)
 
 
 def get_account(account: str) -> ratom.Account:
@@ -268,9 +227,6 @@ def import_psts(paths: List[Path], account: str, clean: bool) -> None:
     logger.info(
         f"Loaded spacy model: {spacy_model_name}, version: {spacy_model_version}"
     )
-    import pudb
-
-    pudb.set_trace()
     account, created = get_account(account)
     if clean:
         files = get_files(account)
@@ -282,3 +238,5 @@ def import_psts(paths: List[Path], account: str, clean: bool) -> None:
         file, created = create_file(path, account)
         importer = PstImporter(file, spacy_model)
         importer.run()
+        file.reported_total_messages = importer.archive.message_count
+        file.save()
