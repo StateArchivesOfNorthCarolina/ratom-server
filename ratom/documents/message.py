@@ -25,7 +25,6 @@ class MessageDocument(Document):
     subject = fields.TextField()
     headers = fields.TextField()
     body = fields.TextField()
-
     sent_date = fields.DateField()
 
     labels = fields.KeywordField(
@@ -51,43 +50,5 @@ class MessageDocument(Document):
 
     class Django(object):
         model = Message
-        # fields = [
-        #     "msg_from",
-        #     "msg_to",
-        #     "subject",
-        #     "body",
-        #     "sent_date",
-        #     "labels",
-        # ]
         # True disables auto-indexing
         ignore_signals = True
-
-        # analyzer=html_strip,
-        # fields={
-        #     'raw': fields.StringField(analyzer='keyword'),
-        # }
-
-        # analyzer=html_strip,
-        # fields={
-        #     'raw': fields.StringField(analyzer='keyword'),
-        # }
-
-        # analyzer=html_strip,
-        # fields={
-        #     'raw': fields.StringField(analyzer='keyword'),
-        # }
-
-        # analyzer=html_strip,
-        # fields={
-        #     'raw': fields.StringField(analyzer='keyword'),
-        # }
-
-        # analyzer=html_strip,
-        # fields={
-        #     'raw': fields.StringField(analyzer='keyword'),
-        # }
-
-        # analyzer=html_strip,
-        # fields={
-        #     'raw': fields.StringField(analyzer='keyword'),
-        # }
