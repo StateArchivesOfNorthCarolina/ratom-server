@@ -55,6 +55,7 @@ class File(models.Model):
         choices=[(tag, tag.value) for tag in FileImportStatus],
         default=FileImportStatus.CREATED,
     )
+    date_imported = models.DateTimeField(auto_now_add=True)
     history = HistoricalRecords()
 
     class Meta:
@@ -83,8 +84,8 @@ class RestrictionAuthority(models.Model):
 
 
 class Redaction(models.Model):
-    redacted_subject = models.TextField(null=True)
-    redacted_body = models.TextField(null=True)
+    redacted_subject = models.TextField(blank=True)
+    redacted_body = models.TextField(blank=True)
 
 
 class MessagesNotProcessed(models.Manager):
@@ -128,7 +129,7 @@ class Message(models.Model):
         }
     """
 
-    source_id = models.CharField(max_length=256, blank=True)
+    source_id = models.CharField(max_length=256)
     file = models.ForeignKey(File, on_delete=models.PROTECT)
     account = models.ForeignKey(Account, on_delete=models.PROTECT)
     restrictions = models.ForeignKey(
@@ -136,8 +137,8 @@ class Message(models.Model):
     )
     redaction = models.ForeignKey(Redaction, null=True, on_delete=models.CASCADE)
     sent_date = models.DateTimeField(null=True)
-    msg_from = models.TextField(null=True)
-    msg_to = models.TextField(null=True)
+    msg_from = models.TextField(blank=True)
+    msg_to = models.TextField(blank=True)
     msg_cc = models.TextField(blank=True)
     msg_bcc = models.TextField(blank=True)
     msg_subject = models.TextField(blank=True)
