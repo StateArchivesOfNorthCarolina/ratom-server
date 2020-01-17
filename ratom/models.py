@@ -4,6 +4,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models
 from simple_history.models import HistoricalRecords
 from elasticsearch_dsl import Index
+from django_elasticsearch_dsl_drf.wrappers import dict_to_obj
 
 from ratom.managers import MessageManager
 
@@ -153,6 +154,20 @@ class Message(models.Model):
     restricted = MessagesHaveRestrictions()
     valid = MessagesAreValid()
 
+    @property
+    def account_indexing(self):
+        """Account data (nested) for indexing.
+        Example:
+            >>> mapping = {
+            >>>     "account": {
+            >>>         "title": "Gov Purdue"
+            >>>     }
+            >>> }
+
+        :return:
+        """
+        return dict_to_obj({"title": self.account.title,})
+
 
 def upload_directory_path(instance, filename):
     """
@@ -180,3 +195,11 @@ class Attachments(models.Model):
     hashed_name = models.CharField(max_length=32, blank=False)
     mime_type = models.CharField(max_length=64)
     upload = models.FileField(upload_to=upload_directory_path)
+
+    @property
+    def labels_indexing(self):
+        labels = []
+        if self.data:
+            labels = list(self.data.get("labels", []))
+        return labels
+        # return [tag.title for tag in self.tags.all()]
