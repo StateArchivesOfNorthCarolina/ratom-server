@@ -59,11 +59,6 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
 
-
-ELASTICSEARCH_INDEX_NAMES = {
-    "ratom.documents.message": "message",
-}
-
 PAGINATION_PAGE_SIZE = 4
 
 REST_FRAMEWORK = {
@@ -81,6 +76,10 @@ ELASTICSEARCH_URL = os.getenv("ELASTICSEARCH_URL", "localhost:9200")
 ELASTICSEARCH_DSL = {
     "default": {"hosts": ELASTICSEARCH_URL},
 }
+ELASTICSEARCH_INDEX_NAMES = {
+    "ratom.documents.message": "message",
+}
+ELASTICSEARCH_LOG_QUERIES = os.getenv("ELASTICSEARCH_LOG_QUERIES", "false") == "true"
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
