@@ -170,7 +170,7 @@ class MessageDocumentView(DocumentViewSet):
 
     highlight_fields = {
         "body": {"enabled": True, "options": HIGHLIGHT_TAGS},
-        "subject": {"options": HIGHLIGHT_TAGS},
+        "subject": {"enabled": True, "options": HIGHLIGHT_TAGS},
         "msg_to": {"options": HIGHLIGHT_TAGS},
         "msg_from": {"options": HIGHLIGHT_TAGS},
     }
