@@ -1,0 +1,15 @@
+BEGIN;
+TRUNCATE "django_session", "auth_group", "ratom_user_groups", "auth_permission", "ratom_user", "django_admin_log", "ratom_collection", "ratom_processor", "ratom_entity", "ratom_user_user_permissions", "ratom_message", "auth_group_permissions", "django_content_type";
+SELECT setval(pg_get_serial_sequence('"auth_permission"','id'), 1, false);
+SELECT setval(pg_get_serial_sequence('"auth_group"','id'), 1, false);
+SELECT setval(pg_get_serial_sequence('"auth_group_permissions"','id'), 1, false);
+SELECT setval(pg_get_serial_sequence('"django_content_type"','id'), 1, false);
+SELECT setval(pg_get_serial_sequence('"django_admin_log"','id'), 1, false);
+SELECT setval(pg_get_serial_sequence('"ratom_user"','id'), 1, false);
+SELECT setval(pg_get_serial_sequence('"ratom_user_groups"','id'), 1, false);
+SELECT setval(pg_get_serial_sequence('"ratom_user_user_permissions"','id'), 1, false);
+SELECT setval(pg_get_serial_sequence('"ratom_collection"','id'), 1, false);
+SELECT setval(pg_get_serial_sequence('"ratom_processor"','id'), 1, false);
+SELECT setval(pg_get_serial_sequence('"ratom_message"','id'), 1, false);
+SELECT setval(pg_get_serial_sequence('"ratom_entity"','id'), 1, false);
+COMMIT;

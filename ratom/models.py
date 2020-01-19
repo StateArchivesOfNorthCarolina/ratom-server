@@ -132,7 +132,7 @@ class Message(models.Model):
                     ...,
                 }],
             },
-            errors: [string, string],
+            errors: {string: string}, stringified
             raw: string ## Text dump of an errored message,
         }
     """
@@ -175,6 +175,10 @@ class Message(models.Model):
         """
         return dict_to_obj({"title": self.account.title,})
 
+    @property
+    def labels(self):
+        return self.data.get("labels", [""])
+
 
 def upload_directory_path(instance, filename):
     """
@@ -205,10 +209,3 @@ class Attachments(models.Model):
 
     def __str__(self):
         return self.file_name
-
-    @property
-    def labels_indexing(self):
-        labels = []
-        if self.data:
-            labels = list(self.data.get("labels", []))
-        return labels
