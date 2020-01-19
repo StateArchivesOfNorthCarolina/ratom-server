@@ -19,23 +19,13 @@ class MessageDocument(Document):
     """Message Elasticsearch Document"""
 
     id = fields.IntegerField(attr="id")
-    message_id = fields.TextField()
+    source_id = fields.TextField()
     msg_from = fields.TextField()
     msg_to = fields.TextField()
-    subject = fields.TextField()
-    headers = fields.TextField()
-    body = fields.TextField()
-
+    msg_subject = fields.TextField()
+    msg_body = fields.TextField()
     sent_date = fields.DateField()
-
-    labels = fields.KeywordField(
-        attr="labels_indexing",
-        fields={
-            "raw": fields.TextField(analyzer="keyword", multi=True),
-            "suggest": fields.CompletionField(multi=True),
-        },
-        multi=True,
-    )
+    labels = fields.ListField(fields.KeywordField())
 
     account = fields.NestedField(
         attr="account_indexing",

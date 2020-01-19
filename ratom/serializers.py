@@ -22,7 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
 class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ["id", "title", "accession_date"]
+        fields = ["id", "title"]
 
 
 class MessageSerializer(serializers.ModelSerializer):
@@ -30,13 +30,12 @@ class MessageSerializer(serializers.ModelSerializer):
         model = Message
         fields = [
             "id",
-            "message_id",
+            "source_id",
             "sent_date",
             "msg_from",
             "msg_to",
-            "subject",
-            "headers",
-            "body",
+            "msg_subject",
+            "msg_body",
             "directory",
             "data",
         ]
@@ -46,13 +45,12 @@ class MessageDocumentSerializer(serializers.Serializer):
     """Serializer for the Message document."""
 
     id = serializers.IntegerField(read_only=True)
-    message_id = serializers.CharField(read_only=True)
+    source_id = serializers.CharField(read_only=True)
     sent_date = serializers.DateTimeField(read_only=True)
     msg_from = serializers.CharField(read_only=True)
     msg_to = serializers.CharField(read_only=True)
-    subject = serializers.CharField(read_only=True)
-    headers = serializers.CharField(read_only=True)
-    body = serializers.CharField(read_only=True)
+    msg_subject = serializers.CharField(read_only=True)
+    msg_body = serializers.CharField(read_only=True)
     directory = serializers.CharField(read_only=True)
     labels = serializers.SerializerMethodField()
 
@@ -70,14 +68,13 @@ class MessageDocumentSerializer(serializers.Serializer):
 
         fields = (
             "id",
-            "message_id",
+            "source_id",
             # "account",
             "sent_date",
             "msg_from",
             "msg_to",
-            "subject",
-            "headers",
-            "body",
+            "msg_subject",
+            "msg_body",
             "directory",
             "labels",
         )

@@ -132,7 +132,7 @@ class Message(models.Model):
                     ...,
                 }],
             },
-            errors: [string, string],
+            errors: {string: string}, stringified
             raw: string ## Text dump of an errored message,
         }
     """
@@ -174,6 +174,10 @@ class Message(models.Model):
         :return:
         """
         return dict_to_obj({"title": self.account.title,})
+
+    @property
+    def labels(self):
+        return self.data.get("labels", [""])
 
 
 def upload_directory_path(instance, filename):

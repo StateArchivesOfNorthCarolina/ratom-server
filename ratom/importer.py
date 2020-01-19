@@ -91,28 +91,29 @@ class PstImporter:
         self.seen_hashes = []
 
     def run(self) -> None:
-        # for folder in self.archive.folders():
-        #     if not folder.name:  # skip root node
-        #         continue
-        #     logger.info(
-        #         f"Scanning {folder.number_of_sub_messages} messages in folder {folder.name}"
-        #     )
-        #     folder_path = self.get_folder_abs_path(folder)
-        self._create_messages()
+        for folder in self.archive.folders():
+            if not folder.name:  # skip root node
+                continue
+            logger.info(
+                f"Scanning {folder.number_of_sub_messages} messages in folder {folder.name}"
+            )
+            if folder.get_number_of_sub_messages() == 0:
+                continue
+            self._create_messages(folder)
 
-    # def get_folder_abs_path(self, folder: pypff.folder) -> str:
-    #     """Traverse tree node parent's to build absolution path"""
-    #     path = [folder.name]
-    #     parent = self.archive.tree.get_node(
-    #         self.archive.tree.get_node(folder.identifier).bpointer
-    #     )
-    #     while parent:
-    #         tag = parent.tag if parent.tag != "root" else ""
-    #         path.insert(0, tag)
-    #         parent = self.archive.tree.get_node(
-    #             self.archive.tree.get_node(parent.identifier).bpointer
-    #         )
-    #     return "/".join(path)
+    def get_folder_abs_path(self, folder: pypff.folder) -> str:
+        """Traverse tree node parent's to build absolution path"""
+        path = [folder.name]
+        parent = self.archive.tree.get_node(
+            self.archive.tree.get_node(folder.identifier).bpointer
+        )
+        while parent:
+            tag = parent.tag if parent.tag != "root" else ""
+            path.insert(0, tag)
+            parent = self.archive.tree.get_node(
+                self.archive.tree.get_node(parent.identifier).bpointer
+            )
+        return "/".join(path)
 
     def _save_attachment(self, attachment: pypff.attachment) -> str:
         """Saves the attachment if it does not already exist.
@@ -135,8 +136,19 @@ class PstImporter:
             default_storage.save(path, fo)
         return hex_digest
 
-    def _create_messages(self) -> None:
-        for m in self.archive.messages():
+    def _create_messages(self, folder: pypff.folder) -> None:
+        """create_messages
+        Takes a pypff folder and attempts to ingest its messages.
+
+        Any errors are stored in a dict. If a message has errors this dict will be added to the
+        msg_data field.
+
+
+        :param folder: pypff.folder
+        :return:
+        """
+        folder_path = self.get_folder_abs_path(folder)
+        for m in folder.sub_messages:
             logger.info(f"Ingesting: {m.subject}")
             self.errors = []
             self.data = {}
@@ -184,7 +196,7 @@ class PstImporter:
                     msg_from=msg_from,
                     msg_subject=msg_subject,
                     msg_body=clean_null_chars(msg_body),
-                    directory=headers.parsed_headers.get("folder", ""),
+                    directory=folder_path,
                     data=msg_data,
                 )  # type: ratom.Message
             except IntegrityError as e:
@@ -199,7 +211,7 @@ class PstImporter:
                     msg_from=msg_from,
                     msg_subject=msg_subject,
                     msg_body=clean_null_chars(msg_body),
-                    directory=headers.parsed_headers.get("folder", ""),
+                    directory=folder_path,
                     data=msg_data,
                 )
 
