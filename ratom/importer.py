@@ -1,4 +1,5 @@
 import datetime as dt
+import io
 import json
 import logging
 import re
@@ -13,6 +14,9 @@ from hashlib import md5
 import pypff
 import pytz
 from django.db.utils import IntegrityError
+from django.conf import settings
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from typing import List, Set, Dict, Tuple, Optional, ByteString
 from spacy.language import Language
 from libratom.lib.entities import load_spacy_model
@@ -79,6 +83,8 @@ class PstImporter:
         logger.info(f"PstImporter running on {file.filename}")
         logger.info(f"Opening archive")
         self.archive = PffArchive(self.path)
+        file.reported_total_messages = self.archive.message_count
+        file.save()
         logger.info(f"Opened {self.archive.message_count} messages in archive")
         self.errors = []
         self.data = {}
@@ -94,32 +100,44 @@ class PstImporter:
         #     folder_path = self.get_folder_abs_path(folder)
         self._create_messages()
 
-    def get_folder_abs_path(self, folder: pypff.folder) -> str:
-        """Traverse tree node parent's to build absolution path"""
-        path = [folder.name]
-        parent = self.archive.tree.get_node(
-            self.archive.tree.get_node(folder.identifier).bpointer
-        )
-        while parent:
-            tag = parent.tag if parent.tag != "root" else ""
-            path.insert(0, tag)
-            parent = self.archive.tree.get_node(
-                self.archive.tree.get_node(parent.identifier).bpointer
-            )
-        return "/".join(path)
+    # def get_folder_abs_path(self, folder: pypff.folder) -> str:
+    #     """Traverse tree node parent's to build absolution path"""
+    #     path = [folder.name]
+    #     parent = self.archive.tree.get_node(
+    #         self.archive.tree.get_node(folder.identifier).bpointer
+    #     )
+    #     while parent:
+    #         tag = parent.tag if parent.tag != "root" else ""
+    #         path.insert(0, tag)
+    #         parent = self.archive.tree.get_node(
+    #             self.archive.tree.get_node(parent.identifier).bpointer
+    #         )
+    #     return "/".join(path)
 
-    def _hash_attachment(self, attachment: pypff.attachment):
+    def _save_attachment(self, attachment: pypff.attachment) -> str:
+        """Saves the attachment if it does not already exist.
+        Attachments are saved using their md5 hexdigest as a name.
+        No extension is saved??
+        :returns string: the hexdigest of the attachment
+        """
+        fo = io.BytesIO()
         hasher = md5()
         while True:
-            buff = attachment.read_buffer(1024)
+            buff = attachment.read_buffer(2048)
             if buff:
+                fo.write(buff)
                 hasher.update(buff)
                 continue
             break
-        return hasher.hexdigest()
+        hex_digest = hasher.hexdigest()
+        path = f"{settings.ATTACHMENT_PATH}/{hex_digest}"
+        if not default_storage.exists(path):
+            default_storage.save(path, fo)
+        return hex_digest
 
     def _create_messages(self) -> None:
         for m in self.archive.messages():
+            logger.info(f"Ingesting: {m.subject}")
             self.errors = []
             self.data = {}
             try:
@@ -187,16 +205,20 @@ class PstImporter:
 
             if ratom_message:
                 for a in m.attachments:  # type: pypff.attachment
-                    mime, encoding = mimetypes.guess_type(a.name)
+                    hashed_name = self._save_attachment(a)
+                    file_name = a.name
+                    if not file_name:
+                        file_name = hashed_name
+                    logger.info(f"Storing attachment: {file_name}")
+                    mime, encoding = mimetypes.guess_type(file_name)
                     if not mime:
                         mime = "Unknown"
                     attachment = ratom.Attachments.objects.create(
                         message=ratom_message,
-                        file_name=a.name,
+                        file_name=file_name,
                         mime_type=mime,
-                        hashed_name=self._hash_attachment(a),
+                        hashed_name=hashed_name,
                     )
-                    print(a.name)
 
 
 def get_account(account: str) -> ratom.Account:
@@ -231,12 +253,9 @@ def import_psts(paths: List[Path], account: str, clean: bool) -> None:
     if clean:
         files = get_files(account)
         logger.warning(f"Deleting {account.title} Account (if exists)")
-        for f in files:
+        for f in files.all():
             f.delete()
-        account.delete()
     for path in paths:
         file, created = create_file(path, account)
         importer = PstImporter(file, spacy_model)
         importer.run()
-        file.reported_total_messages = importer.archive.message_count
-        file.save()
