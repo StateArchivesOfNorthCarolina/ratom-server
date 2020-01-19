@@ -4,6 +4,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models
 from simple_history.models import HistoricalRecords
 from elasticsearch_dsl import Index
+from django_elasticsearch_dsl_drf.wrappers import dict_to_obj
 
 from ratom.managers import MessageManager
 
@@ -20,14 +21,6 @@ class UserTEnum(Enum):
     RESEARCHER = "Researcher"
 
 
-# class RecordStatus(Enum):
-#     NON_RECORD = "Non Record"
-#     RECORD = "Record"
-#     RECORD_RES = "Restricted Record"
-#     RECORD_RED = "Redacted Record"
-#     RECORD_RES_RED = "Restricted and Redactions"
-
-
 class User(AbstractUser):
     user_type = models.CharField(
         max_length=32, choices=[(tag, tag.value) for tag in UserTEnum]
@@ -42,12 +35,21 @@ class Account(models.Model):
         return str(self.title)
 
 
+class RatomFileManager(models.Manager):
+    def reported_totals(self, account_title: str) -> models.QuerySet:
+        qs = self.get_queryset()
+        return qs.filter(account__title=account_title).aggregate(
+            models.Sum("reported_total_messages")
+        )
+
+
 class File(models.Model):
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     filename = models.CharField(max_length=200)
+    original_path = models.CharField(max_length=500)
     reported_total_messages = models.IntegerField(null=True)
     accession_date = models.DateField(null=True)
-    file_size = models.IntegerField(null=True)
+    file_size = models.BigIntegerField(null=True)
     md5_hash = models.CharField(max_length=32)
     import_status = models.CharField(
         max_length=32,
@@ -56,6 +58,16 @@ class File(models.Model):
     )
     date_imported = models.DateTimeField(auto_now_add=True)
     history = HistoricalRecords()
+
+    # Managers
+    objects = models.Manager()
+    counts = RatomFileManager()
+
+    class Meta:
+        unique_together = ["account", "filename"]
+
+    def __str__(self):
+        return f"{self.account.title}-{self.filename}"
 
     @property
     def percent_complete(self) -> object:
@@ -96,7 +108,7 @@ class MessagesHaveRestrictions(models.Manager):
 
 class MessagesAreValid(models.Manager):
     def get_queryset(self):
-        return super().get_queryset().filter(data__errors__is_null=True)
+        return super().get_queryset().filter(data_error_isnull=True)
 
 
 class Message(models.Model):
@@ -120,16 +132,14 @@ class Message(models.Model):
                     ...,
                 }],
             },
-            errors: [{
-                int: string,
-            }],
+            errors: [string, string],
             raw: string ## Text dump of an errored message,
         }
     """
 
     source_id = models.CharField(max_length=256)
-    file = models.ForeignKey(File, on_delete=models.PROTECT)
-    account = models.ForeignKey(Account, on_delete=models.PROTECT)
+    file = models.ForeignKey(File, on_delete=models.CASCADE)
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
     restrictions = models.ForeignKey(
         RestrictionAuthority, null=True, on_delete=models.CASCADE
     )
@@ -151,6 +161,20 @@ class Message(models.Model):
     restricted = MessagesHaveRestrictions()
     valid = MessagesAreValid()
 
+    @property
+    def account_indexing(self):
+        """Account data (nested) for indexing.
+        Example:
+            >>> mapping = {
+            >>>     "account": {
+            >>>         "title": "Gov Purdue"
+            >>>     }
+            >>> }
+
+        :return:
+        """
+        return dict_to_obj({"title": self.account.title,})
+
 
 def upload_directory_path(instance, filename):
     """
@@ -160,7 +184,7 @@ def upload_directory_path(instance, filename):
     :param filename:
     :return:
     """
-    return f"{instance.hashed_name}"
+    return f"/attachments/{instance.hashed_name}"
 
 
 class Attachments(models.Model):
@@ -173,8 +197,18 @@ class Attachments(models.Model):
         upload = the location of the file (S3, local, ???).
     """
 
-    message = models.ForeignKey(Message, on_delete=models.PROTECT)
+    message = models.ForeignKey(Message, on_delete=models.CASCADE)
     file_name = models.CharField(max_length=256, blank=True)
     hashed_name = models.CharField(max_length=32, blank=False)
-    mime_type = models.CharField(max_length=64)
+    mime_type = models.CharField(max_length=128)
     upload = models.FileField(upload_to=upload_directory_path)
+
+    def __str__(self):
+        return self.file_name
+
+    @property
+    def labels_indexing(self):
+        labels = []
+        if self.data:
+            labels = list(self.data.get("labels", []))
+        return labels
