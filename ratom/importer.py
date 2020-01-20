@@ -103,12 +103,11 @@ class PstImporter:
         self.archive = PffArchive(self.path)
         file.reported_total_messages = self.archive.message_count
         file.save()
-        logger.info(f"Opened {self.archive.message_count} messages in archive")
         self.errors = []
         self.data = {}
         self.seen_hashes = []
 
-    def run(self) -> None:
+    def import_messages(self) -> None:
         for folder in self.archive.folders():
             if not folder.name:  # skip root node
                 continue
@@ -117,16 +116,22 @@ class PstImporter:
             )
             if folder.get_number_of_sub_messages() == 0:
                 continue
-            self._create_messages(folder)
+            for message in folder.sub_messages:
+                self._create_message(folder, message)
 
-    def initializing(self) -> None:
-        logger.info("Stage: Initializing")
+    def initializing_stage(self) -> None:
+        logger.info("Initializing:")
         self.ratom_file = self._create_ratom_file(self.account, self.local_path)
-        logger.info(f"Opening archive")
+        logger.info(f"Using ratom.File {self.ratom_file.pk}")
+
+    def importing_stage(self) -> None:
+        logger.info("Importing:")
+        logger.info(f"Opening archive {self.local_path}")
         self.archive = PffArchive(self.local_path)
-        # self.ratom_file.import_status = ratom.FileImportStatus.IMPORTING
+        self.ratom_file.import_status = ratom.FileImportStatus.IMPORTING
         self.ratom_file.reported_total_messages = self.archive.message_count
         self.ratom_file.save()
+        logger.info(f"Opened {self.archive.message_count} messages in archive")
 
     def _create_ratom_file(self, account: ratom.Account, path: Path) -> ratom.File:
         ratom_file, _ = ratom.File.objects.get_or_create(
@@ -139,13 +144,13 @@ class PstImporter:
 
     def run2(self) -> None:
         try:
-            self.initializing()
-            self.importing()
+            self.initializing_stage()
+            self.importing_stage()
             self.import_messages(data_file)
         except Exception as e:
-            self.fail(e)
+            self.stage_fail(e)
         else:
-            self.success(import_summary)
+            self.stage_success(import_summary)
 
     def get_folder_abs_path(self, folder: pypff.folder) -> str:
         """Traverse tree node parent's to build absolution path"""
@@ -182,7 +187,7 @@ class PstImporter:
             default_storage.save(path, fo)
         return hex_digest
 
-    def _create_messages(self, folder: pypff.folder) -> None:
+    def _create_message(self, folder: pypff.folder, m: pypff.message) -> None:
         """create_messages
         Takes a pypff folder and attempts to ingest its messages.
 
@@ -194,89 +199,88 @@ class PstImporter:
         :return:
         """
         folder_path = self.get_folder_abs_path(folder)
-        for m in folder.sub_messages:
-            logger.info(f"Ingesting: {m.subject}")
-            self.errors = []
-            self.data = {}
-            try:
-                headers = MessageHeader(m.transport_headers)
-            except AttributeError as e:
-                logger.exception(f"{e}")
-                self.errors.append(e)
-            msg_from = headers.get_header("from")
-            msg_to = headers.get_header("to")
-            msg_body = self.archive.format_message(m, with_headers=False)
-            msg_subject = headers.get_header("subject")
-            try:
-                sent_date = make_aware(m.delivery_time)
-            except pytz.NonExistentTimeError:
-                logger.exception("Failed to make datetime aware")
-                self.errors.append("Failed to make datetime aware")
-            except pytz.AmbiguousTimeError:
-                logger.exception("Ambiguous Time Could not parse")
-                self.errors.append("Ambiguous time could not parse")
+        logger.info(f"Ingesting: {m.subject}")
+        self.errors = []
+        self.data = {}
+        try:
+            headers = MessageHeader(m.transport_headers)
+        except AttributeError as e:
+            logger.exception(f"{e}")
+            self.errors.append(e)
+        msg_from = headers.get_header("from")
+        msg_to = headers.get_header("to")
+        msg_body = self.archive.format_message(m, with_headers=False)
+        msg_subject = headers.get_header("subject")
+        try:
+            sent_date = make_aware(m.delivery_time)
+        except pytz.NonExistentTimeError:
+            logger.exception("Failed to make datetime aware")
+            self.errors.append("Failed to make datetime aware")
+        except pytz.AmbiguousTimeError:
+            logger.exception("Ambiguous Time Could not parse")
+            self.errors.append("Ambiguous time could not parse")
 
-            spacy_text = f"{msg_subject}\n{msg_body}"
+        spacy_text = f"{msg_subject}\n{msg_body}"
 
-            try:
-                document = self.spacy_model(spacy_text)
-            except ValueError:
-                logger.exception(f"spaCy error")
-                self.errors.append("spaCy Error")
-            labels = set()
-            for entity in document.ents:
-                labels.add(entity.label_)
+        try:
+            document = self.spacy_model(spacy_text)
+        except ValueError:
+            logger.exception(f"spaCy error")
+            self.errors.append("spaCy Error")
+        labels = set()
+        for entity in document.ents:
+            labels.add(entity.label_)
 
-            msg_data = {"labels": list(labels)}
-            msg_data["headers"] = headers.get_full_headers()
-            if self.errors:
-                msg_data["errors"] = "\t".join(self.errors)
+        msg_data = {"labels": list(labels)}
+        msg_data["headers"] = headers.get_full_headers()
+        if self.errors:
+            msg_data["errors"] = "\t".join(self.errors)
 
-            try:
-                ratom_message = ratom.Message.objects.create(
-                    source_id=m.identifier,
-                    file=self.file,
-                    account=self.file.account,
-                    sent_date=sent_date,
-                    msg_to=msg_to,
-                    msg_from=msg_from,
-                    msg_subject=msg_subject,
-                    msg_body=clean_null_chars(msg_body),
-                    directory=folder_path,
-                    data=msg_data,
-                )  # type: ratom.Message
-            except IntegrityError as e:
-                logger.exception(f"{m.identifier}: \t {e}")
-            except ValueError as e:
-                logger.exception(f"{m.identifier}: \t {e}")
-                ratom_message = ratom.Message.objects.create(
-                    source_id=m.identifier,
-                    file=self.file,
-                    account=self.file.account,
-                    msg_to=msg_to,
-                    msg_from=msg_from,
-                    msg_subject=msg_subject,
-                    msg_body=clean_null_chars(msg_body),
-                    directory=folder_path,
-                    data=msg_data,
+        try:
+            ratom_message = ratom.Message.objects.create(
+                source_id=m.identifier,
+                file=self.file,
+                account=self.file.account,
+                sent_date=sent_date,
+                msg_to=msg_to,
+                msg_from=msg_from,
+                msg_subject=msg_subject,
+                msg_body=clean_null_chars(msg_body),
+                directory=folder_path,
+                data=msg_data,
+            )  # type: ratom.Message
+        except IntegrityError as e:
+            logger.exception(f"{m.identifier}: \t {e}")
+        except ValueError as e:
+            logger.exception(f"{m.identifier}: \t {e}")
+            ratom_message = ratom.Message.objects.create(
+                source_id=m.identifier,
+                file=self.file,
+                account=self.file.account,
+                msg_to=msg_to,
+                msg_from=msg_from,
+                msg_subject=msg_subject,
+                msg_body=clean_null_chars(msg_body),
+                directory=folder_path,
+                data=msg_data,
+            )
+
+        if ratom_message:
+            for a in m.attachments:  # type: pypff.attachment
+                hashed_name = self._save_attachment(a)
+                file_name = a.name
+                if not file_name:
+                    file_name = hashed_name
+                logger.info(f"Storing attachment: {file_name}")
+                mime, encoding = mimetypes.guess_type(file_name)
+                if not mime:
+                    mime = "Unknown"
+                attachment = ratom.Attachments.objects.create(
+                    message=ratom_message,
+                    file_name=file_name,
+                    mime_type=mime,
+                    hashed_name=hashed_name,
                 )
-
-            if ratom_message:
-                for a in m.attachments:  # type: pypff.attachment
-                    hashed_name = self._save_attachment(a)
-                    file_name = a.name
-                    if not file_name:
-                        file_name = hashed_name
-                    logger.info(f"Storing attachment: {file_name}")
-                    mime, encoding = mimetypes.guess_type(file_name)
-                    if not mime:
-                        mime = "Unknown"
-                    attachment = ratom.Attachments.objects.create(
-                        message=ratom_message,
-                        file_name=file_name,
-                        mime_type=mime,
-                        hashed_name=hashed_name,
-                    )
 
 
 def get_account(account: str) -> ratom.Account:
