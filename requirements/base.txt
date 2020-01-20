@@ -27,3 +27,4 @@ libratom==0.2.2
 pandas==0.25.3
 boto3==1.11.0
 requests-aws-sign==0.1.5
+django-simple-history==2.8.0
