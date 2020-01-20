@@ -3,8 +3,9 @@ import io
 import json
 import logging
 import re
+import os
 from pathlib import Path
-from typing import Pattern, Union, List
+from typing import Pattern, Union, List, BinaryIO
 from email import headerregistry
 from collections import deque
 import signal
@@ -27,7 +28,8 @@ from django.utils.timezone import make_aware
 
 from ratom import models as ratom
 from ratom.util.bulk_create_manager import BulkCreateManager
-from msg_parser import MsOxMessage
+
+# from msg_parser import MsOxMessage
 
 
 logger = logging.getLogger(__name__)
@@ -76,7 +78,23 @@ class MessageHeader:
 
 
 class PstImporter:
-    def __init__(self, file: ratom.File, spacy_model: Language) -> None:
+    def __init__(
+        self,
+        path: Path,
+        account: ratom.Account,
+        spacy_model: Language,
+        is_asynchronous: bool = False,
+    ):
+        logger.info(f"PstImporter running on {path}")
+        self.local_path = path
+        self.account = account
+        self.spacy_model = spacy_model
+        self.is_asynchronous = is_asynchronous
+        self.errors = []
+        self.data = {}
+        self.seen_hashes = []
+
+    def __init__2(self, file: ratom.File, spacy_model: Language) -> None:
         self.file = file
         self.path = file.original_path
         self.spacy_model = spacy_model
@@ -100,6 +118,35 @@ class PstImporter:
             if folder.get_number_of_sub_messages() == 0:
                 continue
             self._create_messages(folder)
+
+    def initializing(self) -> None:
+        logger.info("Stage: Initializing")
+        self.ratom_file = self._create_ratom_file(self.account, self.local_path)
+        logger.info(f"Opening archive")
+        self.archive = PffArchive(self.local_path)
+        # self.ratom_file.import_status = ratom.FileImportStatus.IMPORTING
+        self.ratom_file.reported_total_messages = self.archive.message_count
+        self.ratom_file.save()
+
+    def _create_ratom_file(self, account: ratom.Account, path: Path) -> ratom.File:
+        ratom_file, _ = ratom.File.objects.get_or_create(
+            account=account,
+            filename=str(path.name),
+            original_path=str(path.absolute()),
+            file_size=path.stat().st_size,
+        )
+        return ratom_file
+
+    def run2(self) -> None:
+        try:
+            self.initializing()
+            with file.open() as data_file:
+                self.importing()
+                self.import_messages(data_file)
+        except Exception as e:
+            self.fail(e)
+        else:
+            self.success(import_summary)
 
     def get_folder_abs_path(self, folder: pypff.folder) -> str:
         """Traverse tree node parent's to build absolution path"""
