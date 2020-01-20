@@ -97,7 +97,7 @@ class Tag(models.Model):
         return f"{self.type}:{self.name}"
 
     class Meta:
-        pass
+        unique_together = ["type", "name"]
 
 
 class MessageAudit(models.Model):
@@ -147,6 +147,10 @@ class Message(models.Model):
         :return:
         """
         return dict_to_obj({"title": self.account.title,})
+
+    @property
+    def tags_indexing(self):
+        return list(self.audit.tags.values_list("name", flat=True))
 
 
 def upload_directory_path(instance, filename):

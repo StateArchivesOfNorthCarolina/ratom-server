@@ -14,17 +14,13 @@ from django.db.utils import IntegrityError
 from django.conf import settings
 
 from django.core.files.storage import default_storage
-from typing import List, Set, Dict, Tuple, Optional, ByteString
+from typing import List, Dict
 from spacy.language import Language
 from libratom.lib.entities import load_spacy_model
 from libratom.lib.pff import PffArchive
-from django.db import transaction
-from django.db.models import Q
 from django.utils.timezone import make_aware
 
-from api import models as ratom
-from api.util.bulk_create_manager import BulkCreateManager
-from msg_parser import MsOxMessage
+from core import models as ratom
 
 
 logger = logging.getLogger(__name__)
@@ -148,6 +144,9 @@ class PstImporter:
         """
         folder_path = self.get_folder_abs_path(folder)
         for m in folder.sub_messages:  # type: pypff.message
+            import pudb
+
+            pudb.set_trace()
             logger.info(f"Ingesting ({m.identifier}): {m.subject}")
             # if api.Message.objects.count() == 3588:
             #     import pudb; pudb.set_trace()
@@ -180,29 +179,34 @@ class PstImporter:
             except ValueError:
                 logger.exception(f"spaCy error")
                 self.errors.append("spaCy Error")
-            labels = set()
-            for entity in document.ents:
-                labels.add(entity.label_)
 
-            msg_data = {"labels": list(labels)}
-            msg_data["headers"] = headers.get_full_headers()
-            if self.errors:
-                msg_data["errors"] = "\t".join(self.errors)
+            tags = set()
+            for entity in document.ents:
+                tag, __ = ratom.Tag.objects.get_or_create(
+                    type=ratom.TagTypeEnum.IMPORTER, name=entity.label_
+                )
+                tags.add(tag)
+
+            audit = ratom.MessageAudit.objects.create()
+            audit.tags.add(*list(tags))
+            tags = None
 
             try:
                 ratom_message = ratom.Message.objects.create(
                     source_id=m.identifier,
                     file=self.file,
                     account=self.file.account,
+                    audit=audit,
                     sent_date=sent_date,
-                    msg_to=msg_to,
                     msg_from=msg_from,
+                    msg_to=msg_to,
                     msg_cc=msg_cc,
                     msg_bcc=msg_bcc,
                     subject=subject,
                     body=clean_null_chars(body),
                     directory=folder_path,
-                    data=msg_data,
+                    headers=headers.get_full_headers(),
+                    errors=json.dumps(self.errors),
                 )  # type: ratom.Message
             except IntegrityError as e:
                 logger.exception(f"{m.identifier}: \t {e}")
@@ -212,14 +216,16 @@ class PstImporter:
                     source_id=m.identifier,
                     file=self.file,
                     account=self.file.account,
-                    msg_to=msg_to,
+                    audit=audit,
                     msg_from=msg_from,
+                    msg_to=msg_to,
                     msg_cc=msg_cc,
                     msg_bcc=msg_bcc,
                     subject=subject,
                     body=clean_null_chars(body),
                     directory=folder_path,
-                    data=msg_data,
+                    headers=headers.get_full_headers(),
+                    errors=json.dumps(self.errors),
                 )
 
             # if ratom_message:

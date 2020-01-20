@@ -25,7 +25,10 @@ class MessageDocument(Document):
     subject = fields.TextField()
     body = fields.TextField()
     sent_date = fields.DateField()
-    labels = fields.ListField(fields.KeywordField())
+    labels = fields.ObjectField(
+        attr="tags_indexing",
+        fields={"raw": fields.KeywordField(), "suggest": fields.CompletionField(),},
+    )
 
     account = fields.NestedField(
         attr="account_indexing",

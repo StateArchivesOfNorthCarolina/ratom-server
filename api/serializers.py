@@ -34,10 +34,9 @@ class MessageSerializer(serializers.ModelSerializer):
             "sent_date",
             "msg_from",
             "msg_to",
-            "msg_subject",
-            "msg_body",
+            "subject",
+            "body",
             "directory",
-            "data",
         ]
 
 
