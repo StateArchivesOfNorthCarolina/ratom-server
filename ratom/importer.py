@@ -140,9 +140,8 @@ class PstImporter:
     def run2(self) -> None:
         try:
             self.initializing()
-            with file.open() as data_file:
-                self.importing()
-                self.import_messages(data_file)
+            self.importing()
+            self.import_messages(data_file)
         except Exception as e:
             self.fail(e)
         else:
