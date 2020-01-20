@@ -32,3 +32,5 @@ docker==4.1.0
 
 # For Jupyter notebooks
 jupyterlab==1.2.2
+
+django-cors-headers==3.2.1

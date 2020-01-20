@@ -1,9 +1,9 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Collection, Processor, Message, Entity
+from .models import User, Account, Processor, Message
 
 admin.site.register(User, UserAdmin)
-admin.site.register(Collection)
+admin.site.register(Account)
 admin.site.register(Processor)
 
 
@@ -11,27 +11,13 @@ admin.site.register(Processor)
 class MessageAdmin(admin.ModelAdmin):
     list_display = (
         "pk",
-        "recipient",
+        "msg_to",
+        "msg_from",
         "sent_date",
-        "msg_subject",
-        "collection",
+        "subject",
+        "account",
     )
-    list_filter = ("sent_date", "collection")
+    list_filter = ("sent_date", "account")
     search_fields = ("msg_body",)
     date_hierarchy = "sent_date"
     ordering = ("-sent_date",)
-    raw_id_fields = ("processor",)
-
-    def recipient(self, obj: Message) -> str:
-        return str(obj.msg_to[:40])
-
-
-@admin.register(Entity)
-class EntityAdmin(admin.ModelAdmin):
-    list_display = (
-        "pk",
-        "label",
-        "value",
-    )
-    list_filter = ("label",)
-    search_fields = ("value",)

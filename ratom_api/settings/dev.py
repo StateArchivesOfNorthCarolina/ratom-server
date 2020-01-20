@@ -6,8 +6,32 @@ from ratom_api.settings.base import *  # noqa
 
 DEBUG = True
 
-INSTALLED_APPS += ("debug_toolbar",)
-MIDDLEWARE += ("debug_toolbar.middleware.DebugToolbarMiddleware",)
+INSTALLED_APPS += (
+    "debug_toolbar",
+    "corsheaders",
+)
+
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+    "x-version-requested",
+]
+
+
+MIDDLEWARE += (
+    "corsheaders.middleware.CorsMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
+)
 
 INTERNAL_IPS = ("127.0.0.1",)
 
@@ -32,9 +56,3 @@ if "test" in sys.argv:
     )
 
     LOGGING["root"]["handlers"] = []
-
-GRAPHQL_JWT = {
-    "JWT_VERIFY_EXPIRATION": True,
-    "JWT_EXPIRATION_DELTA": timedelta(days=365),
-    "JWT_REFRESH_EXPIRATION_DELTA": timedelta(days=365 * 7),
-}

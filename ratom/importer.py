@@ -46,7 +46,7 @@ class PstImporter:
         return "/".join(path)
 
     def run(self) -> None:
-        self._create_collection()
+        self._create_account()
         logger.info("Traversing archive folders")
         for folder in self.archive.folders():
             if not folder.name:  # skip root node
@@ -58,8 +58,8 @@ class PstImporter:
             for message in folder.sub_messages:
                 self._create_message(folder_path, message)
 
-    def _create_collection(self) -> None:
-        self.collection = get_collection(self.path)
+    def _create_account(self) -> None:
+        self.account = get_account(self.path)
 
     def _extract_match(self, pattern: Pattern[str], haystack: str) -> str:
         match = pattern.search(haystack)
@@ -96,36 +96,28 @@ class PstImporter:
             sent_date=sent_date,
             msg_to=msg_to,
             msg_from=msg_from,
-            msg_subject=msg_subject,
-            msg_body=msg_body,
-            msg_tagged_body=msg_body_combined,
-            collection=self.collection,
+            subject=msg_subject,
+            body=msg_body,
+            account=self.account,
             directory=folder_path,
             data=msg_data,
-            processor=ratom.Processor.objects.create(),  # TODO: likely impacts BulkCreateManager
         )
         # spaCy m2m (idea #2)
         bulk_mgr = BulkCreateManager(chunk_size=100)
-        for entity in document.ents:
-            bulk_mgr.add(
-                ratom.Entity(
-                    label=entity.label_, value=entity.text.strip(), message=message
-                )
-            )
         bulk_mgr.done()
         return message
 
 
-def get_collection(path: Path) -> ratom.Collection:
+def get_account(path: Path) -> ratom.Account:
     title = path.with_suffix("").name
     # attempt to clean title to just be the name
     match = title_re.match(path.name)
     if match:
         title = match.group(0).rstrip("_")
-    collection, _ = ratom.Collection.objects.get_or_create(
+    account, _ = ratom.Account.objects.get_or_create(
         title=title, accession_date=dt.date(2019, 11, 18)
     )
-    return collection
+    return account
 
 
 @transaction.atomic
@@ -139,10 +131,9 @@ def import_psts(paths: List[str], clean: bool) -> None:
         f"Loaded spacy model: {spacy_model_name}, version: {spacy_model_version}"
     )
     if clean:
-        collection = get_collection(Path(paths[0]))
-        logger.warning(f"Deleting {collection.title} collection (if exists)")
-        collection.delete()
-        ratom.Processor.objects.filter(message=None).delete()
+        account = get_account(Path(paths[0]))
+        logger.warning(f"Deleting {account.title} account (if exists)")
+        account.delete()
     for path in paths:
         importer = PstImporter(path, spacy_model)
         importer.run()
