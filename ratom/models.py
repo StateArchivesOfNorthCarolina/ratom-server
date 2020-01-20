@@ -2,7 +2,8 @@ from enum import Enum
 from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models
-from simple_history.models import HistoricalRecords
+
+# from simple_history.models import HistoricalRecords
 from elasticsearch_dsl import Index
 from django_elasticsearch_dsl_drf.wrappers import dict_to_obj
 
@@ -29,7 +30,7 @@ class User(AbstractUser):
 
 class Account(models.Model):
     title = models.CharField(max_length=200)
-    history = HistoricalRecords()
+    # history = HistoricalRecords()
 
     def __str__(self) -> str:
         return str(self.title)
@@ -57,7 +58,7 @@ class File(models.Model):
         default=FileImportStatus.CREATED,
     )
     date_imported = models.DateTimeField(auto_now_add=True)
-    history = HistoricalRecords()
+    # history = HistoricalRecords()
 
     # Managers
     objects = models.Manager()
@@ -149,11 +150,11 @@ class Message(models.Model):
     msg_to = models.TextField(blank=True)
     msg_cc = models.TextField(blank=True)
     msg_bcc = models.TextField(blank=True)
-    msg_subject = models.TextField(blank=True)
-    msg_body = models.TextField(blank=True)
+    subject = models.TextField(blank=True)
+    body = models.TextField(blank=True)
     directory = models.TextField(blank=True)
     data = JSONField(null=True, blank=True)
-    history = HistoricalRecords()
+    # history = HistoricalRecords()
 
     # Managers
     objects = models.Manager()

@@ -22,8 +22,8 @@ class MessageDocument(Document):
     source_id = fields.TextField()
     msg_from = fields.TextField()
     msg_to = fields.TextField()
-    msg_subject = fields.TextField()
-    msg_body = fields.TextField()
+    subject = fields.TextField()
+    body = fields.TextField()
     sent_date = fields.DateField()
     labels = fields.ListField(fields.KeywordField())
 

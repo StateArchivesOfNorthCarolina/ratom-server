@@ -49,8 +49,8 @@ class MessageDocumentSerializer(serializers.Serializer):
     sent_date = serializers.DateTimeField(read_only=True)
     msg_from = serializers.CharField(read_only=True)
     msg_to = serializers.CharField(read_only=True)
-    msg_subject = serializers.CharField(read_only=True)
-    msg_body = serializers.CharField(read_only=True)
+    subject = serializers.CharField(read_only=True)
+    body = serializers.CharField(read_only=True)
     directory = serializers.CharField(read_only=True)
     labels = serializers.SerializerMethodField()
 
@@ -73,8 +73,8 @@ class MessageDocumentSerializer(serializers.Serializer):
             "sent_date",
             "msg_from",
             "msg_to",
-            "msg_subject",
-            "msg_body",
+            "subject",
+            "body",
             "directory",
             "labels",
         )

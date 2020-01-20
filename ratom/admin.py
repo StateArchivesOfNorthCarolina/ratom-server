@@ -14,10 +14,10 @@ class MessageAdmin(admin.ModelAdmin):
         "msg_to",
         "msg_from",
         "sent_date",
-        "msg_subject",
+        "subject",
         "account",
     )
     list_filter = ("sent_date", "account")
-    search_fields = ("msg_body",)
+    search_fields = ("body",)
     date_hierarchy = "sent_date"
     ordering = ("-sent_date",)

@@ -4,10 +4,7 @@ import json
 import logging
 import re
 from pathlib import Path
-from typing import Pattern, Union, List
-from email import headerregistry
-from collections import deque
-import signal
+from typing import Union
 import mimetypes
 from hashlib import md5
 
@@ -15,7 +12,7 @@ import pypff
 import pytz
 from django.db.utils import IntegrityError
 from django.conf import settings
-from django.core.files.base import ContentFile
+
 from django.core.files.storage import default_storage
 from typing import List, Set, Dict, Tuple, Optional, ByteString
 from spacy.language import Language
@@ -134,6 +131,8 @@ class PstImporter:
         path = f"{settings.ATTACHMENT_PATH}/{hex_digest}"
         if not default_storage.exists(path):
             default_storage.save(path, fo)
+        fo = None
+        hasher = None
         return hex_digest
 
     def _create_messages(self, folder: pypff.folder) -> None:
@@ -148,8 +147,10 @@ class PstImporter:
         :return:
         """
         folder_path = self.get_folder_abs_path(folder)
-        for m in folder.sub_messages:
-            logger.info(f"Ingesting: {m.subject}")
+        for m in folder.sub_messages:  # type: pypff.message
+            logger.info(f"Ingesting ({m.identifier}): {m.subject}")
+            # if ratom.Message.objects.count() == 3588:
+            #     import pudb; pudb.set_trace()
             self.errors = []
             self.data = {}
             try:
@@ -157,10 +158,12 @@ class PstImporter:
             except AttributeError as e:
                 logger.exception(f"{e}")
                 self.errors.append(e)
-            msg_from = headers.get_header("from")
-            msg_to = headers.get_header("to")
-            msg_body = self.archive.format_message(m, with_headers=False)
-            msg_subject = headers.get_header("subject")
+            msg_from = headers.get_header("From")
+            msg_to = headers.get_header("To")
+            msg_cc = headers.get_header("Cc")
+            msg_bcc = headers.get_header("Bcc")
+            body = self.archive.format_message(m, with_headers=False)
+            subject = headers.get_header("Subject")
             try:
                 sent_date = make_aware(m.delivery_time)
             except pytz.NonExistentTimeError:
@@ -170,7 +173,7 @@ class PstImporter:
                 logger.exception("Ambiguous Time Could not parse")
                 self.errors.append("Ambiguous time could not parse")
 
-            spacy_text = f"{msg_subject}\n{msg_body}"
+            spacy_text = f"{subject}\n{body}"
 
             try:
                 document = self.spacy_model(spacy_text)
@@ -194,8 +197,10 @@ class PstImporter:
                     sent_date=sent_date,
                     msg_to=msg_to,
                     msg_from=msg_from,
-                    msg_subject=msg_subject,
-                    msg_body=clean_null_chars(msg_body),
+                    msg_cc=msg_cc,
+                    msg_bcc=msg_bcc,
+                    subject=subject,
+                    body=clean_null_chars(body),
                     directory=folder_path,
                     data=msg_data,
                 )  # type: ratom.Message
@@ -209,28 +214,31 @@ class PstImporter:
                     account=self.file.account,
                     msg_to=msg_to,
                     msg_from=msg_from,
-                    msg_subject=msg_subject,
-                    msg_body=clean_null_chars(msg_body),
+                    msg_cc=msg_cc,
+                    msg_bcc=msg_bcc,
+                    subject=subject,
+                    body=clean_null_chars(body),
                     directory=folder_path,
                     data=msg_data,
                 )
 
-            if ratom_message:
-                for a in m.attachments:  # type: pypff.attachment
-                    hashed_name = self._save_attachment(a)
-                    file_name = a.name
-                    if not file_name:
-                        file_name = hashed_name
-                    logger.info(f"Storing attachment: {file_name}")
-                    mime, encoding = mimetypes.guess_type(file_name)
-                    if not mime:
-                        mime = "Unknown"
-                    attachment = ratom.Attachments.objects.create(
-                        message=ratom_message,
-                        file_name=file_name,
-                        mime_type=mime,
-                        hashed_name=hashed_name,
-                    )
+            # if ratom_message:
+            #     for a in m.attachments:  # type: pypff.attachment
+            #         logger.info(f"Storing attachment({a.identifier}): {a.name} - {a.size}")
+            #         hashed_name = self._save_attachment(a)
+            #         file_name = a.name
+            #         if not file_name:
+            #             file_name = hashed_name
+            #
+            #         mime, encoding = mimetypes.guess_type(file_name)
+            #         if not mime:
+            #             mime = "Unknown"
+            #         attachment = ratom.Attachments.objects.create(
+            #             message=ratom_message,
+            #             file_name=file_name,
+            #             mime_type=mime,
+            #             hashed_name=hashed_name,
+            #         )
 
 
 def get_account(account: str) -> ratom.Account:
