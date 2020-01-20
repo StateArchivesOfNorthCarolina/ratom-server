@@ -144,9 +144,6 @@ class PstImporter:
         """
         folder_path = self.get_folder_abs_path(folder)
         for m in folder.sub_messages:  # type: pypff.message
-            import pudb
-
-            pudb.set_trace()
             logger.info(f"Ingesting ({m.identifier}): {m.subject}")
             # if api.Message.objects.count() == 3588:
             #     import pudb; pudb.set_trace()
