@@ -11,14 +11,14 @@ python:
 env:
   global:
     - CLOUDSDK_CORE_DISABLE_PROMPTS=1
-    - DOCKERHUB_REPO=govsanc/api-server
+    - DOCKERHUB_REPO=govsanc/ratom-server
 
 install:
   - pip install -r deployment/requirements.txt
 
 before_script:
   # Build container for this commit before tests run
-  - docker build --pull -t govsanc/api-server .
+  - docker build --pull -t govsanc/ratom-server .
 
 script:
   - echo 0
@@ -36,6 +36,6 @@ deploy:
   provider: script
   script: bash deployment/ci_deployment.sh
   on:
-    repo: StateArchivesOfNorthCarolina/api-server
+    repo: StateArchivesOfNorthCarolina/ratom-server
     all_branches: true
     condition: $TRAVIS_BRANCH =~ ^(develop|master)$
