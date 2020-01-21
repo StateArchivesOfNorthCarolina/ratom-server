@@ -65,7 +65,7 @@ class PstImporter:
                 continue
             folder_path = self.get_folder_abs_path(folder)
             for message in folder.sub_messages:  # type: pypff.message
-                self._create_message(folder_path, message)
+                self.create_message(folder_path, message)
 
     def get_folder_abs_path(self, folder: pypff.folder) -> str:
         """Traverse tree node parent's to build absolution path"""
@@ -81,17 +81,7 @@ class PstImporter:
             )
         return "/".join(path)
 
-    def run(self) -> None:
-        try:
-            self.initializing_stage()
-            self.importing_stage()
-            self.import_messages_from_archive()
-        except Exception as e:
-            self.stage_fail(e)
-        else:
-            self.stage_success()
-
-    def _create_message(self, folder_path: str, archive_msg: pypff.message) -> None:
+    def create_message(self, folder_path: str, archive_msg: pypff.message) -> None:
         """create_messages
         Takes a pypff folder and attempts to ingest its messages.
 
@@ -124,6 +114,16 @@ class PstImporter:
         ratom_message.directory = folder_path
         # ratom_message.errors = {}
         ratom_message.save()
+
+    def run(self) -> None:
+        try:
+            self.initializing_stage()
+            self.importing_stage()
+            self.import_messages_from_archive()
+        except Exception as e:
+            self.stage_fail(e)
+        else:
+            self.stage_success()
 
 
 def get_account(account: str) -> ratom.Account:
