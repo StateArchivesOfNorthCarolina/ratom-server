@@ -1,3 +1,4 @@
+import datetime as dt
 import pytest
 from unittest import mock
 
@@ -40,6 +41,7 @@ def archive_msg(empty_message):
     Returns:
         A mock message with fake data
     """
+    empty_message.delivery_time = dt.datetime(2020, 1, 1)
     empty_message.identifier = 2097220
     empty_message.plain_text_body = "Hello, World!"
     headers = [

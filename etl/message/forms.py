@@ -37,6 +37,8 @@ class ArchiveMessageForm(forms.ModelForm):
         msg_data = self._prepare_message()
         kwargs["data"] = msg_data
         super().__init__(*args, **kwargs)
+        # Remove ProhibitNullCharactersValidator
+        self.fields["body"].validators = []
 
     def _prepare_message(self) -> Dict[str, str]:
         """Prepare message for Form-based validation."""
