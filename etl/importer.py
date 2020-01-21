@@ -113,7 +113,7 @@ class PstImporter:
             if folder.get_number_of_sub_messages() == 0:
                 continue
             folder_path = self.get_folder_abs_path(folder)
-            for message in folder.sub_messages:
+            for message in folder.sub_messages:  # type: pypff.message
                 self._create_message(folder_path, message)
 
     def get_folder_abs_path(self, folder: pypff.folder) -> str:

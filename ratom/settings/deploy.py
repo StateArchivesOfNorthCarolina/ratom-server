@@ -54,8 +54,8 @@ if "DATABASE_URL" in os.environ:
 else:
     SECRET_KEY = os.environ["SECRET_KEY"]
 
-    DATABASES["default"]["NAME"] = "ratom_api_%s" % ENVIRONMENT.lower()
-    DATABASES["default"]["USER"] = "ratom_api_%s" % ENVIRONMENT.lower()
+    DATABASES["default"]["NAME"] = "ratom_%s" % ENVIRONMENT.lower()
+    DATABASES["default"]["USER"] = "ratom_%s" % ENVIRONMENT.lower()
     DATABASES["default"]["HOST"] = os.environ.get("DB_HOST", "")
     DATABASES["default"]["PORT"] = os.environ.get("DB_PORT", "")
     DATABASES["default"]["PASSWORD"] = os.environ.get("DB_PASSWORD", "")

@@ -42,7 +42,7 @@ ADD . /code/
 EXPOSE 8000
 
 # Add any static environment variables needed by Django or your settings file here:
-ENV DJANGO_SETTINGS_MODULE=ratom_api.settings.deploy
+ENV DJANGO_SETTINGS_MODULE=ratom.settings.deploy
 
 # Call collectstatic (customize the following line with the minimal environment variables needed for manage.py to run):
 RUN DATABASE_URL='' ENVIRONMENT='' DJANGO_SECRET_KEY='dummy' DOMAIN='' python manage.py collectstatic --noinput
