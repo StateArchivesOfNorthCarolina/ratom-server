@@ -92,9 +92,7 @@ class PstImporter:
         :return:
         """
         logger.info(f"Ingesting ({archive_msg.identifier}): {archive_msg.subject}")
-        form = ArchiveMessageForm(
-            archive=self.archive, archive_msg=archive_msg, ratom_file=self.ratom_file
-        )
+        form = ArchiveMessageForm(archive=self.archive, archive_msg=archive_msg)
         if not form.is_valid():
             # A discovered error will prevent saving this message
             # so log the error and move on

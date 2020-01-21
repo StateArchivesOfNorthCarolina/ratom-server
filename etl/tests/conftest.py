@@ -35,7 +35,7 @@ def empty_message():
 
 
 @pytest.fixture
-def archive_message(empty_message):
+def archive_msg(empty_message):
     """
     Returns:
         A mock message with fake data

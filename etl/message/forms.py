@@ -34,7 +34,6 @@ class ArchiveMessageForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.archive = kwargs.pop("archive")
         self.archive_msg = kwargs.pop("archive_msg")
-        self.ratom_file = kwargs.pop("ratom_file")
         msg_data = self._prepare_message()
         kwargs["data"] = msg_data
         super().__init__(*args, **kwargs)
