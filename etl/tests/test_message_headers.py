@@ -14,7 +14,7 @@ class TestHeaders:
                 "Re: Unit Contingent Deals",
             ),
             (
-                "filename: kate symes 6-27-02.nsf\r\n",
+                "filename: kate symes 6-27-02.nsf  \r\n",
                 "filename",
                 "kate symes 6-27-02.nsf",
             ),
