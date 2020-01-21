@@ -1,24 +1,22 @@
-import datetime as dt
 import io
 import json
 import logging
 import re
 from pathlib import Path
 from typing import Union
-import mimetypes
 from hashlib import md5
 
 import pypff
-import pytz
 from django.db.utils import IntegrityError
 from django.conf import settings
 
 from django.core.files.storage import default_storage
-from typing import List, Dict
+from typing import List
 from spacy.language import Language
 from libratom.lib.entities import load_spacy_model
 from libratom.lib.pff import PffArchive
-from django.utils.timezone import make_aware
+from etl.message.forms import ArchiveMessageForm
+from etl.message.nlp import extract_tags
 
 from core import models as ratom
 
@@ -27,45 +25,6 @@ logger = logging.getLogger(__name__)
 from_re = re.compile(r"^[fF]rom:\s+(?P<value>.*)$", re.MULTILINE)
 to_re = re.compile(r"^[tT]o:\s+(?P<value>.*)$", re.MULTILINE)
 title_re = re.compile(r"[a-zA-Z_]+")
-
-
-def clean_null_chars(obj: str) -> str:
-    """Cleans strings of postgres breaking null chars.
-
-    Arguments:
-        obj {str}
-
-    Returns:
-        str
-    """
-    return re.sub("\x00", "", obj)
-
-
-class MessageHeader:
-    """Provides a consistent interface to the mail and MIME headers from a pypff message.
-    """
-
-    def __init__(self, headers: str) -> None:
-        self.raw_headers = headers
-        self.parsed_headers: Dict[str, str] = {}
-        self.decompose_headers()
-
-    def decompose_headers(self) -> None:
-        """[summary]
-        """
-        if self.raw_headers:
-            decomp = re.split(
-                r"\r\n", re.sub(r"\r\n\s", "\t", self.raw_headers.strip())
-            )
-            for header_item in decomp:
-                s = header_item.split(":", 1)
-                self.parsed_headers[s[0]] = s[1].lstrip()
-
-    def get_header(self, key: str) -> str:
-        return self.parsed_headers.get(key, "")
-
-    def get_full_headers(self) -> str:
-        return json.dumps(self.parsed_headers)
 
 
 class PstImporter:
@@ -103,7 +62,7 @@ class PstImporter:
         )
         return ratom_file
 
-    def import_messages(self) -> None:
+    def import_messages_from_archive(self) -> None:
         for folder in self.archive.folders():
             if not folder.name:  # skip root node
                 continue
@@ -157,42 +116,13 @@ class PstImporter:
         try:
             self.initializing_stage()
             self.importing_stage()
-            self.import_messages(data_file)
+            self.import_messages_from_archive()
         except Exception as e:
             self.stage_fail(e)
         else:
-            self.stage_success(import_summary)
+            self.stage_success()
 
-    def _prepare_message(self, msg_data, archive_msg):
-        try:
-            headers = MessageHeader(archive_msg.transport_headers)
-        except AttributeError as e:
-            logger.exception(f"{e}")
-            msg_data["errors"].append(e)
-        body = self.archive.format_message(archive_msg, with_headers=False)
-        sent_date = None
-        try:
-            sent_date = make_aware(archive_msg.delivery_time)
-        except pytz.NonExistentTimeError:
-            logger.exception("Failed to make datetime aware")
-            msg_data["errors"].append("Failed to make datetime aware")
-        except pytz.AmbiguousTimeError:
-            logger.exception("Ambiguous Time Could not parse")
-            msg_data["errors"].append("Ambiguous time could not parse")
-        msg_data.update(
-            {
-                "msg_from": headers.get_header("From"),
-                "msg_to": headers.get_header("To"),
-                "msg_cc": headers.get_header("Cc"),
-                "msg_bcc": headers.get_header("Bcc"),
-                "sent_date": sent_date,
-                "subject": headers.get_header("Subject"),
-                "headers": headers.get_full_headers(),
-                "body": body,
-            }
-        )
-
-    def _create_message(self, archive_msg: pypff.message, folder_path: str) -> None:
+    def _create_message(self, folder_path: str, archive_msg: pypff.message) -> None:
         """create_messages
         Takes a pypff folder and attempts to ingest its messages.
 
@@ -203,63 +133,28 @@ class PstImporter:
         :return:
         """
         logger.info(f"Ingesting ({archive_msg.identifier}): {archive_msg.subject}")
-        msg_data = {"errors": []}
-        self._prepare_message(archive_msg, msg_data)
+        form = ArchiveMessageForm(
+            archive=self.archive, archive_msg=archive_msg, ratom_file=self.ratom_file
+        )
+        if not form.is_valid():
+            # A discovered error will prevent saving this message
+            # so log the error and move on
+            logger.error(form.errors)
+            return
 
-        spacy_text = f"{subject}\n{body}"
-        try:
-            document = self.spacy_model(spacy_text)
-        except ValueError:
-            logger.exception(f"spaCy error")
-            msg_data["errors"].append("spaCy Error")
-
-        tags = set()
-        for entity in document.ents:
-            tag, __ = ratom.Tag.objects.get_or_create(
-                type=ratom.TagTypeEnum.IMPORTER, name=entity.label_
-            )
-            tags.add(tag)
-
-        audit = ratom.MessageAudit.objects.create()
-        audit.tags.add(*list(tags))
-        tags = None
-
-        try:
-            ratom_message = ratom.Message.objects.create(
-                source_id=m.identifier,
-                file=self.file,
-                account=self.file.account,
-                audit=audit,
-                sent_date=sent_date,
-                msg_from=msg_from,
-                msg_to=msg_to,
-                msg_cc=msg_cc,
-                msg_bcc=msg_bcc,
-                subject=subject,
-                body=clean_null_chars(body),
-                directory=folder_path,
-                headers=headers.get_full_headers(),
-                errors=json.dumps(self.errors),
-            )  # type: ratom.Message
-        except IntegrityError as e:
-            logger.exception(f"{m.identifier}: \t {e}")
-        except ValueError as e:
-            logger.exception(f"{m.identifier}: \t {e}")
-            ratom_message = ratom.Message.objects.create(
-                source_id=m.identifier,
-                file=self.file,
-                account=self.file.account,
-                audit=audit,
-                msg_from=msg_from,
-                msg_to=msg_to,
-                msg_cc=msg_cc,
-                msg_bcc=msg_bcc,
-                subject=subject,
-                body=clean_null_chars(body),
-                directory=folder_path,
-                headers=headers.get_full_headers(),
-                errors=json.dumps(self.errors),
-            )
+        ratom_message = form.save(commit=False)
+        # perform spaCy NLP and entity extraction
+        tags = extract_tags(
+            f"{ratom_message.subject}\n{ratom_message.body}", self.spacy_model
+        )
+        ratom_message.audit = ratom.MessageAudit.objects.create()
+        ratom_message.audit.tags.add(*list(tags))
+        # lastly, save instance
+        ratom_message.file = self.ratom_file
+        ratom_message.account = self.ratom_file.account
+        ratom_message.directory = folder_path
+        # ratom_message.errors = {}
+        ratom_message.save()
 
         # if ratom_message:
         #     for a in m.attachments:  # type: pypff.attachment
@@ -315,6 +210,6 @@ def import_psts(paths: List[Path], account: str, clean: bool) -> None:
         for f in files.all():
             f.delete()
     for path in paths:
-        file, created = create_file(path, account)
-        importer = PstImporter(file, spacy_model)
+        # file, created = create_file(path, account)
+        importer = PstImporter(path, account, spacy_model)
         importer.run()
