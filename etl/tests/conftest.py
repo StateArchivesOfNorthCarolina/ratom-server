@@ -40,7 +40,21 @@ def archive_message(empty_message):
     Returns:
         A mock message with fake data
     """
+    empty_message.identifier = 2097220
     empty_message.plain_text_body = "Hello, World!"
+    headers = [
+        "date: Mon, 2 Apr 2001 11:10:00 -0700 (PDT) Mon, 2 Apr 2001 11:10:00 -0700  (PDT)",
+        "Message-ID: <PPCBV2QFM1HWPI3I1YTQ5013JUTHIZOCB@zlsvr22>",
+        "MIME-Version: 1.0",
+        'Content-Type: text/plain; charset="us-ascii"',
+        "Content-Transfer-Encoding: 7bit",
+        'from: "Lester Rawson"',
+        'to: "Kate Symes"',
+        "subject: Re: Unit Contingent Deals",
+        "filename: kate symes 6-27-02.nsf",
+        "folder: \\kate symes 6-27-02\\Notes Folders\\All documents",
+    ]
+    empty_message.transport_headers = "\r\n".join(headers)
     yield empty_message
 
 
