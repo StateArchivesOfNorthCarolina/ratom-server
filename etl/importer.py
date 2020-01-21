@@ -1,24 +1,16 @@
-import io
-import json
 import logging
 import re
 from pathlib import Path
-from typing import Union
-from hashlib import md5
+from typing import List, Union
 
-import pypff
-from django.db.utils import IntegrityError
-from django.conf import settings
-
-from django.core.files.storage import default_storage
-from typing import List
-from spacy.language import Language
 from libratom.lib.entities import load_spacy_model
 from libratom.lib.pff import PffArchive
-from etl.message.forms import ArchiveMessageForm
-from etl.message.nlp import extract_tags
+from spacy.language import Language
+import pypff
 
 from core import models as ratom
+from etl.message.forms import ArchiveMessageForm
+from etl.message.nlp import extract_tags
 
 
 logger = logging.getLogger(__name__)
@@ -89,29 +81,6 @@ class PstImporter:
             )
         return "/".join(path)
 
-    def _save_attachment(self, attachment: pypff.attachment) -> str:
-        """Saves the attachment if it does not already exist.
-        Attachments are saved using their md5 hexdigest as a name.
-        No extension is saved??
-        :returns string: the hexdigest of the attachment
-        """
-        fo = io.BytesIO()
-        hasher = md5()
-        while True:
-            buff = attachment.read_buffer(2048)
-            if buff:
-                fo.write(buff)
-                hasher.update(buff)
-                continue
-            break
-        hex_digest = hasher.hexdigest()
-        path = f"{settings.ATTACHMENT_PATH}/{hex_digest}"
-        if not default_storage.exists(path):
-            default_storage.save(path, fo)
-        fo = None
-        hasher = None
-        return hex_digest
-
     def run(self) -> None:
         try:
             self.initializing_stage()
@@ -155,24 +124,6 @@ class PstImporter:
         ratom_message.directory = folder_path
         # ratom_message.errors = {}
         ratom_message.save()
-
-        # if ratom_message:
-        #     for a in m.attachments:  # type: pypff.attachment
-        #         logger.info(f"Storing attachment({a.identifier}): {a.name} - {a.size}")
-        #         hashed_name = self._save_attachment(a)
-        #         file_name = a.name
-        #         if not file_name:
-        #             file_name = hashed_name
-        #
-        #         mime, encoding = mimetypes.guess_type(file_name)
-        #         if not mime:
-        #             mime = "Unknown"
-        #         attachment = api.Attachments.objects.create(
-        #             message=ratom_message,
-        #             file_name=file_name,
-        #             mime_type=mime,
-        #             hashed_name=hashed_name,
-        #         )
 
 
 def get_account(account: str) -> ratom.Account:
