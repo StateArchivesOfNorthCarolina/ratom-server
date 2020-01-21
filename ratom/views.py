@@ -5,6 +5,7 @@ from rest_framework.response import Response
 
 from django_elasticsearch_dsl_drf import constants, filter_backends
 from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
+from django_elasticsearch_dsl_drf.pagination import LimitOffsetPagination
 from elasticsearch_dsl import DateHistogramFacet, RangeFacet, TermsFacet
 
 from .documents.message import MessageDocument
@@ -107,6 +108,7 @@ class MessageDocumentView(DocumentViewSet):
     """The MessageDocument view."""
 
     permission_classes = (IsAuthenticated,)
+    pagination_class = LimitOffsetPagination
 
     document = MessageDocument
     serializer_class = MessageDocumentSerializer
