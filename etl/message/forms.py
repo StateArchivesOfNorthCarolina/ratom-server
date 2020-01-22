@@ -37,7 +37,8 @@ class ArchiveMessageForm(forms.ModelForm):
         msg_data = self._prepare_message()
         kwargs["data"] = msg_data
         super().__init__(*args, **kwargs)
-        # Remove ProhibitNullCharactersValidator
+        # Remove ProhibitNullCharactersValidator since we want to
+        # remove them in clean rather than returning invalid
         self.fields["body"].validators = []
 
     def _prepare_message(self) -> Dict[str, str]:
