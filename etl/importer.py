@@ -30,11 +30,13 @@ class PstImporter:
         self.ratom_file_errors = []
 
     def initializing_stage(self) -> None:
+        """Initialization step prior to starting import process."""
         logger.info("Initializing:")
         self.ratom_file = self._create_ratom_file(self.account, self.local_path)
         logger.info(f"Using ratom.File {self.ratom_file.pk}")
 
     def importing_stage(self) -> None:
+        """Set import_status to IMPORTING and open PffArchive."""
         logger.info("Importing:")
         logger.info(f"Opening archive {self.local_path}")
         self.archive = PffArchive(self.local_path)
@@ -44,9 +46,16 @@ class PstImporter:
         logger.info(f"Opened {self.archive.message_count} messages in archive")
 
     def success_stage(self) -> None:
-        pass
+        """If import was successful, set import_status to COMPLETE."""
+        self.ratom_file.import_status = ratom.FileImportStatus.COMPLETE
+        self.ratom_file.save()
+        logger.info(f"ratom.File {self.ratom_file.pk} imported successfully")
 
     def _create_ratom_file(self, account: ratom.Account, path: Path) -> ratom.File:
+        """Create ratom.File for provided Account.
+
+        Returns: ratom.File instance
+        """
         ratom_file, _ = ratom.File.objects.get_or_create(
             account=account,
             filename=str(path.name),
@@ -56,6 +65,7 @@ class PstImporter:
         return ratom_file
 
     def import_messages_from_archive(self) -> None:
+        """Loop through and import all archive messages."""
         for folder in self.archive.folders():
             if not folder.name:  # skip root node
                 continue
@@ -90,14 +100,10 @@ class PstImporter:
         return "/".join(path)
 
     def create_message(self, folder_path: str, archive_msg: pypff.message) -> None:
-        """create_messages
-        Takes a pypff folder and attempts to ingest its messages.
+        """Validate message, run NLP, and create ratom.Message instance.
 
         Any errors are stored in a dict. If a message has errors this dict will be added to the
         msg_data field.
-
-        :param folder: pypff.folder
-        :return:
         """
         logger.info(f"Ingesting ({archive_msg.identifier}): {archive_msg.subject}")
         form = ArchiveMessageForm(archive=self.archive, archive_msg=archive_msg)
@@ -134,6 +140,7 @@ class PstImporter:
         self.ratom_file_errors.append(error_data)
 
     def run(self) -> None:
+        """Main staged import process."""
         try:
             self.initializing_stage()
             self.importing_stage()
