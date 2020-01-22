@@ -15,6 +15,7 @@ def test_create_ratom_file(pst_importer, local_file, account):
 
 @pytest.mark.parametrize("message_count", [100, 1_000])
 def test_importing_stage_message_count(test_archive, pst_importer, message_count):
+    """Acrhive's reported total messages is saved to model"""
     test_archive.return_value.message_count = message_count
     pst_importer.initializing_stage()
     pst_importer.importing_stage()
