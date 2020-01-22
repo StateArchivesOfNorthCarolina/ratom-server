@@ -22,3 +22,21 @@ def test_importing_stage_message_count(test_archive, pst_importer, message_count
     ratom_file = pst_importer.ratom_file
     ratom_file.refresh_from_db()
     assert ratom_file.reported_total_messages == message_count
+
+
+def test_add_file_error__no_msg(pst_importer):
+    """File-level errors are added to internal list."""
+    name = "Error Name"
+    context = {"key": "value"}
+    pst_importer.add_file_error(name, context)
+    assert len(pst_importer.ratom_file_errors) == 1
+    assert pst_importer.ratom_file_errors[0]["name"] == name
+    assert pst_importer.ratom_file_errors[0]["context"] == context
+
+
+def test_add_file_error__with_msg(pst_importer, archive_msg):
+    """Message identifier included in file level error."""
+    name = "Error Name"
+    context = {"key": "value"}
+    pst_importer.add_file_error(name, context, archive_msg)
+    assert pst_importer.ratom_file_errors[0]["msg_identifier"] == archive_msg.identifier

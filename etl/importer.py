@@ -27,6 +27,7 @@ class PstImporter:
         self.local_path = path
         self.account = account
         self.spacy_model = spacy_model
+        self.ratom_file_errors = []
 
     def initializing_stage(self) -> None:
         logger.info("Initializing:")
@@ -92,8 +93,9 @@ class PstImporter:
         form = ArchiveMessageForm(archive=self.archive, archive_msg=archive_msg)
         if not form.is_valid():
             # A discovered error will prevent saving this message
-            # so log the error and move on
+            # so log the error and move on to next message
             logger.error(form.errors)
+            self.add_file_error("ArchiveMessageForm", form.errors, archive_msg)
             return
 
         ratom_message = form.save(commit=False)
@@ -109,6 +111,13 @@ class PstImporter:
         ratom_message.directory = folder_path
         # ratom_message.errors = {}
         ratom_message.save()
+
+    def add_file_error(self, name, context, archive_msg=None):
+        """Record file-level error occured."""
+        error_data = {"name": name, "context": context}
+        if archive_msg:
+            error_data["msg_identifier"] = archive_msg.identifier
+        self.ratom_file_errors.append(error_data)
 
     def run(self) -> None:
         try:
