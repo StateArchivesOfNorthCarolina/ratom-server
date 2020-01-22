@@ -31,13 +31,13 @@ class PstImporter:
 
     def initializing_stage(self) -> None:
         """Initialization step prior to starting import process."""
-        logger.info("Initializing:")
+        logger.info("--- Initializing Stage ---")
         self.ratom_file = self._create_ratom_file(self.account, self.local_path)
         logger.info(f"Using ratom.File {self.ratom_file.pk}")
 
     def importing_stage(self) -> None:
         """Set import_status to IMPORTING and open PffArchive."""
-        logger.info("Importing:")
+        logger.info("--- Importing Stage ---")
         logger.info(f"Opening archive {self.local_path}")
         self.archive = PffArchive(self.local_path)
         self.ratom_file.import_status = ratom.FileImportStatus.IMPORTING
@@ -47,6 +47,7 @@ class PstImporter:
 
     def success_stage(self) -> None:
         """If import was successful, set import_status to COMPLETE."""
+        logger.info("--- Success Stage ---")
         self.ratom_file.import_status = ratom.FileImportStatus.COMPLETE
         self.ratom_file.save()
         logger.info(f"ratom.File {self.ratom_file.pk} imported successfully")
@@ -151,25 +152,6 @@ class PstImporter:
             self.success_stage()
 
 
-def get_account(account: str) -> ratom.Account:
-    return ratom.Account.objects.get_or_create(title=account)
-
-
-def get_files(account: ratom.Account) -> Union[List[ratom.File], List]:
-    if account.file_set:
-        return account.file_set
-    return []
-
-
-def create_file(path: Path, account: ratom.Account) -> ratom.File:
-    return ratom.File.objects.get_or_create(
-        account=account,
-        filename=str(path.name),
-        original_path=str(path.absolute()),
-        file_size=path.stat().st_size,
-    )
-
-
 def import_psts(paths: List[Path], account: str, clean: bool) -> None:
     logger.info("Import process started")
     spacy_model_name = "en_core_web_sm"
@@ -179,13 +161,11 @@ def import_psts(paths: List[Path], account: str, clean: bool) -> None:
     logger.info(
         f"Loaded spacy model: {spacy_model_name}, version: {spacy_model_version}"
     )
-    account, created = get_account(account)
+    account, _ = ratom.Account.objects.get_or_create(title=account)
     if clean:
-        files = get_files(account)
         logger.warning(f"Deleting {account.title} Account (if exists)")
-        for f in files.all():
+        for f in account.file_set.all():
             f.delete()
     for path in paths:
-        # file, created = create_file(path, account)
         importer = PstImporter(path, account, spacy_model)
         importer.run()
