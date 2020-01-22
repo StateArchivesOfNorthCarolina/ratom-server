@@ -1,7 +1,6 @@
 import logging
-import re
 from pathlib import Path
-from typing import List, Union
+from typing import List
 
 from libratom.lib.entities import load_spacy_model
 from libratom.lib.pff import PffArchive
@@ -14,9 +13,6 @@ from etl.message.nlp import extract_tags
 
 
 logger = logging.getLogger(__name__)
-from_re = re.compile(r"^[fF]rom:\s+(?P<value>.*)$", re.MULTILINE)
-to_re = re.compile(r"^[tT]o:\s+(?P<value>.*)$", re.MULTILINE)
-title_re = re.compile(r"[a-zA-Z_]+")
 
 
 class PstImporter:
