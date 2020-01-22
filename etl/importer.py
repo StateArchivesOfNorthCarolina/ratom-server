@@ -43,6 +43,9 @@ class PstImporter:
         self.ratom_file.save()
         logger.info(f"Opened {self.archive.message_count} messages in archive")
 
+    def success_stage(self) -> None:
+        pass
+
     def _create_ratom_file(self, account: ratom.Account, path: Path) -> ratom.File:
         ratom_file, _ = ratom.File.objects.get_or_create(
             account=account,
@@ -62,8 +65,15 @@ class PstImporter:
             if folder.get_number_of_sub_messages() == 0:
                 continue
             folder_path = self.get_folder_abs_path(folder)
-            for message in folder.sub_messages:  # type: pypff.message
-                self.create_message(folder_path, message)
+            for archive_msg in folder.sub_messages:  # type: pypff.message
+                try:
+                    self.create_message(folder_path, archive_msg)
+                except Exception as e:
+                    name = "create_message() failed"
+                    logger.exception(name)
+                    self.add_file_error(
+                        name=name, context=str(e), archive_msg=archive_msg
+                    )
 
     def get_folder_abs_path(self, folder: pypff.folder) -> str:
         """Traverse tree node parent's to build absolution path"""
@@ -95,7 +105,11 @@ class PstImporter:
             # A discovered error will prevent saving this message
             # so log the error and move on to next message
             logger.error(form.errors)
-            self.add_file_error("ArchiveMessageForm", form.errors, archive_msg)
+            self.add_file_error(
+                name="ArchiveMessageForm not valid",
+                context=form.errors,
+                archive=archive_msg,
+            )
             return
 
         ratom_message = form.save(commit=False)
@@ -127,7 +141,7 @@ class PstImporter:
         except Exception as e:
             self.stage_fail(e)
         else:
-            self.stage_success()
+            self.success_stage()
 
 
 def get_account(account: str) -> ratom.Account:

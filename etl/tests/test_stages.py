@@ -1,4 +1,5 @@
 import pytest
+from unittest import mock
 
 from core import models as ratom
 
@@ -41,3 +42,11 @@ def test_add_file_error__with_msg(pst_importer, archive_msg):
     context = {"key": "value"}
     pst_importer.add_file_error(name, context, archive_msg)
     assert pst_importer.ratom_file_errors[0]["msg_identifier"] == archive_msg.identifier
+
+
+def test_create_message__captures_error(pst_importer, test_archive, archive_msg):
+    """If create_message() fails, an error should be added to ratom_file_errors."""
+    pst_importer.create_message = mock.MagicMock(side_effect=Exception)
+    pst_importer.run()
+    assert len(pst_importer.ratom_file_errors) == 1
+    assert pst_importer.ratom_file_errors[0]["name"] == "create_message() failed"
