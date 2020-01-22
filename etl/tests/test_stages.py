@@ -41,3 +41,11 @@ def test_add_file_error__with_msg(pst_importer, archive_msg):
     context = {"key": "value"}
     pst_importer.add_file_error(name, context, archive_msg)
     assert pst_importer.ratom_file_errors[0]["msg_identifier"] == archive_msg.identifier
+
+
+@pytest.mark.parametrize("message_count", [100, 1_000, 1])
+def test_reported_actual_not_equal(test_archive, pst_importer, message_count):
+    test_archive.return_value.message_count = message_count
+    pst_importer.initializing_stage()
+    pst_importer.importing_stage()
+    assert ratom.File.objects.count() == 1

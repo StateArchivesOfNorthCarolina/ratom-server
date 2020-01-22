@@ -119,15 +119,30 @@ class PstImporter:
             error_data["msg_identifier"] = archive_msg.identifier
         self.ratom_file_errors.append(error_data)
 
+    def stage_fail(self, e: str) -> None:
+        logger.info(f"The file {self.ratom_file.filename} failed to import.")
+        logger.info(f"ERROR: {e}")
+        self.ratom_file.import_status = ratom.FileImportStatus.FAILED
+        self.ratom_file.save()
+
+    def stage_finalize(self) -> None:
+        if self.ratom_file.counts.count() == self.ratom_file.reported_total_messages:
+            self.ratom_file.import_status = ratom.FileImportStatus.COMPLETE
+            self.ratom_file.save()
+        else:
+            self.stage_fail(
+                "The expected message count does not equal the ingested count"
+            )
+
     def run(self) -> None:
         try:
             self.initializing_stage()
             self.importing_stage()
             self.import_messages_from_archive()
         except Exception as e:
-            self.stage_fail(e)
+            self.stage_fail(str(e))
         else:
-            self.stage_success()
+            self.stage_finalize()
 
 
 def get_account(account: str) -> ratom.Account:
