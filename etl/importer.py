@@ -27,9 +27,6 @@ class PstImporter:
         self.local_path = path
         self.account = account
         self.spacy_model = spacy_model
-        self.errors = []
-        self.data = {}
-        self.seen_hashes = []
 
     def initializing_stage(self) -> None:
         logger.info("Initializing:")
