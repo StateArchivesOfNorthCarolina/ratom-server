@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class RatomConfig(AppConfig):
+class ApiConfig(AppConfig):
     name = "api"
