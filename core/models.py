@@ -56,6 +56,7 @@ class File(models.Model):
         max_length=2, choices=IMPORT_STATUS, default=CREATED
     )
     date_imported = models.DateTimeField(auto_now_add=True)
+    errors = JSONField(null=True, blank=True)
 
     # Managers
     objects = models.Manager()

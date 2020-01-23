@@ -29,7 +29,7 @@ class PstImporter:
         """Initialization step prior to starting import process."""
         logger.info("--- Initializing Stage ---")
         self.ratom_file = self._create_ratom_file(self.account, self.local_path)
-        logger.info(f"Using ratom.File {self.ratom_file.pk}")
+        logger.info(f"Using ratom.File[{self.ratom_file.pk}]")
 
     def importing_stage(self) -> None:
         """Set import_status to IMPORTING and open PffArchive."""
@@ -41,12 +41,20 @@ class PstImporter:
         self.ratom_file.save()
         logger.info(f"Opened {self.archive.message_count} messages in archive")
 
+    def fail_stage(self, e) -> None:
+        """Import failed for some reason, set import_status to FAILED."""
+        logger.info("--- Fail Stage ---")
+        self.ratom_file.import_status = ratom.File.FAILED
+        self.ratom_file.errors = self.ratom_file_errors
+        self.ratom_file.save()
+        logger.info(f"ratom.File[{self.ratom_file.pk}] failed to import")
+
     def success_stage(self) -> None:
         """If import was successful, set import_status to COMPLETE."""
         logger.info("--- Success Stage ---")
         self.ratom_file.import_status = ratom.File.COMPLETE
         self.ratom_file.save()
-        logger.info(f"ratom.File {self.ratom_file.pk} imported successfully")
+        logger.info(f"ratom.File[{self.ratom_file.pk}] imported successfully")
 
     def _create_ratom_file(self, account: ratom.Account, path: Path) -> ratom.File:
         """Create ratom.File for provided Account.
@@ -143,7 +151,10 @@ class PstImporter:
             self.importing_stage()
             self.import_messages_from_archive()
         except Exception as e:
-            self.stage_fail(e)
+            name = "Unrecoverable import error"
+            logger.exception(name)
+            self.add_file_error(name=name, context=str(e))
+            self.fail_stage(e)
         else:
             self.success_stage()
 
