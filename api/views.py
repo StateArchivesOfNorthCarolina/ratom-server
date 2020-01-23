@@ -83,6 +83,7 @@ def account_detail(request, pk):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def message_detail(request, pk):
     """
     Retrieve a Message
@@ -97,9 +98,9 @@ def message_detail(request, pk):
         return Response(serialized_message.data)
 
 
-HIGHLIGHT_TAGS = {
-    "pre_tags": ["<strong>"],
-    "post_tags": ["</strong>"],
+HIGHLIGHT_LABELS = {
+    "pre_labels": ["<strong>"],
+    "post_labels": ["</strong>"],
 }
 
 
@@ -165,10 +166,10 @@ class MessageDocumentView(DocumentViewSet):
     }
 
     highlight_fields = {
-        "body": {"options": HIGHLIGHT_TAGS},
-        "subject": {"options": HIGHLIGHT_TAGS},
-        "msg_to": {"options": HIGHLIGHT_TAGS},
-        "msg_from": {"options": HIGHLIGHT_TAGS},
+        "body": {"options": HIGHLIGHT_LABELS},
+        "subject": {"options": HIGHLIGHT_LABELS},
+        "msg_to": {"options": HIGHLIGHT_LABELS},
+        "msg_from": {"options": HIGHLIGHT_LABELS},
     }
 
     # Define ordering fields
