@@ -1,0 +1,319 @@
+{
+	"info": {
+		"_postman_id": "a56f33f9-0ab4-4500-8aff-1b4da24b2e6a",
+		"name": "RATOM_V1",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "resfresh token",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{TOKEN_HEADER}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "refresh",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTU4MDMwNDEwNCwianRpIjoiMWJhNzdiNDNmZmZhNGI2ZmEzNzE2MTk4NzZmZTNlOGUiLCJ1c2VyX2lkIjoxfQ.y7VKQ97wgToqyFMGzrVCj4Vc5N-mxSv0pj_lRcVAOjE",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:{{PORT}}/api/v1/token/refresh/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "{{PORT}}",
+					"path": [
+						"api",
+						"v1",
+						"token",
+						"refresh",
+						""
+					],
+					"query": [
+						{
+							"key": "refresh",
+							"value": "",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "220e7c34-e0b5-4865-94ba-930c8a797b36",
+						"exec": [
+							"const { access, refresh } = pm.response.json()",
+							"const authHeader = `Bearer ${access}`",
+							"pm.collectionVariables.set('AUTH_TOKEN', access)",
+							"pm.collectionVariables.set('TOKEN_HEADER', authHeader)",
+							"pm.collectionVariables.set('REFRESH_TOKEN', refresh)"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "username",
+							"value": "michael.ashton",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "Testing1!",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/v1/token/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"token",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SEARCH messages",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{TOKEN_HEADER}}",
+						"type": "text"
+					},
+					{
+						"key": "Authorization",
+						"value": "",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8000/api/v1/messages/?search=body:deal&highlight=body&page_size=10",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"messages",
+						""
+					],
+					"query": [
+						{
+							"key": "search",
+							"value": "body:deal"
+						},
+						{
+							"key": "highlight",
+							"value": "subject",
+							"disabled": true
+						},
+						{
+							"key": "highlight",
+							"value": "body"
+						},
+						{
+							"key": "page_size",
+							"value": "10"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "LIST accounts",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{TOKEN_HEADER}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8000/api/v1/accounts/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"accounts",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SHOW user",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{TOKEN_HEADER}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8000/api/v1/users/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"users",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SHOW message",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{TOKEN_HEADER}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8000/api/v1/messages/10/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"messages",
+						"10",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "39f2b34c-5eba-49cf-b5fa-7d1dc21c5239",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "e627896d-d731-4609-919f-982b3cb1560e",
+				"type": "text/javascript",
+				"exec": [
+					"const requestUrl = pm.request.url;",
+					"const isLogin = requestUrl.path.includes('token')",
+					"",
+					"if (pm.response.code === 401 && !isLogin) {",
+					"    // If response is 401 and the original request was not a login attempt...",
+					"    const port = pm.collectionVariables.get('PORT');",
+					"    const refresh = pm.collectionVariables.get('REFRESH_TOKEN')",
+					"    const postConfig = {",
+					"        url: `http://localhost:${port}/api/v1/token/refresh/`,",
+					"        method: 'POST',",
+					"        header: 'Content-Type:application/json',",
+					"        body: {",
+					"        mode: 'raw',",
+					"        raw: JSON.stringify({ refresh })",
+					"      }",
+					"    }",
+					"    pm.sendRequest(postConfig, (err, response) => {",
+					"        if (err) return console.log(err);",
+					"        const authToken = response.json().access",
+					"        const newTokenHeader = `Bearer ${authToken}`",
+					"        pm.collectionVariables.set('AUTH_TOKEN', authToken)",
+					"        pm.collectionVariables.set('TOKEN_HEADER', newTokenHeader)",
+					"    });",
+					"    ",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "f4a28dd9-a454-4b8a-97ac-daa8722043a5",
+			"key": "AUTH_TOKEN",
+			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNTc5NTI2MzI0LCJqdGkiOiI3Y2Q4ZmNkNWVkYjU0OTk5ODQyYzhmN2YxYmE3ZTlhMiIsInVzZXJfaWQiOjF9.SUHkvOpULrnnzFX7_snXgn2GggdI-rx_QChdZ0kNjZM",
+			"type": "string"
+		},
+		{
+			"id": "20479a07-123d-4005-9617-2fe606922c50",
+			"key": "PORT",
+			"value": "8000",
+			"type": "string"
+		},
+		{
+			"id": "e0a9aebe-ebf4-432c-820f-f56cbcf9bd20",
+			"key": "REFRESH_TOKEN",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"id": "d5157a42-5f5c-4975-ade3-f027770ad1f6",
+			"key": "TOKEN_HEADER",
+			"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNTc5NTI2MzI0LCJqdGkiOiI3Y2Q4ZmNkNWVkYjU0OTk5ODQyYzhmN2YxYmE3ZTlhMiIsInVzZXJfaWQiOjF9.SUHkvOpULrnnzFX7_snXgn2GggdI-rx_QChdZ0kNjZM",
+			"type": "string"
+		}
+	],
+	"protocolProfileBehavior": {}
+}
