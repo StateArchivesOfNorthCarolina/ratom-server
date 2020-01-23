@@ -26,7 +26,7 @@ class MessageDocument(Document):
     body = fields.TextField()
     sent_date = fields.DateField()
     labels = fields.StringField(
-        attr="tags_indexing",
+        attr="labels_indexing",
         fields={
             "raw": fields.KeywordField(multi=True),
             "suggest": fields.CompletionField(multi=True),

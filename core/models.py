@@ -1,4 +1,3 @@
-from enum import Enum
 from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models
@@ -8,28 +7,15 @@ from elasticsearch_dsl import Index
 from django_elasticsearch_dsl_drf.wrappers import dict_to_obj
 
 
-class FileImportStatus(Enum):
-    CREATED = "Created"
-    IMPORTING = "Importing"
-    COMPLETE = "Complete"
-    FAILED = "Failed"
-
-
-class UserTypeEnum(Enum):
-    ARCHIVIST = "Archivist"
-    RESEARCHER = "Researcher"
-
-
-class TagTypeEnum(Enum):
-    USER = "User"
-    IMPORTER = "Importer"
-    STATIC = "Static"
-
-
 class User(AbstractUser):
-    user_type = models.CharField(
-        max_length=32, choices=[(tag, tag.value) for tag in UserTypeEnum]
-    )
+    ARCHIVIST = "AR"
+    RESEARCHER = "RE"
+
+    USER_TYPE = [
+        (ARCHIVIST, "Archivist"),
+        (RESEARCHER, "Researcher"),
+    ]
+    user_type = models.CharField(max_length=2, choices=USER_TYPE,)
 
 
 class Account(models.Model):
@@ -48,6 +34,17 @@ class RatomFileManager(models.Manager):
 
 
 class File(models.Model):
+    CREATED = "CR"
+    IMPORTING = "IM"
+    COMPLETE = "CM"
+    FAILED = "FA"
+    IMPORT_STATUS = [
+        (CREATED, "Created"),
+        (IMPORTING, "Importing"),
+        (COMPLETE, "Complete"),
+        (FAILED, "Failed"),
+    ]
+
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     filename = models.CharField(max_length=200)
     original_path = models.CharField(max_length=500)
@@ -56,9 +53,7 @@ class File(models.Model):
     file_size = models.BigIntegerField(null=True)
     md5_hash = models.CharField(max_length=32)
     import_status = models.CharField(
-        max_length=32,
-        choices=[(tag, tag.value) for tag in FileImportStatus],
-        default=FileImportStatus.CREATED,
+        max_length=2, choices=IMPORT_STATUS, default=CREATED
     )
     date_imported = models.DateTimeField(auto_now_add=True)
 
@@ -86,10 +81,16 @@ class Redaction(models.Model):
     redacted_body = models.TextField(blank=True)
 
 
-class Tag(models.Model):
-    type = models.CharField(
-        max_length=32, choices=[(tag, tag.value) for tag in TagTypeEnum],
-    )
+class Label(models.Model):
+    USER = "U"
+    IMPORTER = "I"
+    STATIC = "S"
+    TAG_TYPE = [
+        (USER, "User"),
+        (IMPORTER, "Importer"),
+        (STATIC, "S"),
+    ]
+    type = models.CharField(max_length=1, choices=TAG_TYPE,)
 
     name = models.CharField(max_length=64)
 
@@ -108,7 +109,7 @@ class MessageAudit(models.Model):
         RestrictionAuthority, null=True, on_delete=models.PROTECT
     )
     redactions = models.ForeignKey(Redaction, null=True, on_delete=models.PROTECT)
-    tags = models.ManyToManyField(Tag)
+    labels = models.ManyToManyField(Label)
     updated_by = models.ForeignKey(User, null=True, on_delete=models.PROTECT)
     history = HistoricalRecords()
 
@@ -149,8 +150,8 @@ class Message(models.Model):
         return dict_to_obj({"title": self.account.title,})
 
     @property
-    def tags_indexing(self):
-        return list(self.audit.tags.values_list("name", flat=True))
+    def labels_indexing(self):
+        return list(self.audit.labels.values_list("name", flat=True))
 
 
 def upload_directory_path(instance, filename):

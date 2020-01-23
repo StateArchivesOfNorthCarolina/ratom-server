@@ -175,16 +175,16 @@ class PstImporter:
                 logger.exception(f"spaCy error")
                 self.errors.append("spaCy Error")
 
-            tags = set()
+            labels = set()
             for entity in document.ents:
-                tag, __ = ratom.Tag.objects.get_or_create(
-                    type=ratom.TagTypeEnum.IMPORTER, name=entity.label_
+                tag, __ = ratom.Label.objects.get_or_create(
+                    type=ratom.Label.IMPORTER, name=entity.label_
                 )
-                tags.add(tag)
+                labels.add(tag)
 
             audit = ratom.MessageAudit.objects.create()
-            audit.tags.add(*list(tags))
-            tags = None
+            audit.labels.add(*list(labels))
+            labels = None
 
             try:
                 ratom_message = ratom.Message.objects.create(
