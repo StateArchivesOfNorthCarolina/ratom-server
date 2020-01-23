@@ -83,6 +83,7 @@ def account_detail(request, pk):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def message_detail(request, pk):
     """
     Retrieve a Message
