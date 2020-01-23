@@ -21,10 +21,12 @@ class MessageHeader:
             )
             for header_item in decomp:
                 s = header_item.split(":", 1)
-                self.parsed_headers[s[0]] = s[1].lstrip()
+                key = s[0].lower()
+                val = s[1].lstrip()
+                self.parsed_headers[key] = val
 
     def get_header(self, key: str) -> str:
-        return self.parsed_headers.get(key, "")
+        return self.parsed_headers.get(key.lower(), "")
 
     def get_full_headers(self) -> str:
         return json.dumps(self.parsed_headers)

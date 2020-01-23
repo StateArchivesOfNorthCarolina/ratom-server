@@ -24,3 +24,12 @@ class TestHeaders:
         """Ensure header lines are parsed into expected key/value pairs."""
         headers = MessageHeader(line)
         assert headers.get_header(key) == val
+
+    @pytest.mark.parametrize(
+        "line", ['from: "Lester Rawson"\r\n', 'From: "Lester Rawson"\r\n']
+    )
+    @pytest.mark.parametrize("key", ["from", "From"])
+    def test_header_key_case(self, key, line):
+        """Accessing headers should work for both lower and upper case use of key."""
+        headers = MessageHeader(line)
+        assert headers.get_header(key) == '"Lester Rawson"'
