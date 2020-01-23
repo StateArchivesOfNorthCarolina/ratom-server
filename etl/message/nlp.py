@@ -1,12 +1,12 @@
 import logging
 
-from core.models import Tag, TagTypeEnum
+from core.models import Label
 
 
 logger = logging.getLogger(__name__)
 
 
-def extract_tags(text, spacy_model):
+def extract_labels(text, spacy_model):
     """Extract entities using libratom.
 
     Returns: core.Tag list
@@ -19,8 +19,6 @@ def extract_tags(text, spacy_model):
 
     tags = set()
     for entity in document.ents:
-        tag, _ = Tag.objects.get_or_create(
-            type=TagTypeEnum.IMPORTER, name=entity.label_
-        )
+        tag, _ = Label.objects.get_or_create(type=Label.IMPORTER, name=entity.label_)
         tags.add(tag)
     return list(tags)
