@@ -50,3 +50,11 @@ def test_create_message__captures_error(pst_importer, test_archive, archive_msg)
     pst_importer.run()
     assert len(pst_importer.ratom_file_errors) == 1
     assert pst_importer.ratom_file_errors[0]["name"] == "create_message() failed"
+
+
+def test_sent_date__errors(pst_importer, archive_msg):
+    """sent_date errors should be saved to message object."""
+    with mock.patch("etl.message.forms.make_aware", side_effect=Exception):
+        pst_importer.run()
+        m = ratom.Message.objects.get()
+        assert m.errors

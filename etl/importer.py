@@ -1,7 +1,6 @@
 import logging
-import re
 from pathlib import Path
-from typing import List, Union
+from typing import List
 
 from libratom.lib.entities import load_spacy_model
 from libratom.lib.pff import PffArchive
@@ -14,9 +13,6 @@ from etl.message.nlp import extract_tags
 
 
 logger = logging.getLogger(__name__)
-from_re = re.compile(r"^[fF]rom:\s+(?P<value>.*)$", re.MULTILINE)
-to_re = re.compile(r"^[tT]o:\s+(?P<value>.*)$", re.MULTILINE)
-title_re = re.compile(r"[a-zA-Z_]+")
 
 
 class PstImporter:
@@ -130,7 +126,7 @@ class PstImporter:
         ratom_message.file = self.ratom_file
         ratom_message.account = self.ratom_file.account
         ratom_message.directory = folder_path
-        # ratom_message.errors = {}
+        ratom_message.errors = form.msg_errors
         ratom_message.save()
 
     def add_file_error(self, name, context, archive_msg=None):
@@ -163,9 +159,8 @@ def import_psts(paths: List[Path], account: str, clean: bool) -> None:
     )
     account, _ = ratom.Account.objects.get_or_create(title=account)
     if clean:
-        logger.warning(f"Deleting {account.title} Account (if exists)")
-        for f in account.file_set.all():
-            f.delete()
+        logger.warning(f"Deleting {account.title} account files (if exists)")
+        account.file_set.all().delete()
     for path in paths:
         importer = PstImporter(path, account, spacy_model)
         importer.run()
