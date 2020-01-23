@@ -11,6 +11,7 @@ admin.site.register(MessageAudit)
 class MessageAdmin(admin.ModelAdmin):
     list_display = (
         "pk",
+        "source_id",
         "msg_to",
         "msg_from",
         "sent_date",
@@ -18,6 +19,7 @@ class MessageAdmin(admin.ModelAdmin):
         "account",
     )
     list_filter = ("sent_date", "account")
-    search_fields = ("body",)
+    search_fields = ("body", "source_id")
     date_hierarchy = "sent_date"
+    raw_id_fields = ("audit", "file")
     ordering = ("-sent_date",)
