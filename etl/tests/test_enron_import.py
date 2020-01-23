@@ -94,5 +94,5 @@ def test_import_enron_dataset_bill_rap(enron_dataset_bill_rap):
     bill_rap = ratom.File.objects.get()
     assert bill_rap.message_set.count() == 483
     message = bill_rap.message_set.get(source_id=2097188)
-    tags = message.audit.tags.values_list("name", flat=True)
-    assert set(tags) == {"CARDINAL", "GPE", "FAC", "ORG", "DATE"}
+    labels = message.audit.labels.values_list("name", flat=True)
+    assert set(labels) == {"CARDINAL", "GPE", "FAC", "ORG", "DATE"}
