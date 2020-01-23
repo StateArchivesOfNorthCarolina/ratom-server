@@ -15,12 +15,6 @@ def local_file(tmp_path):
     yield pst_file
 
 
-@pytest.fixture()
-def pst_importer(account, local_file):
-    """PstImporter instance"""
-    yield PstImporter(local_file, account, "en_core_web_sm")
-
-
 @pytest.fixture
 def empty_message():
     """
@@ -37,10 +31,7 @@ def empty_message():
 
 @pytest.fixture
 def archive_msg(empty_message):
-    """
-    Returns:
-        A mock message with fake data
-    """
+    """A mock pypff message with fake data."""
     empty_message.delivery_time = dt.datetime(2020, 1, 1)
     empty_message.identifier = 2097220
     empty_message.plain_text_body = "Hello, World!"
@@ -61,24 +52,28 @@ def archive_msg(empty_message):
 
 
 @pytest.fixture
-def archive_folder(archive_message):
-    """
-    Returns:
-        A mock pypff folder with messages
-    """
+def archive_folder(archive_msg):
+    """A mock pypff folder with archive_msg in it."""
     folder = mock.Mock()
     folder.name = "Inbox"
     folder.sub_messages = mock.Mock()
-    folder.sub_messages[0] = archive_message
+    folder.sub_messages = [archive_msg]
     yield folder
 
 
 @pytest.fixture()
-def test_archive():
+def test_archive(archive_folder):
+    """A mock pypff archive with ."""
     with mock.patch("etl.importer.PffArchive") as _mock:
         archive = _mock.return_value
         archive.message_count = 1
-        archive.folders = mock.MagicMock()
-        archive.folders[0].name = "Inbox"
-        archive.folders[0].sub_messages = mock.MagicMock()
+        archive.folders.return_value = [archive_folder]
         yield _mock
+
+
+@pytest.fixture()
+def pst_importer(account, local_file, test_archive):
+    """PstImporter instance"""
+    importer = PstImporter(local_file, account, "en_core_web_sm")
+    importer.get_folder_abs_path = mock.MagicMock(return_value="/Important/Project/")
+    yield importer

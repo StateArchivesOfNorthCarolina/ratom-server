@@ -30,12 +30,14 @@ class PstImporter:
         self.ratom_file_errors = []
 
     def initializing_stage(self) -> None:
-        logger.info("Initializing:")
+        """Initialization step prior to starting import process."""
+        logger.info("--- Initializing Stage ---")
         self.ratom_file = self._create_ratom_file(self.account, self.local_path)
         logger.info(f"Using ratom.File {self.ratom_file.pk}")
 
     def importing_stage(self) -> None:
-        logger.info("Importing:")
+        """Set import_status to IMPORTING and open PffArchive."""
+        logger.info("--- Importing Stage ---")
         logger.info(f"Opening archive {self.local_path}")
         self.archive = PffArchive(self.local_path)
         self.ratom_file.import_status = ratom.FileImportStatus.IMPORTING
@@ -43,7 +45,18 @@ class PstImporter:
         self.ratom_file.save()
         logger.info(f"Opened {self.archive.message_count} messages in archive")
 
+    def success_stage(self) -> None:
+        """If import was successful, set import_status to COMPLETE."""
+        logger.info("--- Success Stage ---")
+        self.ratom_file.import_status = ratom.FileImportStatus.COMPLETE
+        self.ratom_file.save()
+        logger.info(f"ratom.File {self.ratom_file.pk} imported successfully")
+
     def _create_ratom_file(self, account: ratom.Account, path: Path) -> ratom.File:
+        """Create ratom.File for provided Account.
+
+        Returns: ratom.File instance
+        """
         ratom_file, _ = ratom.File.objects.get_or_create(
             account=account,
             filename=str(path.name),
@@ -53,6 +66,7 @@ class PstImporter:
         return ratom_file
 
     def import_messages_from_archive(self) -> None:
+        """Loop through and import all archive messages."""
         for folder in self.archive.folders():
             if not folder.name:  # skip root node
                 continue
@@ -62,8 +76,15 @@ class PstImporter:
             if folder.get_number_of_sub_messages() == 0:
                 continue
             folder_path = self.get_folder_abs_path(folder)
-            for message in folder.sub_messages:  # type: pypff.message
-                self.create_message(folder_path, message)
+            for archive_msg in folder.sub_messages:  # type: pypff.message
+                try:
+                    self.create_message(folder_path, archive_msg)
+                except Exception as e:
+                    name = "create_message() failed"
+                    logger.exception(name)
+                    self.add_file_error(
+                        name=name, context=str(e), archive_msg=archive_msg
+                    )
 
     def get_folder_abs_path(self, folder: pypff.folder) -> str:
         """Traverse tree node parent's to build absolution path"""
@@ -80,14 +101,10 @@ class PstImporter:
         return "/".join(path)
 
     def create_message(self, folder_path: str, archive_msg: pypff.message) -> None:
-        """create_messages
-        Takes a pypff folder and attempts to ingest its messages.
+        """Validate message, run NLP, and create ratom.Message instance.
 
         Any errors are stored in a dict. If a message has errors this dict will be added to the
         msg_data field.
-
-        :param folder: pypff.folder
-        :return:
         """
         logger.info(f"Ingesting ({archive_msg.identifier}): {archive_msg.subject}")
         form = ArchiveMessageForm(archive=self.archive, archive_msg=archive_msg)
@@ -95,7 +112,11 @@ class PstImporter:
             # A discovered error will prevent saving this message
             # so log the error and move on to next message
             logger.error(form.errors)
-            self.add_file_error("ArchiveMessageForm", form.errors, archive_msg)
+            self.add_file_error(
+                name="ArchiveMessageForm not valid",
+                context=form.errors,
+                archive=archive_msg,
+            )
             return
 
         ratom_message = form.save(commit=False)
@@ -119,49 +140,16 @@ class PstImporter:
             error_data["msg_identifier"] = archive_msg.identifier
         self.ratom_file_errors.append(error_data)
 
-    def stage_fail(self, e: str) -> None:
-        logger.info(f"The file {self.ratom_file.filename} failed to import.")
-        logger.info(f"ERROR: {e}")
-        self.ratom_file.import_status = ratom.FileImportStatus.FAILED
-        self.ratom_file.save()
-
-    def stage_finalize(self) -> None:
-        if self.ratom_file.counts.count() == self.ratom_file.reported_total_messages:
-            self.ratom_file.import_status = ratom.FileImportStatus.COMPLETE
-            self.ratom_file.save()
-        else:
-            self.stage_fail(
-                "The expected message count does not equal the ingested count"
-            )
-
     def run(self) -> None:
+        """Main staged import process."""
         try:
             self.initializing_stage()
             self.importing_stage()
             self.import_messages_from_archive()
         except Exception as e:
-            self.stage_fail(str(e))
+            self.stage_fail(e)
         else:
-            self.stage_finalize()
-
-
-def get_account(account: str) -> ratom.Account:
-    return ratom.Account.objects.get_or_create(title=account)
-
-
-def get_files(account: ratom.Account) -> Union[List[ratom.File], List]:
-    if account.file_set:
-        return account.file_set
-    return []
-
-
-def create_file(path: Path, account: ratom.Account) -> ratom.File:
-    return ratom.File.objects.get_or_create(
-        account=account,
-        filename=str(path.name),
-        original_path=str(path.absolute()),
-        file_size=path.stat().st_size,
-    )
+            self.success_stage()
 
 
 def import_psts(paths: List[Path], account: str, clean: bool) -> None:
@@ -173,13 +161,11 @@ def import_psts(paths: List[Path], account: str, clean: bool) -> None:
     logger.info(
         f"Loaded spacy model: {spacy_model_name}, version: {spacy_model_version}"
     )
-    account, created = get_account(account)
+    account, _ = ratom.Account.objects.get_or_create(title=account)
     if clean:
-        files = get_files(account)
         logger.warning(f"Deleting {account.title} Account (if exists)")
-        for f in files.all():
+        for f in account.file_set.all():
             f.delete()
     for path in paths:
-        # file, created = create_file(path, account)
         importer = PstImporter(path, account, spacy_model)
         importer.run()
