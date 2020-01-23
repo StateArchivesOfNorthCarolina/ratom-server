@@ -150,6 +150,11 @@ class PstImporter:
             self.initializing_stage()
             self.importing_stage()
             self.import_messages_from_archive()
+        except KeyboardInterrupt as e:
+            name = "Keyboard interrupted file import process"
+            logger.warning("Keyboard interrupted file import process")
+            self.add_file_error(name=name, context=str(e))
+            self.fail_stage(e)
         except Exception as e:
             name = "Unrecoverable import error"
             logger.exception(name)
