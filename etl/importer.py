@@ -126,7 +126,7 @@ class PstImporter:
         ratom_message.file = self.ratom_file
         ratom_message.account = self.ratom_file.account
         ratom_message.directory = folder_path
-        # ratom_message.errors = {}
+        ratom_message.errors = form.msg_errors
         ratom_message.save()
 
     def add_file_error(self, name, context, archive_msg=None):

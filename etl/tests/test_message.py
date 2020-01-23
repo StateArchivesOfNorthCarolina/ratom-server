@@ -1,4 +1,5 @@
 import datetime as dt
+from unittest import mock
 
 from etl.message.forms import ArchiveMessageForm
 
@@ -15,3 +16,12 @@ def test_body__null_chars(test_archive, archive_msg):
     form = ArchiveMessageForm(archive=test_archive, archive_msg=archive_msg)
     assert form.is_valid(), form.errors
     assert form.cleaned_data["body"] == "Hithere"
+
+
+def test_sent_date__make_aware_fails(test_archive, archive_msg):
+    """form should still be valid if make_aware fails."""
+    with mock.patch("etl.message.forms.make_aware", side_effect=Exception):
+        form = ArchiveMessageForm(archive=test_archive, archive_msg=archive_msg)
+        assert form.is_valid(), form.errors
+        assert not form.cleaned_data["sent_date"]
+        assert len(form.msg_errors) == 1

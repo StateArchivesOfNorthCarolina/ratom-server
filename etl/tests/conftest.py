@@ -74,6 +74,6 @@ def test_archive(archive_folder):
 @pytest.fixture()
 def pst_importer(account, local_file, test_archive):
     """PstImporter instance"""
-    importer = PstImporter(local_file, account, "en_core_web_sm")
+    importer = PstImporter(local_file, account, mock.MagicMock())
     importer.get_folder_abs_path = mock.MagicMock(return_value="/Important/Project/")
     yield importer

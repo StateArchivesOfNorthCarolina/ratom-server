@@ -40,6 +40,7 @@ class ArchiveMessageForm(forms.ModelForm):
         # Remove ProhibitNullCharactersValidator since we want to
         # remove them in clean rather than returning invalid
         self.fields["body"].validators = []
+        self.msg_errors = []
 
     def _prepare_message(self) -> Dict[str, str]:
         """Prepare message for Form-based validation."""
@@ -66,15 +67,14 @@ class ArchiveMessageForm(forms.ModelForm):
         return msg_data
 
     def clean_sent_date(self):
+        """If parsing sent_date fails, record error and move on."""
         sent_date = self.archive_msg.delivery_time
         try:
             sent_date = make_aware(sent_date)
-        except pytz.NonExistentTimeError:
-            logger.exception("Failed to make datetime aware")
-        except pytz.AmbiguousTimeError:
-            logger.exception("Ambiguous Time Could not parse")
-        except ValueError:
-            logger.exception("sent_date")
+        except Exception as e:
+            logger.warning(f"{repr(e)} [msg.identifier=={self.archive_msg.identifier}]")
+            self.msg_errors.append(("sent_date", e.__class__.__name__, str(e)))
+            sent_date = None
         return sent_date
 
     def clean_body(self):
