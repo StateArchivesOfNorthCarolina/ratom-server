@@ -36,14 +36,6 @@ def test_add_file_error__no_msg(pst_importer):
     assert pst_importer.ratom_file_errors[0]["context"] == context
 
 
-def test_add_file_error__with_msg(pst_importer, archive_msg):
-    """Message identifier included in file level error."""
-    name = "Error Name"
-    context = {"key": "value"}
-    pst_importer.add_file_error(name, context, archive_msg)
-    assert pst_importer.ratom_file_errors[0]["msg_identifier"] == archive_msg.identifier
-
-
 def test_sent_date__errors(pst_importer, archive_msg):
     """sent_date errors should be saved to message object."""
     with mock.patch("etl.message.forms.make_aware", side_effect=Exception):
@@ -52,20 +44,30 @@ def test_sent_date__errors(pst_importer, archive_msg):
         assert m.errors
 
 
-def test_create_message__captures_error(pst_importer):
-    """If create_message() fails, an error should be added to ratom_file_errors."""
-    pst_importer.create_message = mock.MagicMock(side_effect=Exception)
-    pst_importer.run()
-    assert len(pst_importer.ratom_file_errors) == 1
-    assert pst_importer.ratom_file_errors[0]["name"] == "create_message() failed"
+class TestFileErrors:
+    def test_add_file_error__with_msg(self, pst_importer, archive_msg):
+        """Message identifier included in file level error."""
+        name = "Error Name"
+        context = {"key": "value"}
+        pst_importer.add_file_error(name, context, archive_msg)
+        assert (
+            pst_importer.ratom_file_errors[0]["msg_identifier"]
+            == archive_msg.identifier
+        )
 
+    def test_create_message__captures_error(self, pst_importer):
+        """If create_message() fails, an error should be added to ratom_file_errors."""
+        pst_importer.create_message = mock.MagicMock(side_effect=Exception)
+        pst_importer.run()
+        assert len(pst_importer.ratom_file_errors) == 1
+        assert pst_importer.ratom_file_errors[0]["name"] == "create_message() failed"
 
-def test_import_failure(pst_importer):
-    """sadf"""
-    pst_importer.importing_stage = mock.MagicMock(side_effect=Exception)
-    pst_importer.run()
-    ratom_file = ratom.File.objects.get()
-    assert ratom_file.import_status == ratom.File.FAILED
-    errors = ratom_file.errors
-    assert len(errors) == 1
-    assert errors[0]["name"] == "Unrecoverable import error"
+    def test_import_failure(self, pst_importer):
+        """Uncrecoverable errors should log to the DB."""
+        pst_importer.importing_stage = mock.MagicMock(side_effect=Exception)
+        pst_importer.run()
+        ratom_file = ratom.File.objects.get()
+        assert ratom_file.import_status == ratom.File.FAILED
+        errors = ratom_file.errors
+        assert len(errors) == 1
+        assert errors[0]["name"] == "Unrecoverable import error"
