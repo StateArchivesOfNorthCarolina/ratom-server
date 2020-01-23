@@ -27,3 +27,4 @@ libratom==0.2.5
 boto3==1.11.0
 requests-aws-sign==0.1.5
 django-simple-history==2.8.0
+tqdm==4.41.1

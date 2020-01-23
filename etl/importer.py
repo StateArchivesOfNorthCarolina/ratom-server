@@ -5,6 +5,7 @@ from typing import List
 from libratom.lib.entities import load_spacy_model
 from libratom.lib.pff import PffArchive
 from spacy.language import Language
+from tqdm import tqdm
 import pypff
 
 from core import models as ratom
@@ -74,13 +75,19 @@ class PstImporter:
         for folder in self.archive.folders():
             if not folder.name:  # skip root node
                 continue
-            logger.info(
-                f"Scanning {folder.number_of_sub_messages} messages in folder {folder.name}"
-            )
-            if folder.get_number_of_sub_messages() == 0:
+            message_count = folder.get_number_of_sub_messages()
+            logger.info(f"Scanning {message_count} messages in folder {folder.name}")
+            if message_count == 0:
                 continue
             folder_path = self.get_folder_abs_path(folder)
-            for archive_msg in folder.sub_messages:  # type: pypff.message
+            msg_iterator = tqdm(
+                folder.sub_messages,
+                unit="email",
+                initial=0,
+                total=message_count,
+                miniters=1,
+            )
+            for archive_msg in msg_iterator:  # type: pypff.message
                 try:
                     self.create_message(folder_path, archive_msg)
                 except Exception as e:
