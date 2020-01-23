@@ -18,4 +18,4 @@ class FileFactory(factory.DjangoModelFactory):
     filename = factory.Faker("file_name", extension="pst")
     original_path = factory.Faker("file_path", extension="pst")
     md5_hash = factory.Faker("md5")
-    import_status = core.File.CREATED
+    import_status = core.FileImportStatus.CREATED

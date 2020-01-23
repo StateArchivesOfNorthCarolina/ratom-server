@@ -9,7 +9,7 @@ import pypff
 
 from core import models as ratom
 from etl.message.forms import ArchiveMessageForm
-from etl.message.nlp import extract_labels
+from etl.message.nlp import extract_tags
 
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ class PstImporter:
         logger.info("--- Importing Stage ---")
         logger.info(f"Opening archive {self.local_path}")
         self.archive = PffArchive(self.local_path)
-        self.ratom_file.import_status = ratom.File.IMPORTING
+        self.ratom_file.import_status = ratom.FileImportStatus.IMPORTING
         self.ratom_file.reported_total_messages = self.archive.message_count
         self.ratom_file.save()
         logger.info(f"Opened {self.archive.message_count} messages in archive")
@@ -44,7 +44,7 @@ class PstImporter:
     def success_stage(self) -> None:
         """If import was successful, set import_status to COMPLETE."""
         logger.info("--- Success Stage ---")
-        self.ratom_file.import_status = ratom.File.COMPLETE
+        self.ratom_file.import_status = ratom.FileImportStatus.COMPLETE
         self.ratom_file.save()
         logger.info(f"ratom.File {self.ratom_file.pk} imported successfully")
 
@@ -117,11 +117,11 @@ class PstImporter:
 
         ratom_message = form.save(commit=False)
         # perform spaCy NLP and entity extraction
-        labels = extract_labels(
+        tags = extract_tags(
             f"{ratom_message.subject}\n{ratom_message.body}", self.spacy_model
         )
         ratom_message.audit = ratom.MessageAudit.objects.create()
-        ratom_message.audit.labels.add(*list(labels))
+        ratom_message.audit.tags.add(*list(tags))
         # lastly, save instance
         ratom_message.file = self.ratom_file
         ratom_message.account = self.ratom_file.account
