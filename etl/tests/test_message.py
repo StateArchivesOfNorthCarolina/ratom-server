@@ -25,3 +25,12 @@ def test_sent_date__make_aware_fails(test_archive, archive_msg):
         assert form.is_valid(), form.errors
         assert not form.cleaned_data["sent_date"]
         assert len(form.msg_errors) == 1
+
+
+def test_headers_clean(test_archive, archive_msg):
+    """Make sure transport_headers appear in cleaned_data."""
+    archive_msg.transport_headers = 'From: "Lester Rawson"\r\n'
+    form = ArchiveMessageForm(archive=test_archive, archive_msg=archive_msg)
+    assert form.is_valid()
+    assert "headers" in form.cleaned_data
+    assert "from" in form.cleaned_data["headers"]

@@ -29,4 +29,4 @@ class MessageHeader:
         return self.parsed_headers.get(key.lower(), "")
 
     def get_full_headers(self) -> str:
-        return json.dumps(self.parsed_headers)
+        return self.parsed_headers

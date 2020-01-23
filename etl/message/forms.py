@@ -92,4 +92,5 @@ class ArchiveMessageForm(forms.ModelForm):
             "subject",
             "body",
             "directory",
+            "headers",
         ]
