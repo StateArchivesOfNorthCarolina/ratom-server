@@ -82,7 +82,7 @@ class PstImporter:
             folder_path = self.get_folder_abs_path(folder)
             msg_iterator = tqdm(
                 folder.sub_messages,
-                unit="email",
+                unit="msgs",
                 initial=0,
                 total=message_count,
                 miniters=1,
