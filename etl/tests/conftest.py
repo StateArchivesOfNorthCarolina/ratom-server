@@ -56,6 +56,7 @@ def archive_folder(archive_msg):
     """A mock pypff folder with archive_msg in it."""
     folder = mock.Mock()
     folder.name = "Inbox"
+    folder.get_number_of_sub_messages.return_value = 1
     folder.sub_messages = mock.Mock()
     folder.sub_messages = [archive_msg]
     yield folder
