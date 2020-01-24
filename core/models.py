@@ -86,12 +86,12 @@ class Label(models.Model):
     USER = "U"
     IMPORTER = "I"
     STATIC = "S"
-    TAG_TYPE = [
+    LABEL_TYPE = [
         (USER, "User"),
         (IMPORTER, "Importer"),
-        (STATIC, "S"),
+        (STATIC, "Static"),
     ]
-    type = models.CharField(max_length=1, choices=TAG_TYPE,)
+    type = models.CharField(max_length=1, choices=LABEL_TYPE,)
 
     name = models.CharField(max_length=64)
 
