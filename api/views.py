@@ -138,7 +138,7 @@ class MessageDocumentView(DocumentViewSet):
             # "field": "labels.raw",
             "field": "labels",
             "facet": TermsFacet,
-            "enabled": True,
+            # "enabled": True,
         },
         "sent_date": {
             "field": "sent_date",
