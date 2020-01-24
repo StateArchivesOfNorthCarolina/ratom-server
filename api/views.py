@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from django.conf import settings
 from django_elasticsearch_dsl_drf import constants, filter_backends
 from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
+from django_elasticsearch_dsl_drf.pagination import LimitOffsetPagination
 from elasticsearch_dsl import DateHistogramFacet, TermsFacet
 
 from api.documents.message import MessageDocument
@@ -103,6 +104,8 @@ def message_detail(request, pk):
 HIGHLIGHT_LABELS = {
     "pre_tags": ["<strong>"],
     "post_tags": ["</strong>"],
+    "fragment_size": 40,
+    "number_of_fragments": 5,
 }
 
 
@@ -110,6 +113,7 @@ class MessageDocumentView(DocumentViewSet):
     """The MessageDocument view."""
 
     permission_classes = (IsAuthenticated,)
+    pagination_class = LimitOffsetPagination
 
     document = MessageDocument
     serializer_class = MessageDocumentSerializer
