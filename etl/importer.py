@@ -1,98 +1,101 @@
-import datetime as dt
-import io
-import json
 import logging
-import re
 from pathlib import Path
-from typing import Union
-import mimetypes
-from hashlib import md5
+from typing import List
 
-import pypff
-import pytz
-from django.db.utils import IntegrityError
-from django.conf import settings
-
-from django.core.files.storage import default_storage
-from typing import List, Dict
-from spacy.language import Language
 from libratom.lib.entities import load_spacy_model
 from libratom.lib.pff import PffArchive
-from django.utils.timezone import make_aware
+from spacy.language import Language
+from tqdm import tqdm
+import pypff
 
 from core import models as ratom
+from etl.message.forms import ArchiveMessageForm
+from etl.message.nlp import extract_labels
 
 
 logger = logging.getLogger(__name__)
-from_re = re.compile(r"^[fF]rom:\s+(?P<value>.*)$", re.MULTILINE)
-to_re = re.compile(r"^[tT]o:\s+(?P<value>.*)$", re.MULTILINE)
-title_re = re.compile(r"[a-zA-Z_]+")
-
-
-def clean_null_chars(obj: str) -> str:
-    """Cleans strings of postgres breaking null chars.
-
-    Arguments:
-        obj {str}
-
-    Returns:
-        str
-    """
-    return re.sub("\x00", "", obj)
-
-
-class MessageHeader:
-    """Provides a consistent interface to the mail and MIME headers from a pypff message.
-    """
-
-    def __init__(self, headers: str) -> None:
-        self.raw_headers = headers
-        self.parsed_headers: Dict[str, str] = {}
-        self.decompose_headers()
-
-    def decompose_headers(self) -> None:
-        """[summary]
-        """
-        if self.raw_headers:
-            decomp = re.split(
-                r"\r\n", re.sub(r"\r\n\s", "\t", self.raw_headers.strip())
-            )
-            for header_item in decomp:
-                s = header_item.split(":", 1)
-                self.parsed_headers[s[0]] = s[1].lstrip()
-
-    def get_header(self, key: str) -> str:
-        return self.parsed_headers.get(key, "")
-
-    def get_full_headers(self) -> str:
-        return json.dumps(self.parsed_headers)
 
 
 class PstImporter:
-    def __init__(self, file: ratom.File, spacy_model: Language) -> None:
-        self.file = file
-        self.path = file.original_path
+    def __init__(
+        self, path: Path, account: ratom.Account, spacy_model: Language,
+    ):
+        logger.info(f"PstImporter running on {path}")
+        self.local_path = path
+        self.account = account
         self.spacy_model = spacy_model
-        logger.info(f"PstImporter running on {file.filename}")
-        logger.info(f"Opening archive")
-        self.archive = PffArchive(self.path)
-        file.reported_total_messages = self.archive.message_count
-        file.save()
-        logger.info(f"Opened {self.archive.message_count} messages in archive")
-        self.errors = []
-        self.data = {}
-        self.seen_hashes = []
+        self.ratom_file_errors = []
 
-    def run(self) -> None:
+    def initializing_stage(self) -> None:
+        """Initialization step prior to starting import process."""
+        logger.info("--- Initializing Stage ---")
+        self.ratom_file = self._create_ratom_file(self.account, self.local_path)
+        logger.info(f"Using ratom.File[{self.ratom_file.pk}]")
+
+    def importing_stage(self) -> None:
+        """Set import_status to IMPORTING and open PffArchive."""
+        logger.info("--- Importing Stage ---")
+        logger.info(f"Opening archive {self.local_path}")
+        self.archive = PffArchive(self.local_path)
+        self.ratom_file.import_status = ratom.File.IMPORTING
+        self.ratom_file.reported_total_messages = self.archive.message_count
+        self.ratom_file.save()
+        logger.info(f"Opened {self.archive.message_count} messages in archive")
+
+    def fail_stage(self, e) -> None:
+        """Import failed for some reason, set import_status to FAILED."""
+        logger.info("--- Fail Stage ---")
+        self.ratom_file.import_status = ratom.File.FAILED
+        self.ratom_file.errors = self.ratom_file_errors
+        self.ratom_file.save()
+        logger.info(f"ratom.File[{self.ratom_file.pk}] failed to import")
+
+    def success_stage(self) -> None:
+        """If import was successful, set import_status to COMPLETE."""
+        logger.info("--- Success Stage ---")
+        self.ratom_file.import_status = ratom.File.COMPLETE
+        self.ratom_file.save()
+        logger.info(f"ratom.File[{self.ratom_file.pk}] imported successfully")
+
+    def _create_ratom_file(self, account: ratom.Account, path: Path) -> ratom.File:
+        """Create ratom.File for provided Account.
+
+        Returns: ratom.File instance
+        """
+        ratom_file, _ = ratom.File.objects.get_or_create(
+            account=account,
+            filename=str(path.name),
+            original_path=str(path.absolute()),
+            file_size=path.stat().st_size,
+        )
+        return ratom_file
+
+    def import_messages_from_archive(self) -> None:
+        """Loop through and import all archive messages."""
         for folder in self.archive.folders():
             if not folder.name:  # skip root node
                 continue
-            logger.info(
-                f"Scanning {folder.number_of_sub_messages} messages in folder {folder.name}"
-            )
-            if folder.get_number_of_sub_messages() == 0:
+            message_count = folder.get_number_of_sub_messages()
+            logger.info(f"Scanning {message_count} messages in folder {folder.name}")
+            if message_count == 0:
                 continue
-            self._create_messages(folder)
+            folder_path = self.get_folder_abs_path(folder)
+            msg_iterator = tqdm(
+                folder.sub_messages,
+                unit="msgs",
+                initial=0,
+                total=message_count,
+                miniters=1,
+            )
+            for archive_msg in msg_iterator:  # type: pypff.message
+                try:
+                    self.create_message(folder_path, archive_msg)
+                except Exception as e:
+                    name = "create_message() failed"
+                    logger.exception(name)
+                    self.add_file_error(
+                        name=name, context=str(e), archive_msg=archive_msg
+                    )
 
     def get_folder_abs_path(self, folder: pypff.folder) -> str:
         """Traverse tree node parent's to build absolution path"""
@@ -108,157 +111,64 @@ class PstImporter:
             )
         return "/".join(path)
 
-    def _save_attachment(self, attachment: pypff.attachment) -> str:
-        """Saves the attachment if it does not already exist.
-        Attachments are saved using their md5 hexdigest as a name.
-        No extension is saved??
-        :returns string: the hexdigest of the attachment
-        """
-        fo = io.BytesIO()
-        hasher = md5()
-        while True:
-            buff = attachment.read_buffer(2048)
-            if buff:
-                fo.write(buff)
-                hasher.update(buff)
-                continue
-            break
-        hex_digest = hasher.hexdigest()
-        path = f"{settings.ATTACHMENT_PATH}/{hex_digest}"
-        if not default_storage.exists(path):
-            default_storage.save(path, fo)
-        fo = None
-        hasher = None
-        return hex_digest
-
-    def _create_messages(self, folder: pypff.folder) -> None:
-        """create_messages
-        Takes a pypff folder and attempts to ingest its messages.
+    def create_message(self, folder_path: str, archive_msg: pypff.message) -> None:
+        """Validate message, run NLP, and create ratom.Message instance.
 
         Any errors are stored in a dict. If a message has errors this dict will be added to the
         msg_data field.
-
-
-        :param folder: pypff.folder
-        :return:
         """
-        folder_path = self.get_folder_abs_path(folder)
-        for m in folder.sub_messages:  # type: pypff.message
-            logger.info(f"Ingesting ({m.identifier}): {m.subject}")
-            self.errors = []
-            self.data = {}
-            try:
-                headers = MessageHeader(m.transport_headers)
-            except AttributeError as e:
-                logger.exception(f"{e}")
-                self.errors.append(e)
-            msg_from = headers.get_header("From")
-            msg_to = headers.get_header("To")
-            msg_cc = headers.get_header("Cc")
-            msg_bcc = headers.get_header("Bcc")
-            body = self.archive.format_message(m, with_headers=False)
-            subject = headers.get_header("Subject")
-            try:
-                sent_date = make_aware(m.delivery_time)
-            except pytz.NonExistentTimeError:
-                logger.exception("Failed to make datetime aware")
-                self.errors.append("Failed to make datetime aware")
-            except pytz.AmbiguousTimeError:
-                logger.exception("Ambiguous Time Could not parse")
-                self.errors.append("Ambiguous time could not parse")
+        logger.debug(f"Ingesting ({archive_msg.identifier}): {archive_msg.subject}")
+        form = ArchiveMessageForm(archive=self.archive, archive_msg=archive_msg)
+        if not form.is_valid():
+            # A discovered error will prevent saving this message
+            # so log the error and move on to next message
+            logger.error(form.errors)
+            self.add_file_error(
+                name="ArchiveMessageForm not valid",
+                context=form.errors,
+                archive=archive_msg,
+            )
+            return
 
-            spacy_text = f"{subject}\n{body}"
+        ratom_message = form.save(commit=False)
+        # perform spaCy NLP and entity extraction
+        labels = extract_labels(
+            f"{ratom_message.subject}\n{ratom_message.body}", self.spacy_model
+        )
+        ratom_message.audit = ratom.MessageAudit.objects.create()
+        ratom_message.audit.labels.add(*list(labels))
+        # lastly, save instance
+        ratom_message.file = self.ratom_file
+        ratom_message.account = self.ratom_file.account
+        ratom_message.directory = folder_path
+        ratom_message.errors = form.msg_errors
+        ratom_message.save()
 
-            try:
-                document = self.spacy_model(spacy_text)
-            except ValueError:
-                logger.exception(f"spaCy error")
-                self.errors.append("spaCy Error")
+    def add_file_error(self, name, context, archive_msg=None):
+        """Record file-level error occured."""
+        error_data = {"name": name, "context": context}
+        if archive_msg:
+            error_data["msg_identifier"] = archive_msg.identifier
+        self.ratom_file_errors.append(error_data)
 
-            labels = set()
-            for entity in document.ents:
-                tag, __ = ratom.Label.objects.get_or_create(
-                    type=ratom.Label.IMPORTER, name=entity.label_
-                )
-                labels.add(tag)
-
-            audit = ratom.MessageAudit.objects.create()
-            audit.labels.add(*list(labels))
-            labels = None
-
-            try:
-                ratom_message = ratom.Message.objects.create(
-                    source_id=m.identifier,
-                    file=self.file,
-                    account=self.file.account,
-                    audit=audit,
-                    sent_date=sent_date,
-                    msg_from=msg_from,
-                    msg_to=msg_to,
-                    msg_cc=msg_cc,
-                    msg_bcc=msg_bcc,
-                    subject=subject,
-                    body=clean_null_chars(body),
-                    directory=folder_path,
-                    headers=headers.get_full_headers(),
-                    errors=json.dumps(self.errors),
-                )  # type: ratom.Message
-            except IntegrityError as e:
-                logger.exception(f"{m.identifier}: \t {e}")
-            except ValueError as e:
-                logger.exception(f"{m.identifier}: \t {e}")
-                ratom_message = ratom.Message.objects.create(
-                    source_id=m.identifier,
-                    file=self.file,
-                    account=self.file.account,
-                    audit=audit,
-                    msg_from=msg_from,
-                    msg_to=msg_to,
-                    msg_cc=msg_cc,
-                    msg_bcc=msg_bcc,
-                    subject=subject,
-                    body=clean_null_chars(body),
-                    directory=folder_path,
-                    headers=headers.get_full_headers(),
-                    errors=json.dumps(self.errors),
-                )
-
-            # if ratom_message:
-            #     for a in m.attachments:  # type: pypff.attachment
-            #         logger.info(f"Storing attachment({a.identifier}): {a.name} - {a.size}")
-            #         hashed_name = self._save_attachment(a)
-            #         file_name = a.name
-            #         if not file_name:
-            #             file_name = hashed_name
-            #
-            #         mime, encoding = mimetypes.guess_type(file_name)
-            #         if not mime:
-            #             mime = "Unknown"
-            #         attachment = api.Attachments.objects.create(
-            #             message=ratom_message,
-            #             file_name=file_name,
-            #             mime_type=mime,
-            #             hashed_name=hashed_name,
-            #         )
-
-
-def get_account(account: str) -> ratom.Account:
-    return ratom.Account.objects.get_or_create(title=account)
-
-
-def get_files(account: ratom.Account) -> Union[List[ratom.File], List]:
-    if account.file_set:
-        return account.file_set
-    return []
-
-
-def create_file(path: Path, account: ratom.Account) -> ratom.File:
-    return ratom.File.objects.get_or_create(
-        account=account,
-        filename=str(path.name),
-        original_path=str(path.absolute()),
-        file_size=path.stat().st_size,
-    )
+    def run(self) -> None:
+        """Main staged import process."""
+        try:
+            self.initializing_stage()
+            self.importing_stage()
+            self.import_messages_from_archive()
+        except KeyboardInterrupt as e:
+            name = "Keyboard interrupted file import process"
+            logger.warning("Keyboard interrupted file import process")
+            self.add_file_error(name=name, context=str(e))
+            self.fail_stage(e)
+        except Exception as e:
+            name = "Unrecoverable import error"
+            logger.exception(name)
+            self.add_file_error(name=name, context=str(e))
+            self.fail_stage(e)
+        else:
+            self.success_stage()
 
 
 def import_psts(paths: List[Path], account: str, clean: bool) -> None:
@@ -270,13 +180,10 @@ def import_psts(paths: List[Path], account: str, clean: bool) -> None:
     logger.info(
         f"Loaded spacy model: {spacy_model_name}, version: {spacy_model_version}"
     )
-    account, created = get_account(account)
+    account, _ = ratom.Account.objects.get_or_create(title=account)
     if clean:
-        files = get_files(account)
-        logger.warning(f"Deleting {account.title} Account (if exists)")
-        for f in files.all():
-            f.delete()
+        logger.warning(f"Deleting {account.title} account files (if exists)")
+        account.file_set.all().delete()
     for path in paths:
-        file, created = create_file(path, account)
-        importer = PstImporter(file, spacy_model)
+        importer = PstImporter(path, account, spacy_model)
         importer.run()

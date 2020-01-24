@@ -3,11 +3,14 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from django.conf import settings
 from django_elasticsearch_dsl_drf import constants, filter_backends
 from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
-from elasticsearch_dsl import DateHistogramFacet, RangeFacet, TermsFacet
+from django_elasticsearch_dsl_drf.pagination import LimitOffsetPagination
+from elasticsearch_dsl import DateHistogramFacet, TermsFacet
 
 from api.documents.message import MessageDocument
+from api.documents.utils import LoggingPageNumberPagination
 from core.models import User, Account, Message
 from api.serializers import (
     UserSerializer,
@@ -99,8 +102,10 @@ def message_detail(request, pk):
 
 
 HIGHLIGHT_LABELS = {
-    "pre_labels": ["<strong>"],
-    "post_labels": ["</strong>"],
+    "pre_tags": ["<strong>"],
+    "post_tags": ["</strong>"],
+    "fragment_size": 40,
+    "number_of_fragments": 5,
 }
 
 
@@ -108,6 +113,7 @@ class MessageDocumentView(DocumentViewSet):
     """The MessageDocument view."""
 
     permission_classes = (IsAuthenticated,)
+    pagination_class = LimitOffsetPagination
 
     document = MessageDocument
     serializer_class = MessageDocumentSerializer
@@ -120,6 +126,8 @@ class MessageDocumentView(DocumentViewSet):
         filter_backends.FacetedSearchFilterBackend,
         filter_backends.HighlightBackend,
     ]
+    if settings.ELASTICSEARCH_LOG_QUERIES:
+        pagination_class = LoggingPageNumberPagination
 
     # Define search fields
     search_fields = (
@@ -166,8 +174,8 @@ class MessageDocumentView(DocumentViewSet):
     }
 
     highlight_fields = {
-        "body": {"options": HIGHLIGHT_LABELS},
-        "subject": {"options": HIGHLIGHT_LABELS},
+        "body": {"enabled": True, "options": HIGHLIGHT_LABELS},
+        "subject": {"enabled": True, "options": HIGHLIGHT_LABELS},
         "msg_to": {"options": HIGHLIGHT_LABELS},
         "msg_from": {"options": HIGHLIGHT_LABELS},
     }

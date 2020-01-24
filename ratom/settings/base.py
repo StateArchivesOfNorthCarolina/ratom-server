@@ -46,11 +46,6 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
 
-
-ELASTICSEARCH_INDEX_NAMES = {
-    "api.documents.message": "message",
-}
-
 PAGINATION_PAGE_SIZE = 4
 
 REST_FRAMEWORK = {
@@ -58,7 +53,7 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": PAGINATION_PAGE_SIZE,
     "ORDERING_PARAM": "ordering",
 }
@@ -68,6 +63,10 @@ ELASTICSEARCH_URL = os.getenv("ELASTICSEARCH_URL", "localhost:9200")
 ELASTICSEARCH_DSL = {
     "default": {"hosts": ELASTICSEARCH_URL},
 }
+ELASTICSEARCH_INDEX_NAMES = {
+    "api.documents.message": "message",
+}
+ELASTICSEARCH_LOG_QUERIES = os.getenv("ELASTICSEARCH_LOG_QUERIES", "false") == "true"
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),

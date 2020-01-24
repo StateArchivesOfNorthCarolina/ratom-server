@@ -22,6 +22,7 @@ env-setup.sh
 deployment/roles/
 notebooks/.ipynb_checkpoints
 .vault_pass
+media/
 htmlcov/
 
 ## JMG

@@ -52,8 +52,8 @@ environment variables located in a file name ``.env`` in the top level directory
 of the project. The only variable we need to start is
 ``DJANGO_SETTINGS_MODULE``::
 
-    (ratom_api)$ cp ratom_api/settings/local.example.py ratom_api/settings/local.py
-    (ratom_api)$ echo "DJANGO_SETTINGS_MODULE=ratom_api.settings.local" > .env
+    (ratom_api)$ cp ratom/settings/local.example.py ratom/settings/local.py
+    (ratom_api)$ echo "DJANGO_SETTINGS_MODULE=ratom.settings.local" > .env
 
 Create the Postgres database and run the initial migrate::
 
@@ -104,6 +104,25 @@ Development
 -----------
 
 🤯
+
+
+Tests
+----------
+
+To run the projet unit tests, use:
+
+```
+make test
+```
+
+A full-stack test with a real Enron .pst file is skipped by default. To enable it, run:
+
+``
+TEST_ENRON_DATA_SET=true make test
+```
+
+
+HTML-based coverage reports are generated into ``htmlcov/``.
 
 
 Deployment

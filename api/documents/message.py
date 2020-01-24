@@ -9,7 +9,7 @@ INDEX.settings(number_of_shards=1, number_of_replicas=1)
 html_strip = analyzer(
     "html_strip",
     tokenizer="standard",
-    filter=["standard", "lowercase", "stop", "snowball"],
+    filter=["lowercase", "stop", "snowball"],
     char_filter=["html_strip"],
 )
 
@@ -48,43 +48,5 @@ class MessageDocument(Document):
 
     class Django(object):
         model = Message
-        # fields = [
-        #     "msg_from",
-        #     "msg_to",
-        #     "subject",
-        #     "body",
-        #     "sent_date",
-        #     "labels",
-        # ]
         # True disables auto-indexing
         ignore_signals = True
-
-        # analyzer=html_strip,
-        # fields={
-        #     'raw': fields.StringField(analyzer='keyword'),
-        # }
-
-        # analyzer=html_strip,
-        # fields={
-        #     'raw': fields.StringField(analyzer='keyword'),
-        # }
-
-        # analyzer=html_strip,
-        # fields={
-        #     'raw': fields.StringField(analyzer='keyword'),
-        # }
-
-        # analyzer=html_strip,
-        # fields={
-        #     'raw': fields.StringField(analyzer='keyword'),
-        # }
-
-        # analyzer=html_strip,
-        # fields={
-        #     'raw': fields.StringField(analyzer='keyword'),
-        # }
-
-        # analyzer=html_strip,
-        # fields={
-        #     'raw': fields.StringField(analyzer='keyword'),
-        # }

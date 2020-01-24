@@ -56,6 +56,7 @@ class File(models.Model):
         max_length=2, choices=IMPORT_STATUS, default=CREATED
     )
     date_imported = models.DateTimeField(auto_now_add=True)
+    errors = JSONField(null=True, blank=True)
 
     # Managers
     objects = models.Manager()
@@ -152,6 +153,9 @@ class Message(models.Model):
     @property
     def labels_indexing(self):
         return list(self.audit.labels.values_list("name", flat=True))
+
+    def __str__(self):
+        return f"{self.subject[:40]}..."
 
 
 def upload_directory_path(instance, filename):
