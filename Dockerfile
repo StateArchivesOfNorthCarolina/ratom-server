@@ -48,7 +48,7 @@ ENV DJANGO_SETTINGS_MODULE=ratom.settings.deploy
 RUN DATABASE_URL='' ENVIRONMENT='' DJANGO_SECRET_KEY='dummy' DOMAIN='' python manage.py collectstatic --noinput
 
 # Tell uWSGI where to find your wsgi file (change this):
-ENV UWSGI_WSGI_FILE=ratom_api/wsgi.py
+ENV UWSGI_WSGI_FILE=ratom/wsgi.py
 
 # Base uWSGI configuration (you shouldn't need to change these):
 ENV UWSGI_HTTP=:8000 UWSGI_MASTER=1 UWSGI_HTTP_AUTO_CHUNKED=1 UWSGI_HTTP_KEEPALIVE=1 UWSGI_UID=1000 UWSGI_GID=2000 UWSGI_LAZY_APPS=1 UWSGI_WSGI_ENV_BEHAVIOR=holy
