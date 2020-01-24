@@ -115,6 +115,13 @@ To run the projet unit tests, use:
 make test
 ```
 
+A full-stack test with a real Enron .pst file is skipped by default. To enable it, run:
+
+``
+TEST_ENRON_DATA_SET=true make test
+```
+
+
 HTML-based coverage reports are generated into ``htmlcov/``.
 
 
