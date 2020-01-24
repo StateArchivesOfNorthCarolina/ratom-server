@@ -101,8 +101,8 @@ def message_detail(request, pk):
 
 
 HIGHLIGHT_LABELS = {
-    "pre_labels": ["<strong>"],
-    "post_labels": ["</strong>"],
+    "pre_tags": ["<strong>"],
+    "post_tags": ["</strong>"],
 }
 
 
