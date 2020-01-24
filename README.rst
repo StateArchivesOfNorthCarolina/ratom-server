@@ -106,6 +106,18 @@ Development
 🤯
 
 
+Tests
+----------
+
+To run the projet unit tests, use:
+
+```
+make test
+```
+
+HTML-based coverage reports are generated into ``htmlcov/``.
+
+
 Deployment
 ----------
 
