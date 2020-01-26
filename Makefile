@@ -11,10 +11,10 @@ test:
 	pytest
 
 build-base:
-	DOCKER_BUILDKIT=1 docker build --target base --pull -t govsanc/ratom-server:base .
+	DOCKER_BUILDKIT=0 docker build --target base --pull -t govsanc/ratom-server:base .
 
 build-test:
-	DOCKER_BUILDKIT=1 docker build --target test-base -t govsanc/ratom-server:test-base .
+	DOCKER_BUILDKIT=0 docker build --target test-base -t govsanc/ratom-server:test-base .
 
 ci-pre-commit:
 	docker-compose -f docker-compose.yml -f docker-compose.ci.yml run --rm app pre-commit run --all -v
@@ -23,7 +23,7 @@ ci-test:
 	docker-compose -f docker-compose.yml -f docker-compose.ci.yml run --rm app pytest
 
 build-deploy:
-	DOCKER_BUILDKIT=1 docker build --target deploy -t govsanc/ratom-server .
+	DOCKER_BUILDKIT=0 docker build --target deploy -t govsanc/ratom-server .
 
 lint-py:
 	# Check for Python formatting issues
