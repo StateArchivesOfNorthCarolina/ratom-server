@@ -8,10 +8,18 @@ services:
 python:
   - "3.7"
 
+addons:
+  apt:
+    packages:
+      - docker-ce
+
 env:
   global:
     - CLOUDSDK_CORE_DISABLE_PROMPTS=1
     - DOCKERHUB_REPO=govsanc/ratom-server
+
+before_install:
+  - docker --version
 
 install:
   - pip install -r deployment/requirements.txt
