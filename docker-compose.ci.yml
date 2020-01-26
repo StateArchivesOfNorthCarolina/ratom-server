@@ -2,6 +2,8 @@ version: '3.4'
 
 services:
   app:
+    environment:
+      DJANGO_SETTINGS_MODULE: ratom.settings.dev
     build:
       context: .
       dockerfile: ./Dockerfile
