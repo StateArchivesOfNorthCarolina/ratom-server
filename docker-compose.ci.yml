@@ -1,0 +1,9 @@
+version: '3.4'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      target: test-base
+    image: govsanc/ratom-server:test-base
