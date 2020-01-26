@@ -16,7 +16,7 @@ build-base:
 build-test:
 	DOCKER_BUILDKIT=1 docker build --target test-base -t govsanc/ratom-server:test-base .
 
-ci-black:
+ci-pre-commit:
 	docker-compose -f docker-compose.yml -f docker-compose.ci.yml run --rm app pre-commit run --all -v
 
 ci-test:
