@@ -69,8 +69,12 @@ ELASTICSEARCH_INDEX_NAMES = {
 ELASTICSEARCH_LOG_QUERIES = os.getenv("ELASTICSEARCH_LOG_QUERIES", "false") == "true"
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ACCESS_TOKEN_LIFETIME": timedelta(
+        seconds=int(os.getenv("JWT_ACCESS_TOKEN_LIFETIME_SECONDS", 300))
+    ),
+    "REFRESH_TOKEN_LIFETIME": timedelta(
+        days=int(os.getenv("JWT_REFRESH_TOKEN_LIFETIME_DAYS", 7))
+    ),
 }
 
 ROOT_URLCONF = "ratom.urls"
