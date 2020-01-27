@@ -70,10 +70,12 @@ ELASTICSEARCH_LOG_QUERIES = os.getenv("ELASTICSEARCH_LOG_QUERIES", "false") == "
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(
-        seconds=int(os.getenv("JWT_ACCESS_TOKEN_LIFETIME_SECONDS", 300))
+        seconds=int(os.getenv("JWT_ACCESS_TOKEN_LIFETIME_SECONDS", 300))  # 5 minutes
     ),
     "REFRESH_TOKEN_LIFETIME": timedelta(
-        days=int(os.getenv("JWT_REFRESH_TOKEN_LIFETIME_DAYS", 7))
+        minutes=int(
+            os.getenv("JWT_REFRESH_TOKEN_LIFETIME_MINUTES", 60 * 24 * 7)  # 7 days
+        )
     ),
 }
 
