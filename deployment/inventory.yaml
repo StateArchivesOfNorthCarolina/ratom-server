@@ -63,3 +63,4 @@ all:
             ELASTICSEARCH_URL: "{{ vault_elasticsearch_url }}"
             DJANGO_MANAGEPY_MIGRATE: "on"
             JWT_ACCESS_TOKEN_LIFETIME_SECONDS: "15"
+            JWT_REFRESH_TOKEN_LIFETIME_MINUTES: "1"
