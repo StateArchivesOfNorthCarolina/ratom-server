@@ -3,7 +3,6 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models
 
 from simple_history.models import HistoricalRecords
-from elasticsearch_dsl import Index
 from django_elasticsearch_dsl_drf.wrappers import dict_to_obj
 
 

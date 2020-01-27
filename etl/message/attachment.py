@@ -1,13 +1,20 @@
 import io
+import logging
 from hashlib import md5
+import mimetypes
 
 import pypff
 
 from django.conf import settings
 from django.core.files.storage import default_storage
 
+from core.models import Attachment
 
-def extract_attachment(self, attachment: pypff.attachment) -> str:
+
+logger = logging.getLogger(__name__)
+
+
+def extract_attachment(attachment: pypff.attachment) -> str:
     """Saves the attachment if it does not already exist.
     Attachments are saved using their md5 hexdigest as a name.
     No extension is saved??
@@ -34,7 +41,7 @@ def extract_attachment(self, attachment: pypff.attachment) -> str:
 def save_attachment(m):
     for a in m.attachments:  # type: pypff.attachment
         logger.info(f"Storing attachment({a.identifier}): {a.name} - {a.size}")
-        hashed_name = self._save_attachment(a)
+        hashed_name = "fixme"
         file_name = a.name
         if not file_name:
             file_name = hashed_name
@@ -42,9 +49,6 @@ def save_attachment(m):
         mime, encoding = mimetypes.guess_type(file_name)
         if not mime:
             mime = "Unknown"
-        attachment = api.Attachments.objects.create(
-            message=ratom_message,
-            file_name=file_name,
-            mime_type=mime,
-            hashed_name=hashed_name,
+        Attachment.objects.create(
+            message=m, file_name=file_name, mime_type=mime, hashed_name=hashed_name,
         )

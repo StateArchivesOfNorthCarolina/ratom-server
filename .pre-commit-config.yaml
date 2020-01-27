@@ -19,7 +19,7 @@ repos:
         args: [--allow-missing-credentials]
       - id: detect-private-key
       - id: end-of-file-fixer
-      # - id: flake8
-      #   exclude: settings|migrations
+      - id: flake8
+        exclude: settings|migrations
       - id: no-commit-to-branch
       - id: trailing-whitespace
