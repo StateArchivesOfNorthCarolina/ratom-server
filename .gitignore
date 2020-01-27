@@ -24,6 +24,7 @@ notebooks/.ipynb_checkpoints
 .vault_pass
 media/
 htmlcov/
+docker-compose.override.yml
 
 ## JMG
 .envs/
