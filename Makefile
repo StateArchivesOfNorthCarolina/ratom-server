@@ -20,7 +20,7 @@ ci-pre-commit:
 	docker-compose -f docker-compose.yml -f docker-compose.ci.yml run --rm app pre-commit run --all -v
 
 ci-test:
-	docker-compose -f docker-compose.yml -f docker-compose.ci.yml run --rm app pytest
+	docker-compose -f docker-compose.yml -f docker-compose.ci.yml run --rm app pytest --cov-fail-under=70
 
 build-deploy:
 	DOCKER_BUILDKIT=0 docker build --target deploy -t govsanc/ratom-server .
