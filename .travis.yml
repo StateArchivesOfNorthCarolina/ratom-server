@@ -24,9 +24,6 @@ before_script:
 script:
   - make ci-pre-commit
   - make ci-test
-  # - docker-compose up -d
-  # - docker-compose exec db /bin/bash -c "until psql -l; do echo 'db unavailable. sleeping'; sleep 1; done"
-  # - docker-compose exec app /bin/bash -c "code/python manage.py test"
 
 before_deploy:
   # Build deploy image
