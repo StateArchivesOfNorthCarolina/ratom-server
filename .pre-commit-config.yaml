@@ -5,3 +5,21 @@ repos:
       - id: black
         language_version: python3.7
         exclude: migrations
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.4.0
+    hooks:
+      - id: check-docstring-first
+      - id: check-merge-conflict
+      - id: check-json
+      - id: check-yaml
+        exclude: deployment/inventory.yaml
+      - id: check-xml
+      - id: debug-statements
+      - id: detect-aws-credentials
+        args: [--allow-missing-credentials]
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      # - id: flake8
+      #   exclude: settings|migrations
+      - id: no-commit-to-branch
+      - id: trailing-whitespace
