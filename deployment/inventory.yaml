@@ -13,6 +13,13 @@ all:
           k8s_container_name: api
           k8s_container_image: govsanc/ratom-server
           k8s_container_image_tag: latest
+          k8s_container_resources:
+            requests:
+              memory: "768Mi"
+              cpu: "250m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
           k8s_container_port: 8000
           k8s_container_ingress_paths:
           - /admin
