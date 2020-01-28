@@ -1,7 +1,11 @@
+import logging
 from pathlib import Path
 from django.core.management.base import BaseCommand
 from etl.tasks import import_file_task
 from etl.importer import import_psts
+
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -29,10 +33,18 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        for p in Path(options["paths"][0]).glob("**/*.pst"):
-            if options["detach"]:
-                import_file_task.delay(
-                    path=[str(p)], account=p.stem, clean=options["clean"]
-                )
-            else:
-                import_psts(paths=[str(p)], account=p.stem, clean=options["clean"])
+        logger.info("import_psts started")
+        paths = options["paths"]
+        logger.info(f"Matched {len(paths)} file(s)")
+        if len(paths) == 0:
+            return
+        data = {
+            "paths": paths,
+            "account": Path(paths[0]).stem,
+            "clean": options["clean"],
+        }
+        if options["detach"]:
+            logger.info("Queuing background task...")
+            import_file_task.delay(**data)
+        else:
+            import_psts(**data)
