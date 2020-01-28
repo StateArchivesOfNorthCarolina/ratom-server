@@ -90,7 +90,7 @@ class PstImporter:
                 unit="msgs",
                 initial=0,
                 total=message_count,
-                mininterval=3.0,
+                mininterval=3.0 if self.is_background else 0.1,
             )
             for archive_msg in msg_iterator:  # type: pypff.message
                 try:
@@ -177,7 +177,7 @@ class PstImporter:
 
 
 def import_psts(
-    paths: List[str], account: str, clean: bool, is_background: bool
+    paths: List[str], account: str, clean: bool, is_background: bool = False,
 ) -> None:
     logger.info("Import process started")
     spacy_model_name = "en_core_web_sm"
