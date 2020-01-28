@@ -38,8 +38,8 @@ class Account(models.Model):
         return self.messages.filter(audit__processed=True).count()
 
     @property
-    def message_last_modified(self):
-        return self.messages.latest("inserted_on").inserted_on
+    def account_last_modified(self):
+        return self.files.latest("date_imported").date_imported
 
     def get_inclusive_dates(self, str_fmt: str = YMD_HMS, as_string=True):
         dates = []
