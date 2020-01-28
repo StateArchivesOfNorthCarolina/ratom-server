@@ -122,9 +122,6 @@ for backend in TEMPLATES:
                 ("django.template.loaders.cached.Loader", loaders)
             ]
 
-# Uncomment if using celery worker configuration
-# CELERY_SEND_TASK_ERROR_EMAILS = True
-# BROKER_URL = 'amqp://ratom_api_%(ENVIRONMENT)s:%(BROKER_PASSWORD)s@%(BROKER_HOST)s/ratom_api_%(ENVIRONMENT)s' % os.environ  # noqa
 
 # Environment overrides
 # These should be kept to an absolute minimum
