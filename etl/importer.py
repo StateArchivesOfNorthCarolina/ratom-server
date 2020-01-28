@@ -90,7 +90,7 @@ class PstImporter:
                 unit="msgs",
                 initial=0,
                 total=message_count,
-                miniters=message_count * 0.05 if self.is_background else 1,
+                mininterval=3.0,
             )
             for archive_msg in msg_iterator:  # type: pypff.message
                 try:
