@@ -1,10 +1,13 @@
 from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models
+from django.db.models import F
 
 from simple_history.models import HistoricalRecords
 from elasticsearch_dsl import Index
 from django_elasticsearch_dsl_drf.wrappers import dict_to_obj
+
+YMD_HMS = "%Y-%m-%d %H:%M:%S"
 
 
 class User(AbstractUser):
@@ -37,6 +40,24 @@ class Account(models.Model):
     @property
     def message_last_modified(self):
         return self.messages.latest("inserted_on").inserted_on
+
+    def get_inclusive_dates(self, str_fmt: str = YMD_HMS, as_string=True):
+        dates = []
+        for f in self.files.all():
+            dates.extend(f.inclusive_dates)
+        dates.sort()
+        if as_string:
+            return f"{dates[0].strftime(str_fmt)} - {dates[-1].strftime(str_fmt)}"
+        return dates[0], dates[-1]
+
+    def get_account_status(self):
+        if self.files.filter(import_status=File.IMPORTING).count() > 0:
+            return File.IMPORTING
+        if self.files.filter(import_status=File.FAILED).count() > 0:
+            return File.FAILED
+        if self.files.filter(import_status=File.CREATED).count() > 0:
+            return File.CREATED
+        return File.COMPLETE
 
 
 class RatomFileManager(models.Manager):
@@ -85,6 +106,16 @@ class File(models.Model):
     @property
     def percent_complete(self) -> object:
         pass
+
+    @property
+    def inclusive_dates(self):
+        """
+        Returns the inclusive
+        :param str_format:
+        :return:
+        """
+        qs = self.message_set.filter(sent_date__isnull=False)
+        return qs.first().sent_date, qs.last().sent_date
 
 
 class RestrictionAuthority(models.Model):
@@ -152,6 +183,9 @@ class Message(models.Model):
     headers = JSONField(null=True, blank=True)
     errors = JSONField(null=True, blank=True)
     inserted_on = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["sent_date"]
 
     @property
     def account_indexing(self):

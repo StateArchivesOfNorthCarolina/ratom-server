@@ -53,6 +53,8 @@ class AccountSerializer(serializers.ModelSerializer):
             "message_last_modified": instance.message_last_modified.strftime(
                 "%Y-%m-%d %H:%M:%S"
             ),
+            "inclusive_dates": instance.get_inclusive_dates("%Y-%m-%d"),
+            "account_status": instance.get_account_status(),
         }
 
 
