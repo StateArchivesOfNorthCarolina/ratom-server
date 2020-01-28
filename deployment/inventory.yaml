@@ -25,6 +25,9 @@ all:
           - /admin
           - /api
           - /django-static
+          k8s_worker_enabled: true
+          k8s_worker_replicas: 1
+          k8s_worker_celery_app: "ratom"
           vault_database_password: !vault |
             $ANSIBLE_VAULT;1.1;AES256
             30656462333731386231643531613239613264383533363135316337356335663434363032653361
