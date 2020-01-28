@@ -183,7 +183,7 @@ def import_psts(paths: List[Path], account: str, clean: bool) -> None:
     account, _ = ratom.Account.objects.get_or_create(title=account)
     if clean:
         logger.warning(f"Deleting {account.title} account files (if exists)")
-        account.file_set.all().delete()
+        account.files.all().delete()
     for path in paths:
         importer = PstImporter(path, account, spacy_model)
         importer.run()

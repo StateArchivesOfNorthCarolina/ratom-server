@@ -1,6 +1,6 @@
 from rest_framework import serializers
-
-from core.models import User, Account, Message
+from django.db import models
+from core.models import User, Account, Message, File
 
 from api.documents.message import MessageDocument
 
@@ -19,10 +19,41 @@ class UserSerializer(serializers.ModelSerializer):
         ]
 
 
+class FileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = File
+
+    def to_representation(self, instance: File):
+        return {
+            "filename": instance.filename,
+            "original_path": instance.original_path,
+            "reported_total_messages": instance.reported_total_messages,
+            "accession_date": instance.accession_date,
+            "file_size": instance.file_size,
+            "md5_hash": instance.md5_hash,
+            "import_status": instance.get_import_status_display(),
+            "date_imported": instance.date_imported.strftime("%Y-%d-%m, %H:%M:%S"),
+        }
+
+
 class AccountSerializer(serializers.ModelSerializer):
+    files = FileSerializer(many=True, read_only=True)
+
     class Meta:
         model = Account
-        fields = ["id", "title"]
+
+    def to_representation(self, instance: Account):
+
+        return {
+            "id": instance.id,
+            "title": instance.title,
+            "files_in_account": instance.files.count(),
+            "messages_in_account": instance.total_messages_in_account,
+            "processed_messages": instance.total_processed_messages,
+            "message_last_modified": instance.message_last_modified.strftime(
+                "%Y-%m-%d %H:%M:%S"
+            ),
+        }
 
 
 class MessageSerializer(serializers.ModelSerializer):

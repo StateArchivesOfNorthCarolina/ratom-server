@@ -24,6 +24,20 @@ class Account(models.Model):
     def __str__(self) -> str:
         return str(self.title)
 
+    @property
+    def total_messages_in_account(self):
+        return self.files.aggregate(models.Sum("reported_total_messages")).get(
+            "reported_total_messages__sum", 0
+        )
+
+    @property
+    def total_processed_messages(self):
+        return self.messages.filter(audit__processed=True).count()
+
+    @property
+    def message_last_modified(self):
+        return self.messages.latest("inserted_on").inserted_on
+
 
 class RatomFileManager(models.Manager):
     def reported_totals(self, account_title: str) -> models.QuerySet:
@@ -45,7 +59,7 @@ class File(models.Model):
         (FAILED, "Failed"),
     ]
 
-    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    account = models.ForeignKey(Account, related_name="files", on_delete=models.CASCADE)
     filename = models.CharField(max_length=200)
     original_path = models.CharField(max_length=500)
     reported_total_messages = models.IntegerField(null=True)
@@ -123,7 +137,9 @@ class Message(models.Model):
 
     source_id = models.CharField(max_length=256)
     file = models.ForeignKey(File, on_delete=models.CASCADE)
-    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    account = models.ForeignKey(
+        Account, related_name="messages", on_delete=models.CASCADE
+    )
     audit = models.OneToOneField(MessageAudit, on_delete=models.CASCADE)
     sent_date = models.DateTimeField(null=True)
     msg_from = models.TextField(blank=True)
@@ -135,6 +151,7 @@ class Message(models.Model):
     directory = models.TextField(blank=True)
     headers = JSONField(null=True, blank=True)
     errors = JSONField(null=True, blank=True)
+    inserted_on = models.DateTimeField(auto_now_add=True)
 
     @property
     def account_indexing(self):
