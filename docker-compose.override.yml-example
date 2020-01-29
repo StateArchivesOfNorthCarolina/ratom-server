@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.4.2
+    container_name: kibana
+    ports:
+      - "5601:5601"

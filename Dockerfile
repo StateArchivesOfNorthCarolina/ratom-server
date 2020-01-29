@@ -1,4 +1,4 @@
-FROM python:3.7-slim
+FROM python:3.7-slim AS base
 
 # Install packages needed to run your application (not build deps):
 #   mime-support -- for mime types when serving static files
@@ -7,9 +7,9 @@ FROM python:3.7-slim
 # they were clobbered by a parent image.
 RUN set -ex \
     && RUN_DEPS=" \
-        libpcre3 \
-        mime-support \
-        postgresql-client \
+    libpcre3 \
+    mime-support \
+    postgresql-client \
     " \
     && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
     && apt-get update && apt-get install -y --no-install-recommends $RUN_DEPS \
@@ -22,9 +22,9 @@ ADD requirements /requirements
 # Correct the path to your production requirements file, if needed.
 RUN set -ex \
     && BUILD_DEPS=" \
-        build-essential \
-        libpcre3-dev \
-        libpq-dev \
+    build-essential \
+    libpcre3-dev \
+    libpq-dev \
     " \
     && apt-get update && apt-get install -y --no-install-recommends $BUILD_DEPS \
     && pip install -U pip \
@@ -38,6 +38,22 @@ RUN mkdir /code/
 WORKDIR /code/
 ADD . /code/
 
+FROM base AS test-base
+# Install dev requirements for running tests/linting
+RUN set -ex \
+    && BUILD_DEPS=" \
+    build-essential \
+    git-core \
+    " \
+    && apt-get update && apt-get install -y --no-install-recommends $BUILD_DEPS \
+    && pip install -U pip \
+    && pip install --no-cache-dir -r /requirements/dev.txt
+
+RUN pre-commit install
+
+ENTRYPOINT ["/code/docker-entrypoint.sh"]
+
+FROM base AS deploy
 # uWSGI will listen on this port
 EXPOSE 8000
 

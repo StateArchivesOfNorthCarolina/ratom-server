@@ -18,15 +18,17 @@ install:
 
 before_script:
   # Build container for this commit before tests run
-  - docker build --pull -t govsanc/ratom-server .
+  - make build-base
+  - make build-test
 
 script:
-  - echo 0
-  # - docker-compose up -d
-  # - docker-compose exec db /bin/bash -c "until psql -l; do echo 'db unavailable. sleeping'; sleep 1; done"
-  # - docker-compose exec app /bin/bash -c "code/python manage.py test"
+  - make ci-pre-commit
+  - make ci-test
 
 before_deploy:
+  # Build deploy image
+  - make build-deploy
+  - docker images
   # Install kubectl using Google SDK
   - curl https://sdk.cloud.google.com | bash > /dev/null
   - source $HOME/google-cloud-sdk/path.bash.inc
