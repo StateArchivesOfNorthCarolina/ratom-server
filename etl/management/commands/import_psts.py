@@ -36,8 +36,6 @@ class Command(BaseCommand):
         logger.info("import_psts started")
         paths = options["paths"]
         logger.info(f"Matched {len(paths)} file(s)")
-        if len(paths) == 0:
-            return
         data = {
             "paths": paths,
             "account": Path(paths[0]).stem,

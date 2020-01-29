@@ -22,7 +22,7 @@ class PstImporter:
         path: Path,
         account: ratom.Account,
         spacy_model: Language,
-        is_background: bool,
+        is_background: bool = False,
     ):
         logger.info(f"PstImporter running on {path}")
         self.local_path = path
