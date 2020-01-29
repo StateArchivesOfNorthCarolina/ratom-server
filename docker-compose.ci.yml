@@ -1,0 +1,12 @@
+version: '3.4'
+
+services:
+  app:
+    environment:
+      DJANGO_SETTINGS_MODULE: ratom.settings.dev
+      TEST_ENRON_DATA_SET: "true"
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      target: test-base
+    image: govsanc/ratom-server:test-base

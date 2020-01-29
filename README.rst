@@ -1,6 +1,9 @@
 RATOM API
 ========================
 
+.. image:: https://travis-ci.org/StateArchivesOfNorthCarolina/ratom-server.svg?branch=develop
+    :target: https://travis-ci.org/StateArchivesOfNorthCarolina/ratom-server
+
 Below you will find basic setup and deployment instructions for the ratom_api
 project. To begin you should have the following applications installed on your
 local development system:
