@@ -67,6 +67,6 @@ all:
             SENTRY_DSN: https://a0ca0bdd3f3d4d66b0bb7baaaa322a81@sentry.caktus-built.com/18
             ELASTICSEARCH_URL: "{{ vault_elasticsearch_url }}"
             DJANGO_MANAGEPY_MIGRATE: "on"
-            BROKER_URL: "10.1.42.160"
+            BROKER_URL: "redis"
             JWT_ACCESS_TOKEN_LIFETIME_SECONDS: "15"
             JWT_REFRESH_TOKEN_LIFETIME_MINUTES: "1"
