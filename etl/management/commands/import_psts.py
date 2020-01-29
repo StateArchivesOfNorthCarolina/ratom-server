@@ -20,12 +20,6 @@ class Command(BaseCommand):
             help="Clear collection records before starting import",
         )
         parser.add_argument(
-            "--recursive",
-            default=False,
-            action="store_true",
-            help="Find and import all psts in a structure",
-        )
-        parser.add_argument(
             "--detach",
             default=False,
             action="store_true",
