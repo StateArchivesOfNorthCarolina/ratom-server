@@ -1,5 +1,4 @@
 from django.urls import path
-from django.contrib import admin
 
 from rest_framework_simplejwt import views as jwt_views
 from .views import (
