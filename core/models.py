@@ -1,10 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models
-from django.db.models import F
 
 from simple_history.models import HistoricalRecords
-from elasticsearch_dsl import Index
 from django_elasticsearch_dsl_drf.wrappers import dict_to_obj
 
 YMD_HMS = "%Y-%m-%d %H:%M:%S"
@@ -41,16 +39,35 @@ class Account(models.Model):
     def account_last_modified(self):
         return self.files.latest("date_imported").date_imported
 
-    def get_inclusive_dates(self, str_fmt: str = YMD_HMS, as_string=True):
+    def get_inclusive_dates(
+        self, str_fmt: str = YMD_HMS, as_string: bool = True
+    ) -> tuple:
+        """
+        Returns the earliest message date in a collection an
+        :param str_fmt: Optional stftime formatter when returning strings
+        :param as_string: return the dates as string representations,
+                          based on a default or supplied format.
+        :return tuple(datetime, datetime) or tuple(str, str):
+        """
         dates = []
         for f in self.files.all():
             dates.extend(f.inclusive_dates)
         dates.sort()
         if as_string:
-            return f"{dates[0].strftime(str_fmt)} - {dates[-1].strftime(str_fmt)}"
+            return f"{dates[0].strftime(str_fmt)}", f"{dates[-1].strftime(str_fmt)}"
         return dates[0], dates[-1]
 
-    def get_account_status(self):
+    def get_account_status(self) -> str:
+        """
+        Looks at all the files in an account to determine status
+
+        Account status currently is fixed by the status of ANY file in an account.
+        If ANY file is Importing the account is in status Importing
+        If ANY file is Failed the account is in status Failed
+        If ANY file is Created the account is in status Created
+        If No file meets these criteria then the account is in status Complete
+        :return str:
+        """
         if self.files.filter(import_status=File.IMPORTING).count() > 0:
             return File.IMPORTING
         if self.files.filter(import_status=File.FAILED).count() > 0:
