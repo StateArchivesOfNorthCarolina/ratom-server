@@ -77,14 +77,6 @@ class Account(models.Model):
         return File.COMPLETE
 
 
-class RatomFileManager(models.Manager):
-    def reported_totals(self, account_title: str) -> models.QuerySet:
-        qs = self.get_queryset()
-        return qs.filter(account__title=account_title).aggregate(
-            models.Sum("reported_total_messages")
-        )
-
-
 class File(models.Model):
     CREATED = "CR"
     IMPORTING = "IM"
@@ -112,17 +104,12 @@ class File(models.Model):
 
     # Managers
     objects = models.Manager()
-    counts = RatomFileManager()
 
     class Meta:
         unique_together = ["account", "filename"]
 
     def __str__(self):
         return f"{self.account.title}-{self.filename}"
-
-    @property
-    def percent_complete(self) -> object:
-        pass
 
     @property
     def inclusive_dates(self):
