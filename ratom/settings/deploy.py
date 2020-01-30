@@ -11,56 +11,49 @@ os.environ.setdefault("BROKER_HOST", "127.0.0.1:5672")
 #: deploy environment - e.g. "staging" or "production"
 ENVIRONMENT = os.environ["ENVIRONMENT"]
 
-
+SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 DEBUG = os.getenv("DJANGO_DEBUG") == "1"
-
 
 if "MEDIA_ROOT" in os.environ:
     MEDIA_ROOT = os.getenv("MEDIA_ROOT")
 
-
 if "DATABASE_URL" in os.environ:
-    # Dokku
-    SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
-
     import dj_database_url
 
     # Update database configuration with $DATABASE_URL.
-    db_from_env = dj_database_url.config(conn_max_age=500)
+    db_from_env = dj_database_url.config(conn_max_age=500, ssl_require=True)
     DATABASES["default"].update(db_from_env)
-
-    # Disable Django's own staticfiles handling in favour of WhiteNoise, for
-    # greater consistency between gunicorn and `./manage.py runserver`. See:
-    # http://whitenoise.evans.io/en/stable/django.html#using-whitenoise-in-development
-    INSTALLED_APPS.remove("django.contrib.staticfiles")
-    INSTALLED_APPS.extend(
-        ["whitenoise.runserver_nostatic", "django.contrib.staticfiles",]
-    )
-
-    MIDDLEWARE.remove("django.middleware.security.SecurityMiddleware")
-    MIDDLEWARE = [
-        "django.middleware.security.SecurityMiddleware",
-        "whitenoise.middleware.WhiteNoiseMiddleware",
-    ] + MIDDLEWARE
-
-    # Allow all host headers (feel free to make this more specific)
-    ALLOWED_HOSTS = ["*"]
-
-    # Simplified static file serving.
-    # https://warehouse.python.org/project/whitenoise/
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
-    WEBSERVER_ROOT = os.path.join(PROJECT_ROOT, "www")
 else:
-    SECRET_KEY = os.environ["SECRET_KEY"]
+    DATABASES["default"]["NAME"] = os.getenv("DB_NAME")
+    user = os.getenv("DB_USER")
+    user_host = os.getenv("DB_USER_HOST")
+    if user_host:
+        user = f"{user}@{user_host}"
+    DATABASES["default"]["USER"] = user
+    DATABASES["default"]["HOST"] = os.getenv("DB_HOST")
+    DATABASES["default"]["PORT"] = os.getenv("DB_PORT")
+    DATABASES["default"]["PASSWORD"] = os.getenv("DB_PASSWORD")
+    DATABASES["default"]["OPTIONS"] = {"sslmode": "require"}
 
-    DATABASES["default"]["NAME"] = "ratom_%s" % ENVIRONMENT.lower()
-    DATABASES["default"]["USER"] = "ratom_%s" % ENVIRONMENT.lower()
-    DATABASES["default"]["HOST"] = os.environ.get("DB_HOST", "")
-    DATABASES["default"]["PORT"] = os.environ.get("DB_PORT", "")
-    DATABASES["default"]["PASSWORD"] = os.environ.get("DB_PASSWORD", "")
+# Disable Django's own staticfiles handling in favour of WhiteNoise, for
+# greater consistency between gunicorn and `./manage.py runserver`. See:
+# http://whitenoise.evans.io/en/stable/django.html#using-whitenoise-in-development
+INSTALLED_APPS.remove("django.contrib.staticfiles")
+INSTALLED_APPS.extend(
+    ["whitenoise.runserver_nostatic", "django.contrib.staticfiles",]
+)
 
-    WEBSERVER_ROOT = "/var/www/ratom/"
+MIDDLEWARE.remove("django.middleware.security.SecurityMiddleware")
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+] + MIDDLEWARE
+
+# Simplified static file serving.
+# https://warehouse.python.org/project/whitenoise/
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+WEBSERVER_ROOT = os.path.join(PROJECT_ROOT, "www")
 
 PUBLIC_ROOT = os.path.join(WEBSERVER_ROOT, "public")
 
