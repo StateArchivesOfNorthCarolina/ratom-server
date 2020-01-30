@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from django.db import models
 from core.models import User, Account, Message, File
 
 from api.documents.message import MessageDocument
