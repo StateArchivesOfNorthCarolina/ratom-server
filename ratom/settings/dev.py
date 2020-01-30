@@ -39,10 +39,10 @@ INTERNAL_IPS = ("127.0.0.1",)
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 #: Run celery tasks synchronously
-CELERY_ALWAYS_EAGER = True
+CELERY_TASK_ALWAYS_EAGER = True
 
 #: Tell us when a synchronous celery task fails
-CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
+CELERY_TASK_EAGER_PROPAGATES = True
 
 SECRET_KEY = os.environ.get(
     "SECRET_KEY", "#bd9o-0&)wpy=uhy*#zc7ppe05h8b^f68+&hv7dzs5qf&t@gq6"
