@@ -3,28 +3,71 @@ all:
     k8s_clusters:
       vars:
         ansible_connection: local
+        k8s_namespace: "ratom-{{ env_name }}"
+        k8s_container_name: api
+        k8s_container_image: govsanc/ratom-server
+        k8s_container_image_tag: latest
+        k8s_container_port: 8000
+        k8s_container_ingress_paths:
+        - /admin
+        - /api
+        - /django-static
+        # Redis
+        k8s_redis_enabled: true
+        k8s_elasticsearch_enabled: true
+        # Celery
+        k8s_worker_enabled: true
+        k8s_worker_celery_app: "ratom"
+        # Bump worker resources to handle large file imports
+        k8s_worker_resources:
+          requests:
+            memory: "768Mi"
+            cpu: "250m"
+          limits:
+            memory: "1536Mi"
+            cpu: "1000m"
       hosts:
         ratom-staging:
+          env_name: staging
+          k8s_kube_context: "ratom-{{ env_name }}"
+          k8s_domain_names:
+          - ratom-caktus-aks.caktus-built.com
+          vault_database_password: !vault |
+            $ANSIBLE_VAULT;1.1;AES256
+            64666536653764633432356136646434323365383233636131306565306265346532633964643961
+            3230313034633762366462323238383633386133396366320a316332656536303231626566376564
+            66613064323562396534633135313339383837366636306330623931363537353164363035653764
+            6135386432643562610a653063373264396166646439363863383032653734653530636131363830
+            63323530326263313237643434613539326136383662653463303963373533306533
+          vault_secret_key: !vault |
+            $ANSIBLE_VAULT;1.1;AES256
+            33653032303436346239616437316633376338613030376535343930656233333061633536663861
+            3831303461343964636266356365373730366431353433330a623233376464646237633661343633
+            63363861346137643461366636626662333836316537306131386336313162336564656539646138
+            3838343835656161360a393331653262396630316539326164636633343133306237363331356466
+            32616664343133363030346132326136353834613533396466353636383730663039306235666266
+            35623563616130613234323630376261633130646561623739356538356632323332653964323063
+            303634363162313466663837366465363466
+          k8s_environment_variables:
+            DJANGO_SECRET_KEY: "{{ vault_secret_key }}"
+            ENVIRONMENT: "{{ env_name }}"
+            DB_NAME: ratom_staging
+            DB_USER: ratom_staging
+            DB_USER_HOST: ratom-db
+            DB_HOST: ratom-db.postgres.database.azure.com
+            DB_PORT: "5432"
+            DB_PASSWORD: "{{ vault_database_password }}"
+            DOMAIN: "{{ k8s_domain_names[0] }}"
+            SENTRY_DSN: https://a0ca0bdd3f3d4d66b0bb7baaaa322a81@sentry.caktus-built.com/18
+            DJANGO_MANAGEPY_MIGRATE: "on"
+            BROKER_URL: "redis"
+            CACHE_HOST: memcached:11211
+            ELASTICSEARCH_URL: "elasticsearch:9200"
+        ratom-staging-old:
           env_name: staging
           k8s_kube_context: microk8s
           k8s_domain_names:
           - ratom-staging.caktus-built.com
-          k8s_namespace: "ratom-{{ env_name }}"
-          k8s_container_name: api
-          k8s_container_image: govsanc/ratom-server
-          k8s_container_image_tag: latest
-          k8s_container_resources:
-            requests:
-              memory: "768Mi"
-              cpu: "250m"
-            limits:
-              memory: "1024Mi"
-              cpu: "1000m"
-          k8s_container_port: 8000
-          k8s_container_ingress_paths:
-          - /admin
-          - /api
-          - /django-static
           vault_database_password: !vault |
             $ANSIBLE_VAULT;1.1;AES256
             30656462333731386231643531613239613264383533363135316337356335663434363032653361
