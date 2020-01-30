@@ -18,12 +18,17 @@ logger = logging.getLogger(__name__)
 
 class PstImporter:
     def __init__(
-        self, path: Path, account: ratom.Account, spacy_model: Language,
+        self,
+        path: Path,
+        account: ratom.Account,
+        spacy_model: Language,
+        is_background: bool = False,
     ):
         logger.info(f"PstImporter running on {path}")
         self.local_path = path
         self.account = account
         self.spacy_model = spacy_model
+        self.is_background = is_background
         self.ratom_file_errors = []
 
     def initializing_stage(self) -> None:
@@ -66,8 +71,10 @@ class PstImporter:
             account=account,
             filename=str(path.name),
             original_path=str(path.absolute()),
-            file_size=path.stat().st_size,
         )
+        if path.exists():
+            ratom_file.file_size = path.stat().st_size
+            ratom_file.save()
         return ratom_file
 
     def import_messages_from_archive(self) -> None:
@@ -85,7 +92,7 @@ class PstImporter:
                 unit="msgs",
                 initial=0,
                 total=message_count,
-                miniters=1,
+                mininterval=3.0 if self.is_background else 0.1,
             )
             for archive_msg in msg_iterator:  # type: pypff.message
                 try:
@@ -171,7 +178,9 @@ class PstImporter:
             self.success_stage()
 
 
-def import_psts(paths: List[Path], account: str, clean: bool) -> None:
+def import_psts(
+    paths: List[str], account: str, clean: bool, is_background: bool = False,
+) -> None:
     logger.info("Import process started")
     spacy_model_name = "en_core_web_sm"
     logger.info(f"Loading {spacy_model_name} spacy model")
@@ -185,5 +194,5 @@ def import_psts(paths: List[Path], account: str, clean: bool) -> None:
         logger.warning(f"Deleting {account.title} account files (if exists)")
         account.file_set.all().delete()
     for path in paths:
-        importer = PstImporter(path, account, spacy_model)
+        importer = PstImporter(Path(path), account, spacy_model, is_background)
         importer.run()

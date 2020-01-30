@@ -1,7 +1,11 @@
+import logging
 from pathlib import Path
 from django.core.management.base import BaseCommand
-
+from etl.tasks import import_file_task
 from etl.importer import import_psts
+
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -16,17 +20,23 @@ class Command(BaseCommand):
             help="Clear collection records before starting import",
         )
         parser.add_argument(
-            "--recursive",
+            "--detach",
             default=False,
             action="store_true",
-            help="Find and import all psts in a structure",
+            help="Run task in background",
         )
 
     def handle(self, *args, **options):
-        if options["recursive"]:
-            for p in Path(options["paths"][0]).glob("**/*.pst"):
-                import_psts(paths=[p], account=p.stem, clean=options["clean"])
+        logger.info("import_psts started")
+        paths = options["paths"]
+        logger.info(f"Matched {len(paths)} file(s)")
+        data = {
+            "paths": paths,
+            "account": Path(paths[0]).stem,
+            "clean": options["clean"],
+        }
+        if options["detach"]:
+            logger.info("Queuing background task...")
+            import_file_task.delay(**data)
         else:
-            for p in options["paths"]:
-                p = Path(p)
-                import_psts(paths=[p], account=p.stem, clean=options["clean"])
+            import_psts(**data)

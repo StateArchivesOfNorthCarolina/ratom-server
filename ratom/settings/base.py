@@ -222,3 +222,14 @@ X_FRAME_OPTIONS = "DENY"
 AUTH_USER_MODEL = "core.User"
 
 ATTACHMENT_PATH = "attachments/"
+
+BROKER_URL = os.getenv("BROKER_URL")
+if BROKER_URL:
+    CELERY_BROKER_URL = f"redis://{BROKER_URL}:6379/0"
+    CELERY_WORKER_REDIRECT_STDOUTS = True
+    CELERY_WORKER_REDIRECT_STDOUTS_LEVEL = "INFO"
+    # If using Celery, tell it to obey our logging configuration.
+    CELERY_WORKER_HIJACK_ROOT_LOGGER = False
+    CELERY_WORKER_LOG_FORMAT = (
+        "[%(asctime)s: %(levelname)s/%(processName)s/%(name)s] %(message)s"
+    )
