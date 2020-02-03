@@ -1,6 +1,6 @@
 import logging
 from typing import List
-
+from django.conf import settings
 from libratom.lib.entities import load_spacy_model
 from spacy.language import Language
 from tqdm import tqdm
@@ -10,6 +10,7 @@ from core import models as ratom
 from etl.message.forms import ArchiveMessageForm
 from etl.message.nlp import extract_labels
 from etl.providers.base import ImportProvider
+from etl.providers.factory import import_provider_factory, ProviderTypes
 
 
 logger = logging.getLogger(__name__)
@@ -182,7 +183,11 @@ class PstImporter:
 
 
 def import_psts(
-    paths: List[ImportProvider], account: str, clean: bool, is_background: bool = False,
+    paths: List[str],
+    account: str,
+    clean: bool,
+    is_background: bool = False,
+    is_remote=False,
 ) -> None:
     logger.info("Import process started")
     spacy_model_name = "en_core_web_sm"
@@ -196,6 +201,18 @@ def import_psts(
     if clean:
         logger.warning(f"Deleting {account.title} account files (if exists)")
         account.files.all().delete()
-    for path in paths:
-        importer = PstImporter(path, account, spacy_model, is_background)
+    if is_remote:
+        provider = import_provider_factory(
+            provider=ProviderTypes[f"{settings.CLOUD_SERVICE_PROVIDER}"].value
+        )
+        cloud_provider = provider(file_path=paths[0])
+        importer = PstImporter(cloud_provider, account, spacy_model, is_background)
         importer.run()
+    else:
+        for path in paths:
+            provider = import_provider_factory(
+                provider=ProviderTypes["FILESYSTEM"].value
+            )
+            local_provider = provider(file_path=path)
+            importer = PstImporter(local_provider, account, spacy_model, is_background)
+            importer.run()

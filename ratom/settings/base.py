@@ -156,6 +156,7 @@ LOGGING = {
             "level": "ERROR",
             "propagate": True,
         },
+        "azure": {"level": "WARNING", "handlers": ["console"], "propagate": False,},
         "api": {"level": "DEBUG", "handlers": ["console"], "propagate": False,},
     },
     "root": {"handlers": ["console",], "level": "INFO",},

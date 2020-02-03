@@ -20,8 +20,6 @@ from api.serializers import (
     MessageDocumentSerializer,
 )
 
-from etl.providers.factory import factory
-from etl.providers.base import ImportProviderError
 from etl.tasks import import_file_task
 
 
@@ -93,12 +91,7 @@ def account_detail(request, pk):
 class AccountCreate(APIView):
     def post(self, request, format=None):
         account, _ = Account.objects.get_or_create(title=request.data["name"])
-        provider = factory(provider=settings.CLOUD_SERVICE_PROVIDER)
-        try:
-            service_provider = provider(pst_blob=request.data["url"])
-        except ImportProviderError as e:
-            return Response(e.messages, status=status.HTTP_400_BAD_REQUEST)
-        import_file_task.delay([service_provider], account.title)
+        import_file_task.delay([request.data["url"]], account.title)
         return Response(status=status.HTTP_201_CREATED)
 
 

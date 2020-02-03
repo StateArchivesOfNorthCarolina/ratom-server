@@ -19,6 +19,6 @@ class ImportProviderFactory:
         self._providers[obj] = provider
 
 
-factory = ImportProviderFactory()
-factory.register(ProviderTypes.AZURE.value, AzureServiceProvider)
-factory.register(ProviderTypes.FILESYSTEM.value, FilesystemProvider)
+import_provider_factory = ImportProviderFactory()
+import_provider_factory.register(ProviderTypes.AZURE.value, AzureServiceProvider)
+import_provider_factory.register(ProviderTypes.FILESYSTEM.value, FilesystemProvider)

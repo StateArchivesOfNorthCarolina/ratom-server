@@ -14,7 +14,7 @@ class AzureServiceProvider(ImportProvider):
         self._data = None
         self.account_url = settings.AZURE_URL
         self.container = settings.AZURE_CONTAINER
-        self.pst_blob_name = kwargs["pst_blob"]
+        self.pst_blob_name = kwargs["file_path"]
         self._service = None
         self._client = None
         self.pst_blob = None
@@ -35,11 +35,12 @@ class AzureServiceProvider(ImportProvider):
         self._service = BlobServiceClient(
             account_url=self.account_url, credential=settings.AZURE_BLOB_KEY
         )
+        self._client = self._service.get_container_client(self.container)
+        self.valid = self._validate()
         if not self.valid:
             raise ImportProviderError(
                 message="File was not found", error="AzureServiceProviderError"
             )
-        self._client = self._service.get_container_client(self.container)
         self._get_file()
         super().open()
 
