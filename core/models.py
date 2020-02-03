@@ -5,6 +5,8 @@ from django.db import models
 from simple_history.models import HistoricalRecords
 from django_elasticsearch_dsl_drf.wrappers import dict_to_obj
 
+YMD_HMS = "%Y-%m-%d %H:%M:%S"
+
 
 class User(AbstractUser):
     ARCHIVIST = "AR"
@@ -23,13 +25,57 @@ class Account(models.Model):
     def __str__(self) -> str:
         return str(self.title)
 
-
-class RatomFileManager(models.Manager):
-    def reported_totals(self, account_title: str) -> models.QuerySet:
-        qs = self.get_queryset()
-        return qs.filter(account__title=account_title).aggregate(
-            models.Sum("reported_total_messages")
+    @property
+    def total_messages_in_account(self):
+        return self.files.aggregate(models.Sum("reported_total_messages")).get(
+            "reported_total_messages__sum", 0
         )
+
+    @property
+    def total_processed_messages(self):
+        return self.messages.filter(audit__processed=True).count()
+
+    @property
+    def account_last_modified(self):
+        return self.files.latest("date_imported").date_imported
+
+    def get_inclusive_dates(
+        self, str_fmt: str = YMD_HMS, as_string: bool = True
+    ) -> tuple:
+        """
+        Returns the earliest message date in a collection an
+        :param str_fmt: Optional stftime formatter when returning strings
+        :param as_string: return the dates as string representations,
+                          based on a default or supplied format.
+        :return tuple(datetime, datetime) or tuple(str, str):
+        """
+        dates = self.messages.aggregate(
+            min=models.Min("sent_date"), max=models.Max("sent_date")
+        )
+        min_date = dates.get("min")
+        max_date = dates.get("max")
+        if all((min_date, max_date, as_string)):
+            return f"{min_date.strftime(str_fmt)}", f"{max_date.strftime(str_fmt)}"
+        return min_date, max_date
+
+    def get_account_status(self) -> str:
+        """
+        Looks at all the files in an account to determine status
+
+        Account status currently is fixed by the status of ANY file in an account.
+        If ANY file is Importing the account is in status Importing
+        If ANY file is Failed the account is in status Failed
+        If ANY file is Created the account is in status Created
+        If No file meets these criteria then the account is in status Complete
+        :return str:
+        """
+        if self.files.filter(import_status=File.IMPORTING).count() > 0:
+            return File.IMPORTING
+        if self.files.filter(import_status=File.FAILED).count() > 0:
+            return File.FAILED
+        if self.files.filter(import_status=File.CREATED).count() > 0:
+            return File.CREATED
+        return File.COMPLETE
 
 
 class File(models.Model):
@@ -44,7 +90,7 @@ class File(models.Model):
         (FAILED, "Failed"),
     ]
 
-    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    account = models.ForeignKey(Account, related_name="files", on_delete=models.CASCADE)
     filename = models.CharField(max_length=200)
     original_path = models.CharField(max_length=500)
     reported_total_messages = models.IntegerField(null=True)
@@ -59,7 +105,6 @@ class File(models.Model):
 
     # Managers
     objects = models.Manager()
-    counts = RatomFileManager()
 
     class Meta:
         unique_together = ["account", "filename"]
@@ -68,8 +113,14 @@ class File(models.Model):
         return f"{self.account.title}-{self.filename}"
 
     @property
-    def percent_complete(self) -> object:
-        pass
+    def inclusive_dates(self):
+        """
+        Returns the inclusive
+        :param str_format:
+        :return:
+        """
+        qs = self.message_set.filter(sent_date__isnull=False)
+        return qs.first().sent_date, qs.last().sent_date
 
 
 class RestrictionAuthority(models.Model):
@@ -122,7 +173,9 @@ class Message(models.Model):
 
     source_id = models.CharField(max_length=256)
     file = models.ForeignKey(File, on_delete=models.CASCADE)
-    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    account = models.ForeignKey(
+        Account, related_name="messages", on_delete=models.CASCADE
+    )
     audit = models.OneToOneField(MessageAudit, on_delete=models.CASCADE)
     sent_date = models.DateTimeField(null=True)
     msg_from = models.TextField(blank=True)
@@ -134,6 +187,10 @@ class Message(models.Model):
     directory = models.TextField(blank=True)
     headers = JSONField(null=True, blank=True)
     errors = JSONField(null=True, blank=True)
+    inserted_on = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["sent_date"]
 
     @property
     def account_indexing(self):
