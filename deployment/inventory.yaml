@@ -25,6 +25,11 @@ all:
           - /admin
           - /api
           - /django-static
+          # Redis
+          k8s_redis_enabled: true
+          # Celery
+          k8s_worker_enabled: true
+          k8s_worker_celery_app: "ratom"
           vault_database_password: !vault |
             $ANSIBLE_VAULT;1.1;AES256
             30656462333731386231643531613239613264383533363135316337356335663434363032653361
@@ -62,4 +67,6 @@ all:
             SENTRY_DSN: https://a0ca0bdd3f3d4d66b0bb7baaaa322a81@sentry.caktus-built.com/18
             ELASTICSEARCH_URL: "{{ vault_elasticsearch_url }}"
             DJANGO_MANAGEPY_MIGRATE: "on"
+            BROKER_URL: "redis"
             JWT_ACCESS_TOKEN_LIFETIME_SECONDS: "15"
+            JWT_REFRESH_TOKEN_LIFETIME_MINUTES: "1"

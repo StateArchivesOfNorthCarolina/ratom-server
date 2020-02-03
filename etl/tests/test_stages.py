@@ -1,3 +1,4 @@
+from pathlib import Path
 import pytest
 from unittest import mock
 
@@ -12,6 +13,12 @@ def test_create_ratom_file(pst_importer, local_file, account):
     assert str(local_file.absolute()) == ratom_file.original_path
     assert local_file.name == ratom_file.filename
     assert local_file.stat().st_size == ratom_file.file_size
+
+
+def test_create_ratom_file__missing(pst_importer, account):
+    """Importer shouldn't fail with non-existent file."""
+    ratom_file = pst_importer._create_ratom_file(account, Path("i-dont-exist.pst"))
+    assert not ratom_file.file_size
 
 
 @pytest.mark.parametrize("message_count", [100, 1_000])
