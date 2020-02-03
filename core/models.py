@@ -49,13 +49,14 @@ class Account(models.Model):
                           based on a default or supplied format.
         :return tuple(datetime, datetime) or tuple(str, str):
         """
-        dates = []
-        for f in self.files.all():
-            dates.extend(f.inclusive_dates)
-        dates.sort()
-        if as_string:
-            return f"{dates[0].strftime(str_fmt)}", f"{dates[-1].strftime(str_fmt)}"
-        return dates[0], dates[-1]
+        dates = self.messages.aggregate(
+            min=models.Min("sent_date"), max=models.Max("sent_date")
+        )
+        min_date = dates.get("min")
+        max_date = dates.get("max")
+        if all((min_date, max_date, as_string)):
+            return f"{min_date.strftime(str_fmt)}", f"{max_date.strftime(str_fmt)}"
+        return min_date, max_date
 
     def get_account_status(self) -> str:
         """
