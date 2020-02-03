@@ -6,7 +6,7 @@ import random
 
 def generate_messages(account: m.Account, file: m.File) -> [m.Message]:
     messages = []
-    for i in range(random.randrange(1, 100)):
+    for i in range(random.randrange(1, 10)):
         ma = m.MessageAudit.objects.create()
         message = factory.MessageFactory(account=account, file=file)
         message.audit = ma
