@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-if [[ -z "${DATABASE_URL}" ]]; then
+if [ -n "${DATABASE_URL+set}" ]; then
 until psql $DATABASE_URL -c '\l'; do
     >&2 echo "Postgres is unavailable - sleeping"
     sleep 1
