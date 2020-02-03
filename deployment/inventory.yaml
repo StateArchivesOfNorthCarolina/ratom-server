@@ -17,28 +17,26 @@ all:
         k8s_elasticsearch_enabled: true
         # Celery
         k8s_worker_enabled: true
+        k8s_worker_beat_enabled: false
         k8s_worker_celery_app: "ratom"
         # Bump worker resources to handle large file imports
         k8s_worker_resources:
           requests:
             memory: "768Mi"
             cpu: "250m"
-          limits:
-            memory: "1536Mi"
-            cpu: "1000m"
       hosts:
-        ratom-staging:
+        caktus-ratom:
           env_name: staging
-          k8s_kube_context: "ratom-{{ env_name }}"
+          k8s_kube_context: caktus-ratom
           k8s_domain_names:
           - ratom-caktus-aks.caktus-built.com
           vault_database_password: !vault |
             $ANSIBLE_VAULT;1.1;AES256
-            64666536653764633432356136646434323365383233636131306565306265346532633964643961
-            3230313034633762366462323238383633386133396366320a316332656536303231626566376564
-            66613064323562396534633135313339383837366636306330623931363537353164363035653764
-            6135386432643562610a653063373264396166646439363863383032653734653530636131363830
-            63323530326263313237643434613539326136383662653463303963373533306533
+            64336139666538626134653530656431616130326330633137343636306636343566626632383834
+            6436363934336666613361363435643030356265613435610a656132643161313164623531663437
+            64626364313236373238643038346430333534613062313232363462323532306434346639376332
+            3264313337656339630a653666363131326136376461663930303530663336313831316436643162
+            3733
           vault_secret_key: !vault |
             $ANSIBLE_VAULT;1.1;AES256
             33653032303436346239616437316633376338613030376535343930656233333061633536663861
@@ -51,19 +49,14 @@ all:
           k8s_environment_variables:
             DJANGO_SECRET_KEY: "{{ vault_secret_key }}"
             ENVIRONMENT: "{{ env_name }}"
-            DB_NAME: ratom_staging
-            DB_USER: ratom_staging
-            DB_USER_HOST: ratom-db
-            DB_HOST: ratom-db.postgres.database.azure.com
-            DB_PORT: "5432"
-            DB_PASSWORD: "{{ vault_database_password }}"
+            DATABASE_URL: "postgres://ratom_staging%40ratomdb:{{ vault_database_password }}@ratomdb.postgres.database.azure.com:5432/ratom_staging"
             DOMAIN: "{{ k8s_domain_names[0] }}"
             SENTRY_DSN: https://a0ca0bdd3f3d4d66b0bb7baaaa322a81@sentry.caktus-built.com/18
-            DJANGO_MANAGEPY_MIGRATE: "on"
+            # DJANGO_MANAGEPY_MIGRATE: "on"
             BROKER_URL: "redis"
             CACHE_HOST: memcached:11211
             ELASTICSEARCH_URL: "elasticsearch:9200"
-        ratom-staging-old:
+        ratom-staging:
           env_name: staging
           k8s_kube_context: microk8s
           k8s_domain_names:
