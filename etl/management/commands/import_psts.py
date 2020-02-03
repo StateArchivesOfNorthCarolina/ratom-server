@@ -3,6 +3,7 @@ from pathlib import Path
 from django.core.management.base import BaseCommand
 from etl.tasks import import_file_task
 from etl.importer import import_psts
+from etl.providers.filesystem import FilesystemProvider
 
 
 logger = logging.getLogger(__name__)
@@ -25,14 +26,17 @@ class Command(BaseCommand):
             action="store_true",
             help="Run task in background",
         )
+        parser.add_argument(
+            "--account", help="Name of the account for this set of paths"
+        )
 
     def handle(self, *args, **options):
         logger.info("import_psts started")
-        paths = options["paths"]
+        paths = [FilesystemProvider(local_path=Path(x)) for x in options["paths"]]
         logger.info(f"Matched {len(paths)} file(s)")
         data = {
             "paths": paths,
-            "account": Path(paths[0]).stem,
+            "account": options["account"],
             "clean": options["clean"],
         }
         if options["detach"]:

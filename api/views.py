@@ -2,6 +2,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from django.conf import settings
 from django_elasticsearch_dsl_drf import constants, filter_backends
@@ -18,6 +19,10 @@ from api.serializers import (
     MessageSerializer,
     MessageDocumentSerializer,
 )
+
+from etl.providers.factory import factory
+from etl.providers.base import ImportProviderError
+from etl.tasks import import_file_task
 
 
 @api_view(["GET"])
@@ -83,6 +88,18 @@ def account_detail(request, pk):
     elif request.method == "DELETE":
         account.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AccountCreate(APIView):
+    def post(self, request, format=None):
+        account, _ = Account.objects.get_or_create(title=request.data["name"])
+        provider = factory(provider=settings.CLOUD_SERVICE_PROVIDER)
+        try:
+            service_provider = provider(pst_blob=request.data["url"])
+        except ImportProviderError as e:
+            return Response(e.messages, status=status.HTTP_400_BAD_REQUEST)
+        import_file_task.delay([service_provider], account.title)
+        return Response(status=status.HTTP_201_CREATED)
 
 
 @api_view(["GET"])
