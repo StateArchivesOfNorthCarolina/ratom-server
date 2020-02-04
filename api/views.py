@@ -89,10 +89,12 @@ def account_detail(request, pk):
 
 
 class AccountCreate(APIView):
-    def post(self, request, format=None):
-        account, _ = Account.objects.get_or_create(title=request.data["name"])
-        import_file_task.delay([request.data["url"]], account.title)
-        return Response(status=status.HTTP_201_CREATED)
+    def post(self, request):
+        if request.data["name"] and request.data["url"]:
+            account, _ = Account.objects.get_or_create(title=request.data["name"])
+            import_file_task.delay([request.data["url"]], account.title)
+            return Response(status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["GET"])
