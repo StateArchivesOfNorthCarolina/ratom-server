@@ -29,3 +29,5 @@ requests-aws-sign==0.1.5
 django-simple-history==2.8.0
 tqdm==4.41.1
 celery[redis]==4.4.0
+azure-core==1.2.1
+azure-storage-blob==12.1.0
