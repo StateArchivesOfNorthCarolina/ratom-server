@@ -17,4 +17,4 @@ cd ./deployment
 
 echo $VAULT_PASS > .vault_pass
 ansible-galaxy install -r requirements.yaml
-ansible-playbook deploy.yaml -l ratom-staging -e k8s_container_image_tag=$TAG
+ansible-playbook deploy.yaml -l $DEPLOY_HOST -e k8s_container_image_tag=$TAG
