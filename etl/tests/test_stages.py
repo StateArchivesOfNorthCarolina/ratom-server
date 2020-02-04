@@ -17,10 +17,9 @@ def test_create_ratom_file(pst_importer, local_file, account):
 def test_create_ratom_file__missing(pst_importer, account, local_file):
     """Importer shouldn't fail with non-existent file."""
     local_file.local_path = Path("i-dont-exist.pst")
-    pst_importer._create_ratom_file(account, local_file)
+    ratom_file = pst_importer._create_ratom_file(account, local_file)
     pst_importer.initializing_stage()
-    with pytest.raises(FileNotFoundError):
-        pst_importer.importing_stage()
+    assert not ratom_file.file_size
 
 
 @pytest.mark.parametrize("message_count", [100, 1_000])

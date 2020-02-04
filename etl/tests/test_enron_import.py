@@ -9,6 +9,7 @@ import requests
 from requests.exceptions import ChunkedEncodingError, HTTPError
 
 from etl.importer import import_psts
+from etl.providers.filesystem import FilesystemProvider
 from core import models as ratom
 
 pytestmark = pytest.mark.django_db
@@ -87,8 +88,10 @@ def enron_dataset_bill_rap() -> Path:
 )
 def test_import_enron_dataset_bill_rap(enron_dataset_bill_rap):
     """Run full-stack test against Enron's Bill Rap account."""
-    path = enron_dataset_bill_rap / "bill_rapp_000_1_1.pst"
-    import_psts([path], "bill_rap", clean=True)
+    path = FilesystemProvider(
+        file_path=enron_dataset_bill_rap / "bill_rapp_000_1_1.pst"
+    )
+    import_psts([path.path], "bill_rap", clean=True)
     assert ratom.Account.objects.count() == 1
     assert ratom.File.objects.count() == 1
     bill_rap = ratom.File.objects.get()
