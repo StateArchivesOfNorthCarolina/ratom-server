@@ -19,3 +19,7 @@ class FilesystemProvider(ImportProvider):
     @property
     def file_size(self):
         return self.local_path.stat().st_size
+
+    @property
+    def file_name(self):
+        return self.local_path.name

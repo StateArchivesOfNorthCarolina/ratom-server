@@ -27,3 +27,7 @@ class ImportProvider:
     @property
     def file_size(self):
         pass
+
+    @property
+    def file_name(self):
+        pass

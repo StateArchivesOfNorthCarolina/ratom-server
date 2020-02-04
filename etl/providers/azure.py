@@ -55,3 +55,7 @@ class AzureServiceProvider(ImportProvider):
     @property
     def file_size(self):
         return self.blob_data.size
+
+    @property
+    def file_name(self):
+        return self.pst_blob_name

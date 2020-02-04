@@ -73,12 +73,9 @@ class PstImporter:
         """
         ratom_file, _ = ratom.File.objects.get_or_create(
             account=account,
-            filename=str(import_provider.path),
+            filename=str(import_provider.file_name),
             original_path=str(import_provider.path),
         )
-        # if import_provider.exists:
-        #     ratom_file.file_size = import_provider.file_size
-        #     ratom_file.save()
         return ratom_file
 
     def import_messages_from_archive(self) -> None:
