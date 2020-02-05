@@ -18,6 +18,10 @@ class User(AbstractUser):
     ]
     user_type = models.CharField(max_length=2, choices=USER_TYPE,)
 
+    email = models.EmailField("email address", unique=True)
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []
+
 
 class Account(models.Model):
     title = models.CharField(max_length=200)
