@@ -6,6 +6,13 @@ logger = logging.getLogger(__name__)
 
 
 class FilesystemProvider(ImportProvider):
+    """
+    An import provider for RATOM instances that are using a locally available file store.
+
+    :keyword:
+       file_path (str) -- a string representing the local path to a file.
+    """
+
     def __init__(self, **kwargs) -> None:
         super().__init__()
         self.local_path = Path(kwargs.get("file_path", "/"))

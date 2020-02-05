@@ -1,4 +1,5 @@
 from enum import Enum
+from etl.providers.base import ImportProvider
 from etl.providers.azure import AzureServiceProvider
 from etl.providers.filesystem import FilesystemProvider
 
@@ -9,10 +10,18 @@ class ProviderTypes(Enum):
 
 
 class ImportProviderFactory:
+    """
+    A factory class that returns a registered provider that implements the ImportProvider
+    interface.
+
+    :keyword:
+        provider (enum): An enum member defined in ProviderTypes
+    """
+
     def __init__(self):
         self._providers = {}
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs) -> ImportProvider:
         return self._providers.get(kwargs["provider"], None)
 
     def register(self, obj, provider):
@@ -20,5 +29,5 @@ class ImportProviderFactory:
 
 
 import_provider_factory = ImportProviderFactory()
-import_provider_factory.register(ProviderTypes.AZURE.value, AzureServiceProvider)
-import_provider_factory.register(ProviderTypes.FILESYSTEM.value, FilesystemProvider)
+import_provider_factory.register(ProviderTypes.AZURE, AzureServiceProvider)
+import_provider_factory.register(ProviderTypes.FILESYSTEM, FilesystemProvider)

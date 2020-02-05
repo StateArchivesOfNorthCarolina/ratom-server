@@ -9,12 +9,21 @@ logger = logging.getLogger(__name__)
 
 
 class AzureServiceProvider(ImportProvider):
+    """
+    An import provider for RATOM instances that will use the AZURE platform for hosting of
+    their pst files.
+
+    :keyword:
+       file_path (str) -- a string representing the path on the blob_store with the target file as
+       the final part.
+    """
+
     def __init__(self, **kwargs) -> None:
         super().__init__()
         self._data = None
         self.account_url = settings.AZURE_URL
         self.container = settings.AZURE_CONTAINER
-        self.pst_blob_name = kwargs["file_path"]
+        self.pst_blob_name = kwargs.get("file_path", "")
         self._service = None
         self._client = None
         self.pst_blob = None

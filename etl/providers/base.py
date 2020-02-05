@@ -8,11 +8,13 @@ class ImportProviderError(Exception):
 
 
 class ImportProvider:
-    def __init__(self):
-        self._data = None
-        self.pff_archive = None
+    """Base class that provides an interface to the etl.importer.PstImporter"""
 
-    def open(self):
+    def __init__(self) -> None:
+        self._data = None
+        self.pff_archive = None  # type: PffArchive
+
+    def open(self) -> None:
         self.pff_archive = PffArchive(self._data)
         self._data = None
 

@@ -165,7 +165,7 @@ class PstImporter:
             self.initializing_stage()
             self.importing_stage()
             self.import_messages_from_archive()
-        except KeyboardInterrupt as e:
+        except (KeyboardInterrupt, SystemExit, SystemError) as e:
             name = "Keyboard interrupted file import process"
             logger.warning("Keyboard interrupted file import process")
             self.add_file_error(name=name, context=str(e))
@@ -200,16 +200,14 @@ def import_psts(
         account.files.all().delete()
     if is_remote:
         provider = import_provider_factory(
-            provider=ProviderTypes[f"{settings.CLOUD_SERVICE_PROVIDER}"].value
+            provider=ProviderTypes[f"{settings.CLOUD_SERVICE_PROVIDER}"]
         )
         cloud_provider = provider(file_path=paths[0])
         importer = PstImporter(cloud_provider, account, spacy_model, is_background)
         importer.run()
     else:
         for path in paths:
-            provider = import_provider_factory(
-                provider=ProviderTypes["FILESYSTEM"].value
-            )
+            provider = import_provider_factory(provider=ProviderTypes["FILESYSTEM"])
             local_provider = provider(file_path=path)
             importer = PstImporter(local_provider, account, spacy_model, is_background)
             importer.run()
