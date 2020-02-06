@@ -5,18 +5,30 @@ from django.db import models
 from simple_history.models import HistoricalRecords
 from django_elasticsearch_dsl_drf.wrappers import dict_to_obj
 
+from .managers import CustomUserManager
+
 YMD_HMS = "%Y-%m-%d %H:%M:%S"
 
 
 class User(AbstractUser):
+    username = None
+    email = models.EmailField("email address", unique=True)
+
     ARCHIVIST = "AR"
     RESEARCHER = "RE"
-
     USER_TYPE = [
         (ARCHIVIST, "Archivist"),
         (RESEARCHER, "Researcher"),
     ]
     user_type = models.CharField(max_length=2, choices=USER_TYPE,)
+
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []
+
+    objects = CustomUserManager()
+
+    def __str__(self):
+        return self.email
 
 
 class Account(models.Model):
