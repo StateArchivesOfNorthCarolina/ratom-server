@@ -138,12 +138,7 @@ class MessageDocumentView(DocumentViewSet):
     )
 
     faceted_search_fields = {
-        "labels": {
-            # "field": "labels.raw",
-            "field": "labels",
-            "facet": TermsFacet,
-            # "enabled": True,
-        },
+        "labels": {"field": "labels", "facet": TermsFacet,},
         "sent_date": {
             "field": "sent_date",
             "facet": DateHistogramFacet,
@@ -153,10 +148,9 @@ class MessageDocumentView(DocumentViewSet):
 
     # Define filtering fields
     filter_fields = {
-        "id": {
-            "field": "_id",
-            "lookups": [constants.LOOKUP_FILTER_RANGE, constants.LOOKUP_QUERY_IN,],
-        },
+        "sent_date": "sent_date",
+        "msg_from": "msg_from",
+        "body": "body",
         "labels": {
             "field": "labels",
             "lookups": [
@@ -167,10 +161,6 @@ class MessageDocumentView(DocumentViewSet):
                 constants.LOOKUP_QUERY_EXCLUDE,
             ],
         },
-        "sent_date": "sent_date",
-        "msg_from": "msg_from",
-        "body": "body",
-        "pk": "pk",
     }
 
     highlight_fields = {
