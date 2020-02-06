@@ -8,6 +8,10 @@ class CustomUserManager(BaseUserManager):
     for authentication instead of usernames.
     """
 
+    def normalize_email(self, email):
+        lower_email = email.lower()
+        return BaseUserManager.normalize_email(lower_email)
+
     def create_user(self, email, password, **extra_fields):
         """
         Create and save a User with the given email and password.
