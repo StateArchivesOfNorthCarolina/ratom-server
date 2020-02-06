@@ -10,7 +10,7 @@ class CustomUserManager(BaseUserManager):
 
     def normalize_email(self, email):
         lower_email = email.lower()
-        return BaseUserManager.normalize_email(lower_email)
+        return super(CustomUserManager, self).normalize_email(lower_email)
 
     def create_user(self, email, password, **extra_fields):
         """
