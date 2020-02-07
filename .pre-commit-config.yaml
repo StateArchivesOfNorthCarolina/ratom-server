@@ -12,7 +12,7 @@ repos:
       - id: check-merge-conflict
       - id: check-json
       - id: check-yaml
-        exclude: deployment/inventory.yaml
+        exclude: deployment/host_vars/
       - id: check-xml
       - id: debug-statements
       - id: detect-aws-credentials
