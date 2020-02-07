@@ -13,3 +13,9 @@ def account():
 def ratom_file(account):
     """ratom.core.models.File instance"""
     return factories.FileFactory(account=account)
+
+
+@pytest.fixture
+def user():
+    """ratom.core.models.File instance"""
+    return factories.UserFactory()
