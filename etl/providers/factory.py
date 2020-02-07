@@ -14,7 +14,7 @@ class ImportProviderFactory:
     interface.
 
     :keyword:
-        provider (enum): An enum member defined in ProviderTypes
+        provider (enum): An class that indicates a type of provider of the factory registry
     """
 
     def __init__(self):

@@ -8,7 +8,7 @@ import pypff
 from django.conf import settings
 from django.core.files.storage import default_storage
 
-from core.models import Attachment
+from core.models import Attachments
 
 
 logger = logging.getLogger(__name__)
@@ -49,6 +49,6 @@ def save_attachment(m):
         mime, encoding = mimetypes.guess_type(file_name)
         if not mime:
             mime = "Unknown"
-        Attachment.objects.create(
+        Attachments.objects.create(
             message=m, file_name=file_name, mime_type=mime, hashed_name=hashed_name,
         )
