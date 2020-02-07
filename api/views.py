@@ -40,27 +40,6 @@ def user_detail(request):
         return Response(serialized_user.data)
 
 
-@api_view(["GET", "POST"])
-@permission_classes([IsAuthenticated])
-def account_list(request):
-    """
-    List all Accounts, or create a new Account.
-    """
-    if request.method == "GET":
-        # TODO: currently showing all accounts.
-        # TODO: need to decide how/if to limit access
-        accounts = Account.objects.all()
-        serialized_account = AccountSerializer(accounts, many=True)
-        return Response(serialized_account.data)
-
-    if request.method == "POST":
-        serialized_account = AccountSerializer(data=request.data)
-        if serialized_account.is_valid():
-            serialized_account.save()
-            return Response(serialized_account.data, status=status.HTTP_201_CREATED)
-        return Response(serialized_account.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 @api_view(["GET", "PUT", "DELETE"])
 @permission_classes([IsAuthenticated])
 def account_detail(request, pk):
@@ -88,13 +67,26 @@ def account_detail(request, pk):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class AccountCreate(APIView):
+class AccountListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # TODO: currently showing all accounts.
+        # TODO: need to decide how/if to limit access
+        accounts = Account.objects.all()
+        serialized_account = AccountSerializer(accounts, many=True)
+        return Response(serialized_account.data)
+
     def post(self, request):
-        if request.data["name"] and request.data["url"]:
-            account, _ = Account.objects.get_or_create(title=request.data["name"])
-            import_file_task.delay([request.data["url"]], account.title)
-            return Response(status=status.HTTP_201_CREATED)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        if request.data["title"] and request.data["url"]:
+            serialized_account = AccountSerializer(data=request.data)
+            if serialized_account.is_valid():
+                account = serialized_account.save()
+                import_file_task.delay([request.data["url"]], account.title)
+                return Response(serialized_account.data, status=status.HTTP_201_CREATED)
+            return Response(
+                serialized_account.errors, status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 @api_view(["GET"])

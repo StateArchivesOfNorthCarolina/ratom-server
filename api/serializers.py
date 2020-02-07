@@ -40,7 +40,15 @@ class AccountSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Account
-        fields = "__all__"
+        fields = ["title", "files"]
+
+    def create(self, validated_data):
+        account, _ = Account.objects.get_or_create(**validated_data)
+        return account
+
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get("title", instance.title)
+        return instance
 
     def to_representation(self, instance: Account):
 

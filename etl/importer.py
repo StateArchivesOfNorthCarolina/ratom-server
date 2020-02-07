@@ -9,7 +9,7 @@ import pypff
 from core import models as ratom
 from etl.message.forms import ArchiveMessageForm
 from etl.message.nlp import extract_labels
-from etl.providers.base import ImportProvider
+from etl.providers.base import ImportProvider, ImportProviderError
 from etl.providers.factory import import_provider_factory, ProviderTypes
 
 
@@ -41,6 +41,10 @@ class PstImporter:
         """Set import_status to IMPORTING and open PffArchive."""
         logger.info("--- Importing Stage ---")
         logger.info(f"Opening archive {self.import_provider.path}")
+        if not self.import_provider.exists:
+            raise ImportProviderError(
+                message="File was not found", error=f"{type(self.import_provider)}"
+            )
         self.import_provider.open()
         self.archive = self.import_provider.pff_archive
         self.ratom_file.import_status = ratom.File.IMPORTING
@@ -170,6 +174,11 @@ class PstImporter:
             logger.warning("Keyboard interrupted file import process")
             self.add_file_error(name=name, context=str(e))
             self.fail_stage(e)
+        except ImportProviderError as e:
+            name = e.error
+            logger.warning(f"{e}")
+            self.add_file_error(name=name, context=str(e))
+            self.fail_stage(e)
         except Exception as e:
             name = "Unrecoverable import error"
             logger.exception(name)
@@ -198,16 +207,10 @@ def import_psts(
     if clean:
         logger.warning(f"Deleting {account.title} account files (if exists)")
         account.files.all().delete()
-    if is_remote:
-        provider = import_provider_factory(
-            provider=ProviderTypes[f"{settings.CLOUD_SERVICE_PROVIDER}"]
-        )
-        cloud_provider = provider(file_path=paths[0])
-        importer = PstImporter(cloud_provider, account, spacy_model, is_background)
+    for path in paths:
+        provider = import_provider_factory(provider=ProviderTypes.FILESYSTEM)
+        if is_remote:
+            provider = import_provider_factory(provider=settings.CLOUD_SERVICE_PROVIDER)
+        local_provider = provider(file_path=path)
+        importer = PstImporter(local_provider, account, spacy_model, is_background)
         importer.run()
-    else:
-        for path in paths:
-            provider = import_provider_factory(provider=ProviderTypes["FILESYSTEM"])
-            local_provider = provider(file_path=path)
-            importer = PstImporter(local_provider, account, spacy_model, is_background)
-            importer.run()

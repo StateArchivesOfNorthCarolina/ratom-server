@@ -1,8 +1,8 @@
 from django.conf import settings
 from azure.storage.blob import BlobServiceClient
-import io
-from etl.providers.base import ImportProvider, ImportProviderError
-
+from pathlib import Path
+from etl.providers.base import ImportProvider
+from tempfile import NamedTemporaryFile
 import logging
 
 logger = logging.getLogger(__name__)
@@ -26,6 +26,7 @@ class AzureServiceProvider(ImportProvider):
         self.pst_blob_name = kwargs.get("file_path", "")
         self._service = None
         self._client = None
+        self._file_size = None
         self.pst_blob = None
         self.valid = True
 
@@ -37,21 +38,18 @@ class AzureServiceProvider(ImportProvider):
         return False
 
     def _get_file(self):
-        self.blob_data = self._client.download_blob(self.pst_blob)
-        self._data = io.BytesIO(self.blob_data.content_as_bytes())
+        tmp_file = NamedTemporaryFile(delete=False)
+        with Path(tmp_file.name).open(mode="wb") as fh:
+            self.blob_data = self._client.download_blob(self.pst_blob)
+            self._file_size = self.blob_data.size
+            fh.write(self.blob_data.readall())
+            self.blob_data = None
+            self._data = tmp_file.name
 
     def open(self):
-        self._service = BlobServiceClient(
-            account_url=self.account_url, credential=settings.AZURE_BLOB_KEY
-        )
-        self._client = self._service.get_container_client(self.container)
-        self.valid = self._validate()
-        if not self.valid:
-            raise ImportProviderError(
-                message="File was not found", error="AzureServiceProviderError"
-            )
         self._get_file()
         super().open()
+        Path(self._data).unlink()
 
     @property
     def path(self):
@@ -59,11 +57,18 @@ class AzureServiceProvider(ImportProvider):
 
     @property
     def exists(self):
+        self._service = BlobServiceClient(
+            account_url=self.account_url, credential=settings.AZURE_BLOB_KEY
+        )
+        self._client = self._service.get_container_client(self.container)
+        self.valid = self._validate()
+        if not self.valid:
+            return False
         return True
 
     @property
     def file_size(self):
-        return self.blob_data.size
+        return self._file_size
 
     @property
     def file_name(self):

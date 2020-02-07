@@ -16,7 +16,6 @@ class ImportProvider:
 
     def open(self) -> None:
         self.pff_archive = PffArchive(self._data)
-        self._data = None
 
     @property
     def path(self):

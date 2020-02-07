@@ -13,7 +13,7 @@ def local_file(tmp_path):
     sub_directory.mkdir()
     pst_file = sub_directory / "name.pst"
     pst_file.write_text("CONTENT")
-    import_provider = import_provider_factory(provider=ProviderTypes["FILESYSTEM"])
+    import_provider = import_provider_factory(provider=ProviderTypes.FILESYSTEM)
     yield import_provider(file_path=str(pst_file.absolute()))
 
 

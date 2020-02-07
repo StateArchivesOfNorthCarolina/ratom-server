@@ -3,9 +3,8 @@ from django.urls import path
 from rest_framework_simplejwt import views as jwt_views
 from .views import (
     user_detail,
-    account_list,
     account_detail,
-    AccountCreate,
+    AccountListView,
     message_detail,
     MessageDocumentView,
 )
@@ -19,9 +18,8 @@ urlpatterns = [
 
 # Accounts
 urlpatterns += [
-    path("accounts/", account_list, name="account_list"),
+    path("accounts/", AccountListView.as_view(), name="account_list"),
     path("accounts/<int:pk>/", account_detail, name="account_detail"),
-    path("accounts/create/", AccountCreate.as_view()),
 ]
 
 # Messages

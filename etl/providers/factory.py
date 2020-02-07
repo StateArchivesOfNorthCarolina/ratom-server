@@ -1,12 +1,11 @@
-from enum import Enum
 from etl.providers.base import ImportProvider
 from etl.providers.azure import AzureServiceProvider
 from etl.providers.filesystem import FilesystemProvider
 
 
-class ProviderTypes(Enum):
-    AZURE = "AZURE"
-    FILESYSTEM = "FILESYSTEM"
+class ProviderTypes:
+    AZURE = 0
+    FILESYSTEM = 1
 
 
 class ImportProviderFactory:

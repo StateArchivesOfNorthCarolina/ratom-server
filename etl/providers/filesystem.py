@@ -28,11 +28,8 @@ class FilesystemProvider(ImportProvider):
 
     @property
     def file_size(self):
-        try:
+        if self.exists:
             return self.local_path.stat().st_size
-        except FileNotFoundError:
-            logger.info(f"{self.file_name} not found. Filesize set to 0")
-            return 0
 
     @property
     def file_name(self):
