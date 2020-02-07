@@ -5,6 +5,11 @@ import pytz
 timezone = pytz.timezone("America/New_York")
 
 
+class UserFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = core.User
+
+
 class MessageAuditFactory(factory.DjangoModelFactory):
     class Meta:
         model = core.MessageAudit
