@@ -24,7 +24,7 @@ k8s_worker_celery_app: "ratom"
 k8s_worker_resources:
   requests:
     memory: "768Mi"
-    cpu: "250m"
+    cpu: "600m"
 
 # Celery beat
 k8s_worker_beat_enabled: false
