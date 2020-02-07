@@ -16,6 +16,7 @@ from api.serializers import (
     UserSerializer,
     AccountSerializer,
     MessageSerializer,
+    MessageHighlightsSerializer,
     MessageDocumentSerializer,
 )
 
@@ -97,7 +98,9 @@ def message_detail(request, pk):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == "GET":
-        serialized_message = MessageSerializer(message)
+        highlights = request.query_params.get("highlights")
+        serializer = MessageHighlightsSerializer if highlights else MessageSerializer
+        serialized_message = serializer(message, context={"highlights": highlights})
         return Response(serialized_message.data)
 
 

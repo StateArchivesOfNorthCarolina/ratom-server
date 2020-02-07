@@ -1,3 +1,4 @@
+import re
 from rest_framework import serializers
 from core.models import User, Account, Message, File
 
@@ -70,6 +71,47 @@ class MessageSerializer(serializers.ModelSerializer):
             "msg_to",
             "subject",
             "body",
+            "directory",
+        ]
+
+
+class MessageHighlightsSerializer(serializers.ModelSerializer):
+    highlighted_subject = serializers.SerializerMethodField()
+    highlighted_body = serializers.SerializerMethodField()
+
+    def _highlight(self, text):
+        highlights_str = self.context.get("highlights")
+        highlights = highlights_str.split(",")
+        highlighted_text = text
+        for highlight in highlights:
+            for m in re.finditer(highlight, text, re.IGNORECASE):
+                og_text = m.group(0)
+                highlighted = "<strong>" + og_text + "</strong>"
+                highlighted_text = re.sub(og_text, highlighted, highlighted_text)
+        return highlighted_text
+
+    def get_highlighted_subject(self, message):
+        if message.subject:
+            return self._highlight(message.subject)
+        else:
+            return None
+
+    def get_highlighted_body(self, message):
+        if message.body:
+            return self._highlight(message.body)
+        else:
+            return None
+
+    class Meta:
+        model = Message
+        fields = [
+            "id",
+            "source_id",
+            "sent_date",
+            "msg_from",
+            "msg_to",
+            "highlighted_subject",
+            "highlighted_body",
             "directory",
         ]
 
