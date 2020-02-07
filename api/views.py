@@ -138,6 +138,11 @@ class MessageDocumentView(DocumentViewSet):
     )
 
     faceted_search_fields = {
+        "processed": {
+            "field": "audit.processed",
+            "facet": TermsFacet,
+            "enabled": True,
+        },
         "labels": {
             # "field": "labels.raw",
             "field": "labels",
@@ -148,12 +153,14 @@ class MessageDocumentView(DocumentViewSet):
             "field": "sent_date",
             "facet": DateHistogramFacet,
             "options": {"interval": "year",},
+            "enabled": True,
         },
     }
 
     # Define filtering fields
     filter_fields = {
         "account": "account.id",
+        "processed": "audit.processed",
         "labels": {
             "field": "labels",
             "lookups": [

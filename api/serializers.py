@@ -87,18 +87,23 @@ class MessageDocumentSerializer(serializers.Serializer):
     directory = serializers.CharField(read_only=True)
     labels = serializers.SerializerMethodField()
     highlight = serializers.SerializerMethodField()
+    processed = serializers.SerializerMethodField()
 
     def get_labels(self, obj):
         """Get labels."""
         if obj.labels:
             return list(obj.labels)
-        else:
-            return []
+        return []
 
     def get_highlight(self, obj):
         if hasattr(obj.meta, "highlight"):
             return obj.meta.highlight.__dict__["_d_"]
         return {}
+
+    def get_processed(self, obj):
+        if obj.audit:
+            return obj.audit.processed
+        return False
 
     class Meta(object):
         document = MessageDocument
