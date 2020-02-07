@@ -6,16 +6,17 @@ from core.tests import factories
 @pytest.fixture
 def account():
     """ratom.core.models.Account instance"""
-    return factories.AccountFactory()
+    yield factories.AccountFactory()
 
 
 @pytest.fixture
 def ratom_file(account):
     """ratom.core.models.File instance"""
-    return factories.FileFactory(account=account)
+    yield factories.FileFactory(account=account)
 
 
 @pytest.fixture
-def user():
+def user(django_db_blocker):
     """ratom.core.models.File instance"""
-    return factories.UserFactory()
+    with django_db_blocker.unblock():
+        yield factories.UserFactory()
