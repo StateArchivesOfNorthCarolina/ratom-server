@@ -34,15 +34,15 @@ class MessageDocument(Document):
         multi=True,
     )
 
-    account = fields.NestedField(
-        attr="account_indexing",
+    account = fields.ObjectField(
         properties={
+            "id": fields.IntegerField(),
             "title": fields.StringField(
                 fields={
                     "raw": fields.KeywordField(),
                     "suggest": fields.CompletionField(),
                 }
-            )
+            ),
         },
     )
 

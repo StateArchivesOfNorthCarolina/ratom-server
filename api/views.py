@@ -153,10 +153,7 @@ class MessageDocumentView(DocumentViewSet):
 
     # Define filtering fields
     filter_fields = {
-        "id": {
-            "field": "_id",
-            "lookups": [constants.LOOKUP_FILTER_RANGE, constants.LOOKUP_QUERY_IN,],
-        },
+        "account": "account.id",
         "labels": {
             "field": "labels",
             "lookups": [
