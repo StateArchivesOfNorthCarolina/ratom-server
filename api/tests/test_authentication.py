@@ -1,16 +1,14 @@
-from django.test import TestCase
 from django.urls import reverse
-from rest_framework.test import APIClient
+from rest_framework.test import APITestCase
 
 
-class ProtectedRouteTestCase(TestCase):
+class ProtectedRouteTestCase(APITestCase):
     """
     Requests to views decorated with @permission_classes([IsAuthenticated])
     should return 401s if unauthenticated
     """
 
     def setUp(self):
-        self.client = APIClient()
         self.no_credentials_msg = "Authentication credentials were not provided."
         self.bad_credentials_msg = "Token is invalid or expired"
 
