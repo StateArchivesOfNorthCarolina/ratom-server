@@ -56,9 +56,10 @@ def account_detail(request, pk):
         return Response(serialized_account.data)
 
     elif request.method == "PUT":
+        request.data["title"] = account.title
         serialized_account = AccountSerializer(account, data=request.data)
         if serialized_account.is_valid():
-            serialized_account.save()
+            import_file_task.delay([request.data["filename"]], account.title)
             return Response(serialized_account.data)
         return Response(serialized_account.errors, status=status.HTTP_400_BAD_REQUEST)
 
