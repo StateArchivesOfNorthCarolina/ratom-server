@@ -1,5 +1,5 @@
 import logging
-from typing import List, Union
+from typing import List
 from django.conf import settings
 from libratom.lib.entities import load_spacy_model
 from spacy.language import Language
@@ -14,12 +14,6 @@ from etl.providers.factory import import_provider_factory, ProviderTypes
 
 
 logger = logging.getLogger(__name__)
-
-
-class ImporterError(Exception):
-    def __init__(self, message):
-        super().__init__()
-        self.message = message
 
 
 class PstImporter:
@@ -76,20 +70,17 @@ class PstImporter:
 
     def _create_ratom_file(
         self, account: ratom.Account, import_provider: ImportProvider
-    ) -> Union[ratom.File, None]:
+    ) -> ratom.File:
         """Create ratom.File for provided Account.
 
         Returns: ratom.File instance
         """
-        ratom_file, created = ratom.File.objects.get_or_create(
-            account=account, filename=str(import_provider.file_name)
+        ratom_file, _ = ratom.File.objects.get_or_create(
+            account=account,
+            filename=str(import_provider.file_name),
+            original_path=str(import_provider.path),
         )
-        if created:
-            return ratom_file
-        raise ImporterError(
-            message=f"A file: {import_provider.file_name} "
-            f"for Account: {account.title} has already been imported."
-        )
+        return ratom_file
 
     def import_messages_from_archive(self) -> None:
         """Loop through and import all archive messages."""
@@ -178,8 +169,6 @@ class PstImporter:
             self.initializing_stage()
             self.importing_stage()
             self.import_messages_from_archive()
-        except ImporterError as e:
-            logger.warning(e.message)
         except (KeyboardInterrupt, SystemExit, SystemError) as e:
             name = "Keyboard interrupted file import process"
             logger.warning("Keyboard interrupted file import process")
