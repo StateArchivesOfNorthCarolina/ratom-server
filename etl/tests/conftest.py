@@ -3,6 +3,7 @@ import pytest
 from unittest import mock
 
 from etl.importer import PstImporter
+from etl.providers.factory import import_provider_factory, ProviderTypes
 
 
 @pytest.fixture()
@@ -12,7 +13,8 @@ def local_file(tmp_path):
     sub_directory.mkdir()
     pst_file = sub_directory / "name.pst"
     pst_file.write_text("CONTENT")
-    yield pst_file
+    import_provider = import_provider_factory(provider=ProviderTypes.FILESYSTEM)
+    yield import_provider(file_path=str(pst_file.absolute()))
 
 
 @pytest.fixture
@@ -65,7 +67,7 @@ def archive_folder(archive_msg):
 @pytest.fixture()
 def test_archive(archive_folder):
     """A mock pypff archive with ."""
-    with mock.patch("etl.importer.PffArchive") as _mock:
+    with mock.patch("etl.providers.base.PffArchive") as _mock:
         archive = _mock.return_value
         archive.message_count = 1
         archive.folders.return_value = [archive_folder]

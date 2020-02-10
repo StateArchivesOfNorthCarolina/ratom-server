@@ -34,15 +34,23 @@ class MessageDocument(Document):
         multi=True,
     )
 
-    account = fields.NestedField(
-        attr="account_indexing",
+    audit = fields.ObjectField(
         properties={
+            "processed": fields.BooleanField(),
+            "is_record": fields.BooleanField(),
+            "date_processed": fields.DateField(),
+        }
+    )
+
+    account = fields.ObjectField(
+        properties={
+            "id": fields.IntegerField(),
             "title": fields.StringField(
                 fields={
                     "raw": fields.KeywordField(),
                     "suggest": fields.CompletionField(),
                 }
-            )
+            ),
         },
     )
 

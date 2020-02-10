@@ -73,6 +73,11 @@ class MessageDocumentView(DocumentViewSet):
     )
 
     faceted_search_fields = {
+        "processed": {
+            "field": "audit.processed",
+            "facet": TermsFacet,
+            "enabled": True,
+        },
         "labels": {
             # "field": "labels.raw",
             "field": "labels",
@@ -83,15 +88,17 @@ class MessageDocumentView(DocumentViewSet):
             "field": "sent_date",
             "facet": DateHistogramFacet,
             "options": {"interval": "year",},
+            "enabled": True,
         },
     }
 
     # Define filtering fields
     filter_fields = {
-        "id": {
-            "field": "_id",
-            "lookups": [constants.LOOKUP_FILTER_RANGE, constants.LOOKUP_QUERY_IN,],
-        },
+        "account": "account.id",
+        "sent_date": "sent_date",
+        "msg_from": "msg_from",
+        "body": "body",
+        "processed": "audit.processed",
         "labels": {
             "field": "labels",
             "lookups": [
@@ -102,10 +109,6 @@ class MessageDocumentView(DocumentViewSet):
                 constants.LOOKUP_QUERY_EXCLUDE,
             ],
         },
-        "sent_date": "sent_date",
-        "msg_from": "msg_from",
-        "body": "body",
-        "pk": "pk",
     }
 
     highlight_fields = {
@@ -116,6 +119,6 @@ class MessageDocumentView(DocumentViewSet):
     }
 
     # Define ordering fields
-    ordering_fields = {"sent_date": "sent_date"}
+    ordering_fields = {"_score": "_score"}
     # Specify default ordering
-    ordering = ("sent_date",)
+    ordering = ("-_score",)

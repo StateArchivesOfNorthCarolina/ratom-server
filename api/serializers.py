@@ -1,7 +1,10 @@
+import logging
 from rest_framework import serializers
 from core.models import User, Account, Message, File
 
 from api.documents.message import MessageDocument
+
+logger = logging.getLogger(__file__)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -40,6 +43,15 @@ class AccountSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Account
+        fields = ["title", "files"]
+
+    def create(self, validated_data):
+        account, _ = Account.objects.get_or_create(**validated_data)
+        return account
+
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get("title", instance.title)
+        return instance
 
     def to_representation(self, instance: Account):
 
@@ -87,18 +99,28 @@ class MessageDocumentSerializer(serializers.Serializer):
     directory = serializers.CharField(read_only=True)
     labels = serializers.SerializerMethodField()
     highlight = serializers.SerializerMethodField()
+    score = serializers.SerializerMethodField()
+    processed = serializers.SerializerMethodField(method_name="get_processed")
 
     def get_labels(self, obj):
         """Get labels."""
         if obj.labels:
             return list(obj.labels)
-        else:
-            return []
+        return []
 
     def get_highlight(self, obj):
         if hasattr(obj.meta, "highlight"):
             return obj.meta.highlight.__dict__["_d_"]
         return {}
+
+    def get_score(self, obj):
+        return obj.meta.score
+
+    def get_processed(self, obj):
+        logger.info(obj.__repr__())
+        if obj.audit:
+            return obj.audit.processed
+        return False
 
     class Meta(object):
         document = MessageDocument

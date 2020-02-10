@@ -2,8 +2,37 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from core import models as ratom
 
-admin.site.register(ratom.User, UserAdmin)
 admin.site.register(ratom.Account)
+
+
+@admin.register(ratom.User)
+class CustomUserAdmin(UserAdmin):
+    model = ratom.User
+    list_display = (
+        "email",
+        "is_staff",
+        "is_active",
+    )
+    list_filter = (
+        "email",
+        "is_staff",
+        "is_active",
+    )
+    fieldsets = (
+        (None, {"fields": ("email", "password")}),
+        ("Permissions", {"fields": ("is_staff", "is_active")}),
+    )
+    add_fieldsets = (
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": ("email", "password1", "password2", "is_staff", "is_active"),
+            },
+        ),
+    )
+    search_fields = ("email",)
+    ordering = ("email",)
 
 
 @admin.register(ratom.Message)

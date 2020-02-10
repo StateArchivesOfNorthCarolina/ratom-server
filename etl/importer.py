@@ -1,9 +1,7 @@
 import logging
-from pathlib import Path
 from typing import List
-
+from django.conf import settings
 from libratom.lib.entities import load_spacy_model
-from libratom.lib.pff import PffArchive
 from spacy.language import Language
 from tqdm import tqdm
 import pypff
@@ -11,6 +9,8 @@ import pypff
 from core import models as ratom
 from etl.message.forms import ArchiveMessageForm
 from etl.message.nlp import extract_labels
+from etl.providers.base import ImportProvider, ImportProviderError
+from etl.providers.factory import import_provider_factory, ProviderTypes
 
 
 logger = logging.getLogger(__name__)
@@ -19,13 +19,13 @@ logger = logging.getLogger(__name__)
 class PstImporter:
     def __init__(
         self,
-        path: Path,
+        import_provider: ImportProvider,
         account: ratom.Account,
         spacy_model: Language,
         is_background: bool = False,
     ):
-        logger.info(f"PstImporter running on {path}")
-        self.local_path = path
+        logger.info(f"PstImporter running on {import_provider.path}")
+        self.import_provider = import_provider
         self.account = account
         self.spacy_model = spacy_model
         self.is_background = is_background
@@ -34,16 +34,22 @@ class PstImporter:
     def initializing_stage(self) -> None:
         """Initialization step prior to starting import process."""
         logger.info("--- Initializing Stage ---")
-        self.ratom_file = self._create_ratom_file(self.account, self.local_path)
+        self.ratom_file = self._create_ratom_file(self.account, self.import_provider)
         logger.info(f"Using ratom.File[{self.ratom_file.pk}]")
 
     def importing_stage(self) -> None:
         """Set import_status to IMPORTING and open PffArchive."""
         logger.info("--- Importing Stage ---")
-        logger.info(f"Opening archive {self.local_path}")
-        self.archive = PffArchive(self.local_path)
+        logger.info(f"Opening archive {self.import_provider.path}")
+        if not self.import_provider.exists:
+            raise ImportProviderError(
+                message="File was not found", error=f"{type(self.import_provider)}"
+            )
+        self.import_provider.open()
+        self.archive = self.import_provider.pff_archive
         self.ratom_file.import_status = ratom.File.IMPORTING
         self.ratom_file.reported_total_messages = self.archive.message_count
+        self.ratom_file.file_size = self.import_provider.file_size
         self.ratom_file.save()
         logger.info(f"Opened {self.archive.message_count} messages in archive")
 
@@ -62,19 +68,18 @@ class PstImporter:
         self.ratom_file.save()
         logger.info(f"ratom.File[{self.ratom_file.pk}] imported successfully")
 
-    def _create_ratom_file(self, account: ratom.Account, path: Path) -> ratom.File:
+    def _create_ratom_file(
+        self, account: ratom.Account, import_provider: ImportProvider
+    ) -> ratom.File:
         """Create ratom.File for provided Account.
 
         Returns: ratom.File instance
         """
         ratom_file, _ = ratom.File.objects.get_or_create(
             account=account,
-            filename=str(path.name),
-            original_path=str(path.absolute()),
+            filename=str(import_provider.file_name),
+            original_path=str(import_provider.path),
         )
-        if path.exists():
-            ratom_file.file_size = path.stat().st_size
-            ratom_file.save()
         return ratom_file
 
     def import_messages_from_archive(self) -> None:
@@ -164,9 +169,14 @@ class PstImporter:
             self.initializing_stage()
             self.importing_stage()
             self.import_messages_from_archive()
-        except KeyboardInterrupt as e:
+        except (KeyboardInterrupt, SystemExit, SystemError) as e:
             name = "Keyboard interrupted file import process"
             logger.warning("Keyboard interrupted file import process")
+            self.add_file_error(name=name, context=str(e))
+            self.fail_stage(e)
+        except ImportProviderError as e:
+            name = e.error
+            logger.warning(f"{e}")
             self.add_file_error(name=name, context=str(e))
             self.fail_stage(e)
         except Exception as e:
@@ -179,7 +189,11 @@ class PstImporter:
 
 
 def import_psts(
-    paths: List[str], account: str, clean: bool, is_background: bool = False,
+    paths: List[str],
+    account: str,
+    clean: bool,
+    is_background: bool = False,
+    is_remote=False,
 ) -> None:
     logger.info("Import process started")
     spacy_model_name = "en_core_web_sm"
@@ -194,5 +208,9 @@ def import_psts(
         logger.warning(f"Deleting {account.title} account files (if exists)")
         account.files.all().delete()
     for path in paths:
-        importer = PstImporter(Path(path), account, spacy_model, is_background)
+        provider = import_provider_factory(provider=ProviderTypes.FILESYSTEM)
+        if is_remote:
+            provider = import_provider_factory(provider=settings.CLOUD_SERVICE_PROVIDER)
+        local_provider = provider(file_path=path)
+        importer = PstImporter(local_provider, account, spacy_model, is_background)
         importer.run()

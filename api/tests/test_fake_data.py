@@ -4,13 +4,13 @@ import pytest
 from django.urls import reverse
 
 from core.models import Account
-from api.views.fake_data import ACCOUNT_TITLE
+from api.views.fake_data import ACCOUNT_TITLE_1
 
 pytestmark = pytest.mark.django_db
 
 
 def test_reset(api_client_anon):
-    response = api_client_anon.post(reverse("reset_fake_data"))
+    response = api_client_anon.get(reverse("reset_fake_data"))
     assert response.status_code == HTTPStatus.OK.value
-    account = Account.objects.get(title=ACCOUNT_TITLE)
+    account = Account.objects.get(title=ACCOUNT_TITLE_1)
     assert account.files.count() == 1

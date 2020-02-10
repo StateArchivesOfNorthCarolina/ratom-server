@@ -10,14 +10,15 @@ pytestmark = pytest.mark.django_db
 def test_create_ratom_file(pst_importer, local_file, account):
     """Importer should create ratom.File with correct initial values."""
     ratom_file = pst_importer._create_ratom_file(account, local_file)
-    assert str(local_file.absolute()) == ratom_file.original_path
-    assert local_file.name == ratom_file.filename
-    assert local_file.stat().st_size == ratom_file.file_size
+    assert str(local_file.path) == ratom_file.original_path
+    assert str(local_file.file_name) == ratom_file.filename
 
 
-def test_create_ratom_file__missing(pst_importer, account):
+def test_create_ratom_file__missing(pst_importer, account, local_file):
     """Importer shouldn't fail with non-existent file."""
-    ratom_file = pst_importer._create_ratom_file(account, Path("i-dont-exist.pst"))
+    local_file.local_path = Path("i-dont-exist.pst")
+    ratom_file = pst_importer._create_ratom_file(account, local_file)
+    pst_importer.initializing_stage()
     assert not ratom_file.file_size
 
 

@@ -48,7 +48,7 @@ def test_bad_token(api_client_anon, url, pk):
     "url,pk,allowed_methods",
     [
         ("user_detail", None, {"get"}),
-        ("account_list", None, {"get", "post"}),
+        ("account_list", None, {"get", "post", "head"}),
         ("account_detail", 1, {"get", "put", "delete"}),
         ("search_messages", None, {"get", "head"}),
         ("message_detail", 1, {"get"}),
