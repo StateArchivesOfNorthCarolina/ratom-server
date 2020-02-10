@@ -1,7 +1,32 @@
+import random
 from django.test import TestCase
+from faker import Faker
+from rest_framework.test import APITestCase, APIRequestFactory
+
 import core.tests.factories as factory
 import core.models as m
-import random
+
+fake = Faker()
+
+
+class TestUser(APITestCase):
+    """
+    Test custom user model.
+    """
+
+    def setUp(self):
+        self.request_factory = APIRequestFactory()
+        self.user = {"email": fake.email(), "password": fake.password()}
+
+    def test_user_can_be_created_with_email(self):
+        user = m.User.objects.create(**self.user)
+        self.assertEqual(user.email, self.user["email"])
+        self.assertEqual(user.password, self.user["password"])
+
+    def test_username_is_none(self):
+        user = m.User.objects.create(**self.user)
+        self.assertEqual(m.User.username, None)
+        self.assertEqual(user.username, None)
 
 
 def generate_messages(account: m.Account, file: m.File) -> [m.Message]:
