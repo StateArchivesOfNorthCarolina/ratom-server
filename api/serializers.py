@@ -1,7 +1,10 @@
+import logging
 from rest_framework import serializers
 from core.models import User, Account, Message, File
 
 from api.documents.message import MessageDocument
+
+logger = logging.getLogger(__file__)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -97,7 +100,7 @@ class MessageDocumentSerializer(serializers.Serializer):
     labels = serializers.SerializerMethodField()
     highlight = serializers.SerializerMethodField()
     score = serializers.SerializerMethodField()
-    processed = serializers.SerializerMethodField()
+    processed = serializers.SerializerMethodField(method_name="get_processed")
 
     def get_labels(self, obj):
         """Get labels."""
@@ -114,6 +117,7 @@ class MessageDocumentSerializer(serializers.Serializer):
         return obj.meta.score
 
     def get_processed(self, obj):
+        logger.info(obj.__repr__())
         if obj.audit:
             return obj.audit.processed
         return False
