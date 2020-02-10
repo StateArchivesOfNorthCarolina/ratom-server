@@ -28,12 +28,25 @@ class AzureServiceProvider(ImportProvider):
         self._client = None
         self._file_size = None
         self.pst_blob = None
-        self.valid = True
+        self.valid = None
+
+    def _setup(self):
+        """Establish Azure services and run validations."""
+        if not self._client:
+            logger.info(f"Initiating Azure service client for {self.account_url}")
+            self._service = BlobServiceClient(
+                account_url=self.account_url, credential=settings.AZURE_BLOB_KEY
+            )
+            self._client = self._service.get_container_client(self.container)
+        if self.valid is None:
+            self.valid = self._validate()
 
     def _validate(self) -> bool:
+        """Obtain blob metadata and set blob state."""
         for b in self._client.list_blobs():
             if b.name == self.pst_blob_name:
                 self.pst_blob = b
+                self._file_size = self.pst_blob.size
                 return True
         return False
 
@@ -42,8 +55,8 @@ class AzureServiceProvider(ImportProvider):
         logger.info(f"Downloading to {tmp_file.name}")
         with Path(tmp_file.name).open(mode="wb") as fh:
             self.blob_data = self._client.download_blob(self.pst_blob)
-            self._file_size = self.blob_data.size
             fh.write(self.blob_data.readall())
+            logger.info("Download complete")
             self.blob_data = None
             self._data = tmp_file.name
 
@@ -58,19 +71,14 @@ class AzureServiceProvider(ImportProvider):
 
     @property
     def exists(self):
-        self._service = BlobServiceClient(
-            account_url=self.account_url, credential=settings.AZURE_BLOB_KEY
-        )
-        self._client = self._service.get_container_client(self.container)
-        self.valid = self._validate()
-        if not self.valid:
-            logger.info(f"{self.pst_blob_name} does not exist")
-            return False
-        logger.info(f"{self.pst_blob_name} exists")
-        return True
+        self._setup()
+        exists = "does" if self.valid else "does not"
+        logger.info(f"{self.pst_blob_name} {exists} exist")
+        return self.valid
 
     @property
     def file_size(self):
+        self._setup()
         return self._file_size
 
     @property
