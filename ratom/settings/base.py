@@ -236,4 +236,8 @@ if BROKER_URL:
         "[%(asctime)s: %(levelname)s/%(processName)s/%(name)s] %(message)s"
     )
 
-CLOUD_SERVICE_PROVIDER = ProviderTypes.AZURE
+# Azure Blobs
+CLOUD_SERVICE_PROVIDER = os.getenv("CLOUD_SERVICE_PROVIDER", ProviderTypes.AZURE)
+AZURE_BLOB_KEY = os.getenv("AZURE_BLOB_KEY")
+AZURE_URL = os.getenv("AZURE_URL")
+AZURE_CONTAINER = os.getenv("AZURE_CONTAINER")

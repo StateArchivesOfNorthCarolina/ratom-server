@@ -31,7 +31,7 @@ class Command(BaseCommand):
             help="Run task in background",
         )
         parser.add_argument(
-            "--account", help="Name of the account for this set of paths"
+            "--account", help="Name of the account for this set of paths", required=True
         )
 
     def handle(self, *args, **options):
