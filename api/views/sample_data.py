@@ -9,7 +9,7 @@ __all__ = ("reset_sample_data",)
 
 
 @transaction.atomic
-@api_view(["GET"])
+@api_view(["POST"])
 def reset_sample_data(request):
     sample_reset_all()
     return Response("Done")
