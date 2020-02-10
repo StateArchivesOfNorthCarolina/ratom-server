@@ -63,7 +63,7 @@ def account_detail(request, pk):
             import_file_task.delay(
                 [serialized_file.validated_data["filename"]], account.title
             )
-            return Response(serialized_file.data, status=status.HTTP_200_OK)
+            return Response(serialized_file.data, status=status.HTTP_201_CREATED)
         return Response(serialized_file.errors, status=status.HTTP_400_BAD_REQUEST)
 
     elif request.method == "DELETE":
