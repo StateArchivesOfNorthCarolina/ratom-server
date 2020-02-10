@@ -34,13 +34,13 @@ def test_import_psts(mock_import_psts, local_file):
 
 def test_import_psts__clean(mock_import_psts, local_file):
     """Clean should be passed through to import_psts()"""
-    call_command("import_psts", local_file, clean=True)
+    call_command("import_psts", local_file, clean=True, account=local_file.file_name)
     assert mock_import_psts.call_args[1]["clean"]
 
 
 def test_import_psts__detach(mock_task_import_psts, local_file):
     """Detach should route through task and set is_background=True"""
-    call_command("import_psts", local_file, detach=True)
+    call_command("import_psts", local_file, detach=True, account=local_file.file_name)
     assert mock_task_import_psts.called
     assert mock_task_import_psts.call_args[1]["is_background"]
     assert mock_task_import_psts.call_args[1]["is_remote"]

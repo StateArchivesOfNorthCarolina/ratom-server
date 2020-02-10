@@ -28,46 +28,60 @@ class AzureServiceProvider(ImportProvider):
         self._client = None
         self._file_size = None
         self.pst_blob = None
-        self.valid = True
+        self.valid = None
+
+    def _setup(self):
+        """Establish Azure services and run validations."""
+        if not self._client:
+            logger.info(f"Initiating Azure service client for {self.account_url}")
+            self._service = BlobServiceClient(
+                account_url=self.account_url, credential=settings.AZURE_BLOB_KEY
+            )
+            self._client = self._service.get_container_client(self.container)
+        if self.valid is None:
+            self.valid = self._validate()
 
     def _validate(self) -> bool:
+        """Obtain blob metadata and set blob state."""
         for b in self._client.list_blobs():
             if b.name == self.pst_blob_name:
                 self.pst_blob = b
+                self._file_size = self.pst_blob.size
                 return True
         return False
 
     def _get_file(self):
-        tmp_file = NamedTemporaryFile(delete=False)
+        tmp_file = NamedTemporaryFile(delete=False, prefix="ratom-")
+        logger.info(f"Downloading to {tmp_file.name}")
         with Path(tmp_file.name).open(mode="wb") as fh:
-            self.blob_data = self._client.download_blob(self.pst_blob)
-            self._file_size = self.blob_data.size
-            fh.write(self.blob_data.readall())
-            self.blob_data = None
+            blob_data = self._client.download_blob(self.pst_blob)
+            fh.write(blob_data.readall())
             self._data = tmp_file.name
+        logger.info("Download complete")
 
     def open(self):
+        self._setup()
         self._get_file()
         super().open()
+        # Clean up temporary file once it is finished
+        logger.info(f"Deleting temporary file {self._data}")
         Path(self._data).unlink()
 
     @property
     def path(self):
-        return self.pst_blob_name
+        self._setup()
+        return f"{self._client.primary_endpoint}/{self.pst_blob_name}"
 
     @property
     def exists(self):
-        self._service = BlobServiceClient(
-            account_url=self.account_url, credential=settings.AZURE_BLOB_KEY
-        )
-        self._client = self._service.get_container_client(self.container)
-        self.valid = self._validate()
-        if not self.valid:
-            return False
-        return True
+        self._setup()
+        exists = "does" if self.valid else "does not"
+        logger.info(f"{self.pst_blob_name} {exists} exist")
+        return self.valid
 
     @property
     def file_size(self):
+        self._setup()
         return self._file_size
 
     @property

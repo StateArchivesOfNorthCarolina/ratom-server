@@ -209,6 +209,16 @@ class Message(models.Model):
         ordering = ["sent_date"]
 
     @property
+    def audit_indexing(self):
+        return dict_to_obj(
+            {
+                "processed": self.audit.processed,
+                "is_record": self.audit.is_record,
+                "date_processed": self.audit.date_processed,
+            }
+        )
+
+    @property
     def account_indexing(self):
         """Account data (nested) for indexing.
         Example:
