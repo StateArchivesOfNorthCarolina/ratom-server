@@ -63,7 +63,7 @@ def account_detail(request, pk):
             import_file_task.delay(
                 [serialized_file.validated_data["filename"]], account.title
             )
-            return Response(serialized_file.data)
+            return Response(serialized_file.data, status=status.HTTP_200_OK)
         return Response(serialized_file.errors, status=status.HTTP_400_BAD_REQUEST)
 
     elif request.method == "DELETE":
@@ -85,8 +85,18 @@ class AccountListView(APIView):
         serialized_account = AccountSerializer(data=request.data)
         if serialized_account.is_valid():
             account = serialized_account.save()
-            import_file_task.delay([request.data["filename"]], account.title)
-            return Response(serialized_account.data, status=status.HTTP_201_CREATED)
+            request.data["account"] = account.id
+            serialized_file = FileSerializer(data=request.data)
+            if serialized_file.is_valid():
+                import_file_task.delay(
+                    [serialized_file.validated_data["filename"]], account.title
+                )
+                return Response(serialized_file.data, status=status.HTTP_200_OK)
+            serialized_account.errors["ratom_error"] = (
+                f"Could not create account with "
+                f"{serialized_file.validated_data['filename']}"
+            )
+            return Response(serialized_account.errors, status=status.HTTP_404_NOT_FOUND)
         return Response(serialized_account.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
