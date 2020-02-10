@@ -4,7 +4,7 @@ from api.sample_data.etl import extract_data
 
 
 class Command(BaseCommand):
-    help = "Extract fake data"
+    help = "Extract sample data"
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -15,4 +15,4 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        print(extract_data(account=options["account"], total=options["total"]))
+        print(extract_data(account=options["account"], total=int(options["total"])))
