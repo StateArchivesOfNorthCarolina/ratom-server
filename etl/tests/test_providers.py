@@ -13,12 +13,19 @@ def pst_blob():
 
 
 @pytest.fixture
-def cloud_provider(pst_blob):
+def container_client(pst_blob):
+    client = mock.Mock()
+    client.primary_endpoint = "https://blob.windows.net"
+    client.list_blobs.return_value = [pst_blob]
+    yield client
+
+
+@pytest.fixture
+def cloud_provider(pst_blob, container_client):
     Provider = import_provider_factory(provider=ProviderTypes.AZURE)
     provider = Provider(file_path="inbox.pst")
+    provider._client = container_client
     provider._service = mock.Mock()
-    provider._client = mock.Mock()
-    provider._client.list_blobs.return_value = [pst_blob]
     yield provider
 
 
@@ -26,6 +33,11 @@ def test_azure_file_name():
     Provider = import_provider_factory(provider=ProviderTypes.AZURE)
     provider = Provider(file_path="inbox.pst")
     assert provider.file_name == "inbox.pst"
+
+
+def test_azure_path(cloud_provider, container_client):
+    container_client.primary_endpoint = "https://ratom.com"
+    assert container_client.primary_endpoint in cloud_provider.path
 
 
 def test_azure_blob__exists(cloud_provider, pst_blob):

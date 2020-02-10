@@ -54,20 +54,23 @@ class AzureServiceProvider(ImportProvider):
         tmp_file = NamedTemporaryFile(delete=False, prefix="ratom-")
         logger.info(f"Downloading to {tmp_file.name}")
         with Path(tmp_file.name).open(mode="wb") as fh:
-            self.blob_data = self._client.download_blob(self.pst_blob)
-            fh.write(self.blob_data.readall())
-            logger.info("Download complete")
-            self.blob_data = None
+            blob_data = self._client.download_blob(self.pst_blob)
+            fh.write(blob_data.readall())
             self._data = tmp_file.name
+        logger.info("Download complete")
 
     def open(self):
+        self._setup()
         self._get_file()
         super().open()
+        # Clean up temporary file once it is finished
+        logger.info(f"Deleting temporary file {self._data}")
         Path(self._data).unlink()
 
     @property
     def path(self):
-        return self.pst_blob_name
+        self._setup()
+        return f"{self._client.primary_endpoint}/{self.pst_blob_name}"
 
     @property
     def exists(self):
