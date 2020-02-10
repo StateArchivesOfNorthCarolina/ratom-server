@@ -1,3 +1,5 @@
+import logging
+
 from api.sample_data.etl import load_data
 from core.models import Account, MessageAudit
 
@@ -7,7 +9,13 @@ SAMPLE_DATA_SETS = (
         "files": ["bill_rapp_sample.pst"],
         "source": "bill_rapp.json",
     },
+    {
+        "title": "Albert Meyers [Sample Data]",
+        "files": ["albert_meyers_sample.pst"],
+        "source": "albert_meyers.json",
+    },
 )
+logger = logging.getLogger(__name__)
 
 
 def sample_reset_all():
@@ -18,6 +26,7 @@ def sample_reset_all():
 
 def reset_dataset(title, files, source):
     """Reset specified sample data."""
+    logger.info(f"Resetting sample dataset: {title}")
     account, _ = Account.objects.get_or_create(title=title)
     # Delete all messages associated with fake account
     account.files.all().delete()
