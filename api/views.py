@@ -138,11 +138,22 @@ class MessageDocumentView(DocumentViewSet):
     )
 
     faceted_search_fields = {
-        "labels": {"field": "labels", "facet": TermsFacet,},
+        "processed": {
+            "field": "audit.processed",
+            "facet": TermsFacet,
+            "enabled": True,
+        },
+        "labels": {
+            # "field": "labels.raw",
+            "field": "labels",
+            "facet": TermsFacet,
+            # "enabled": True,
+        },
         "sent_date": {
             "field": "sent_date",
             "facet": DateHistogramFacet,
             "options": {"interval": "year",},
+            "enabled": True,
         },
     }
 
@@ -152,6 +163,7 @@ class MessageDocumentView(DocumentViewSet):
         "sent_date": "sent_date",
         "msg_from": "msg_from",
         "body": "body",
+        "processed": "audit.processed",
         "labels": {
             "field": "labels",
             "lookups": [

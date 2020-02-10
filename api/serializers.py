@@ -88,13 +88,13 @@ class MessageDocumentSerializer(serializers.Serializer):
     labels = serializers.SerializerMethodField()
     highlight = serializers.SerializerMethodField()
     score = serializers.SerializerMethodField()
+    processed = serializers.SerializerMethodField()
 
     def get_labels(self, obj):
         """Get labels."""
         if obj.labels:
             return list(obj.labels)
-        else:
-            return []
+        return []
 
     def get_highlight(self, obj):
         if hasattr(obj.meta, "highlight"):
@@ -103,6 +103,11 @@ class MessageDocumentSerializer(serializers.Serializer):
 
     def get_score(self, obj):
         return obj.meta.score
+
+    def get_processed(self, obj):
+        if obj.audit:
+            return obj.audit.processed
+        return False
 
     class Meta(object):
         document = MessageDocument

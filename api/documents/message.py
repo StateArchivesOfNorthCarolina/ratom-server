@@ -34,6 +34,14 @@ class MessageDocument(Document):
         multi=True,
     )
 
+    audit = fields.ObjectField(
+        properties={
+            "processed": fields.BooleanField(),
+            "is_record": fields.BooleanField(),
+            "date_processed": fields.DateField(),
+        }
+    )
+
     account = fields.ObjectField(
         properties={
             "id": fields.IntegerField(),
