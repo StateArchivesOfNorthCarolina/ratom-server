@@ -44,6 +44,10 @@ class Account(models.Model):
         )
 
     @property
+    def total_messages_saved(self):
+        return self.messages.count()
+
+    @property
     def total_processed_messages(self):
         return self.messages.filter(audit__processed=True).count()
 

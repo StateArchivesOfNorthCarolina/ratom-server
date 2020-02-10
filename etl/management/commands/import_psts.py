@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 from django.core.management.base import BaseCommand
 from etl.tasks import import_file_task
 from etl.importer import import_psts
@@ -20,10 +19,19 @@ class Command(BaseCommand):
             help="Clear collection records before starting import",
         )
         parser.add_argument(
+            "--remote",
+            default=False,
+            action="store_true",
+            help="Indicates that this importer should use the CLOUD_STORAGE_PROVIDER",
+        )
+        parser.add_argument(
             "--detach",
             default=False,
             action="store_true",
             help="Run task in background",
+        )
+        parser.add_argument(
+            "--account", help="Name of the account for this set of paths", required=True
         )
 
     def handle(self, *args, **options):
@@ -32,8 +40,9 @@ class Command(BaseCommand):
         logger.info(f"Matched {len(paths)} file(s)")
         data = {
             "paths": paths,
-            "account": Path(paths[0]).stem,
+            "account": options["account"],
             "clean": options["clean"],
+            "is_remote": options["remote"],
         }
         if options["detach"]:
             logger.info("Queuing background task...")
