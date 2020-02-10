@@ -7,7 +7,7 @@ from .views import (
     AccountListView,
     message_detail,
     MessageDocumentView,
-    reset_fake_data,
+    reset_sample_data,
 )
 
 # Auth
@@ -35,7 +35,7 @@ urlpatterns += [
 
 # Fake data
 urlpatterns += [
-    path("reset-fake-data/", reset_fake_data, name="reset_fake_data"),
+    path("reset-sample-data/", reset_sample_data, name="reset_sample_data"),
 ]
 
 ratom_urlpatterns = urlpatterns

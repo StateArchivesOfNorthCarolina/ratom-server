@@ -3,16 +3,16 @@ from rest_framework.response import Response
 
 from core.models import Account, MessageAudit
 
-from api.faker.data import load_data
+from api.sample_data.data import load_data
 
-__all__ = ("reset_fake_data",)
+__all__ = ("reset_sample_data",)
 
 
 ACCOUNT_TITLE_1 = "Bill Rapp [Staging Test Data]"
 
 
 @api_view(["GET"])
-def reset_fake_data(request):
+def reset_sample_data(request):
     account, _ = Account.objects.get_or_create(title=ACCOUNT_TITLE_1)
     # Delete all messages associated with fake account
     account.files.all().delete()
