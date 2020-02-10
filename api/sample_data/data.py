@@ -21,6 +21,6 @@ def extract_data(account, total):
 
 
 def load_data(filename):
-    path = Path(settings.PROJECT_ROOT) / "api/faker" / filename
+    path = Path(settings.PROJECT_ROOT) / "api/sample_data" / filename
     json_data = path.read_text()
     return serializers.deserialize("json", json_data)
