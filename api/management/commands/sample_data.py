@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from api.sample_data.data import extract_data
+from api.sample_data.etl import extract_data
 
 
 class Command(BaseCommand):

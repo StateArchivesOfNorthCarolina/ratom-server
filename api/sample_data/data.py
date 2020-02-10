@@ -1,26 +1,35 @@
-from pathlib import Path
+from api.sample_data.etl import load_data
+from core.models import Account, MessageAudit
 
-from django.core import serializers
-from django.conf import settings
-
-from core.models import Account
-
-
-def extract_data(account, total):
-    """Extract and serialize a subset of messages."""
-    account = Account.objects.get(title=account)
-    # Explicit ordering so we can attempt to re-generate the same
-    # list in the future
-    messages = account.messages.order_by("sent_date", "source_id")[:total]
-    rows = []
-    for message in messages:
-        for field in ("account", "file", "audit", "pk"):
-            setattr(message, field, None)
-        rows.append(message)
-    return serializers.serialize("json", rows, indent=2)
+SAMPLE_DATA_SETS = (
+    {
+        "title": "Bill Rapp [Sample Data]",
+        "files": ["bill_rapp_sample.pst"],
+        "source": "bill_rapp.json",
+    },
+)
 
 
-def load_data(filename):
-    path = Path(settings.PROJECT_ROOT) / "api/sample_data" / filename
-    json_data = path.read_text()
-    return serializers.deserialize("json", json_data)
+def sample_reset_all():
+    """Reset all sample datasets."""
+    for dataset in SAMPLE_DATA_SETS:
+        reset_dataset(**dataset)
+
+
+def reset_dataset(title, files, source):
+    """Reset specified sample data."""
+    account, _ = Account.objects.get_or_create(title=title)
+    # Delete all messages associated with fake account
+    account.files.all().delete()
+    for filename in files:
+        ratom_file = account.files.create(
+            filename=filename, original_path=f"/tmp/{filename}",
+        )
+        messages = load_data(source)
+        for message in messages:
+            message.object.account = account
+            message.object.file = ratom_file
+            message.object.audit = MessageAudit.objects.create()
+            message.object.save()
+        ratom_file.reported_total_messages = ratom_file.message_set.count()
+        ratom_file.save()
