@@ -38,7 +38,8 @@ class AzureServiceProvider(ImportProvider):
         return False
 
     def _get_file(self):
-        tmp_file = NamedTemporaryFile(delete=False)
+        tmp_file = NamedTemporaryFile(delete=False, prefix="ratom-")
+        logger.info(f"Downloading to {tmp_file.name}")
         with Path(tmp_file.name).open(mode="wb") as fh:
             self.blob_data = self._client.download_blob(self.pst_blob)
             self._file_size = self.blob_data.size
@@ -63,7 +64,9 @@ class AzureServiceProvider(ImportProvider):
         self._client = self._service.get_container_client(self.container)
         self.valid = self._validate()
         if not self.valid:
+            logger.info(f"{self.pst_blob_name} does not exist")
             return False
+        logger.info(f"{self.pst_blob_name} exists")
         return True
 
     @property
