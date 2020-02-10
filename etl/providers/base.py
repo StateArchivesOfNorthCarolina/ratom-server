@@ -1,4 +1,8 @@
+import logging
+
 from libratom.lib.pff import PffArchive
+
+logger = logging.getLogger(__name__)
 
 
 class ImportProviderError(Exception):
@@ -15,6 +19,7 @@ class ImportProvider:
         self.pff_archive = None  # type: PffArchive
 
     def open(self) -> None:
+        logger.info(f"Opening archive {self._data} with provider")
         self.pff_archive = PffArchive(self._data)
 
     @property
