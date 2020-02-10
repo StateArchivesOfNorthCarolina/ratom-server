@@ -128,6 +128,20 @@ TEST_ENRON_DATA_SET=true make test
 HTML-based coverage reports are generated into ``htmlcov/``.
 
 
+Sample Data
+-----------
+
+To reset the project sample data using a management command, run::
+
+    python manage.py reset_sample_data
+
+To create a new sample dataset from an existing account in your database, run::
+
+    python manage.py sample_data --account="albert_meyers" --total=10 > ./api/sample_data/albert_meyers.json
+
+Then populate additional entries in ``api.sample_data.data.SAMPLE_DATA_SETS``.
+
+
 Deployment
 ----------
 
