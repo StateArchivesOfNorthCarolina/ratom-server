@@ -78,11 +78,11 @@ class AccountListView(APIView):
         return Response(serialized_account.data)
 
     def post(self, request):
-        if request.data["title"] and request.data["url"]:
+        if request.data["title"] and request.data["filename"]:
             serialized_account = AccountSerializer(data=request.data)
             if serialized_account.is_valid():
                 account = serialized_account.save()
-                import_file_task.delay([request.data["url"]], account.title)
+                import_file_task.delay([request.data["filename"]], account.title)
                 return Response(serialized_account.data, status=status.HTTP_201_CREATED)
             return Response(
                 serialized_account.errors, status=status.HTTP_400_BAD_REQUEST
