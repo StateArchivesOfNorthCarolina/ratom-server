@@ -19,7 +19,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class FileSerializer(serializers.ModelSerializer):
-    account = serializers.PrimaryKeyRelatedField(queryset=Account.objects.all())
+    # account = serializers.PrimaryKeyRelatedField(queryset=Account.objects.all())
 
     class Meta:
         model = File
