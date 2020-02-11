@@ -3,14 +3,14 @@ import pytest
 
 from django.urls import reverse
 
-from core.models import Account
-from api.sample_data.data import SAMPLE_DATA_SETS
+from core.models import File
 
 pytestmark = pytest.mark.django_db
 
 
-def test_reset(api_client, user):
+def test_reset(settings, api_client):
+    """Simple test to make sure 2 files exist after running a sample data reset."""
+    settings.RATOM_SAMPLE_DATA_ENABLED = True
     response = api_client.post(reverse("reset_sample_data"))
     assert response.status_code == HTTPStatus.OK.value
-    account = Account.objects.get(title=SAMPLE_DATA_SETS[0]["title"])
-    assert account.files.count() == 1
+    assert File.objects.count() == 2

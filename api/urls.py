@@ -1,4 +1,5 @@
 from django.urls import path
+from django.conf import settings
 
 from rest_framework_simplejwt import views as jwt_views
 from .views import (
@@ -33,9 +34,10 @@ urlpatterns += [
     path("messages/<int:pk>/", message_detail, name="message_detail"),
 ]
 
-# Fake data
-urlpatterns += [
-    path("reset-sample-data/", reset_sample_data, name="reset_sample_data"),
-]
+if settings.RATOM_SAMPLE_DATA_ENABLED:
+    # Fake data
+    urlpatterns += [
+        path("reset-sample-data/", reset_sample_data, name="reset_sample_data"),
+    ]
 
 ratom_urlpatterns = urlpatterns
