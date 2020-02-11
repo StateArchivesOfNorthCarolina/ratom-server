@@ -2,7 +2,6 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from django.conf import settings
 from django_elasticsearch_dsl_drf import constants, filter_backends
@@ -12,92 +11,13 @@ from elasticsearch_dsl import DateHistogramFacet, TermsFacet
 
 from api.documents.message import MessageDocument
 from api.documents.utils import LoggingPageNumberPagination
-from core.models import User, Account, Message
+from core.models import Message
 from api.serializers import (
-    UserSerializer,
-    AccountSerializer,
-    FileSerializer,
     MessageSerializer,
     MessageDocumentSerializer,
 )
 
-from etl.tasks import import_file_task
-
-
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def user_detail(request):
-    """
-    Show details of single user
-    """
-    try:
-        user_pk = request.user.pk
-        user = User.objects.get(pk=user_pk)
-    except User.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    if request.method == "GET":
-        serialized_user = UserSerializer(user)
-        return Response(serialized_user.data)
-
-
-@api_view(["GET", "PUT", "DELETE"])
-@permission_classes([IsAuthenticated])
-def account_detail(request, pk):
-    """
-    Retrieve, update or delete an Account.
-    """
-    try:
-        account = Account.objects.get(pk=pk)
-    except Account.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    if request.method == "GET":
-        serialized_account = AccountSerializer(account)
-        return Response(serialized_account.data)
-
-    elif request.method == "PUT":
-        request.data["account"] = account.id
-        serialized_file = FileSerializer(data=request.data)
-        if serialized_file.is_valid():
-            import_file_task.delay(
-                [serialized_file.validated_data["filename"]], account.title
-            )
-            return Response(serialized_file.data, status=status.HTTP_201_CREATED)
-        return Response(serialized_file.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    elif request.method == "DELETE":
-        account.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class AccountListView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        # TODO: currently showing all accounts.
-        # TODO: need to decide how/if to limit access
-        accounts = Account.objects.all()
-        serialized_account = AccountSerializer(accounts, many=True)
-        return Response(serialized_account.data)
-
-    def post(self, request):
-        serialized_account = AccountSerializer(data=request.data)
-        if serialized_account.is_valid():
-            account = serialized_account.save()
-            request.data["account"] = account.id
-            serialized_file = FileSerializer(data=request.data)
-            if serialized_file.is_valid():
-                import_file_task.delay(
-                    [serialized_file.validated_data["filename"]], account.title
-                )
-                return Response(serialized_file.data, status=status.HTTP_200_OK)
-            serialized_account.errors["ratom_error"] = (
-                f"Could not create account with "
-                f"{serialized_file.validated_data['filename']}"
-            )
-            return Response(serialized_account.errors, status=status.HTTP_404_NOT_FOUND)
-        return Response(serialized_account.errors, status=status.HTTP_400_BAD_REQUEST)
+__all__ = ("message_detail", "MessageDocumentView")
 
 
 @api_view(["GET"])
