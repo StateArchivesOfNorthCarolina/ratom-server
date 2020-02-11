@@ -65,3 +65,5 @@ if os.getenv("DATABASE_URL"):
     DATABASES["default"].update(db_from_env)
 
 DATABASES["default"]["TEST"] = {"NAME": "test_" + DATABASES["default"]["NAME"]}
+
+RATOM_SAMPLE_DATA_ENABLED = True
