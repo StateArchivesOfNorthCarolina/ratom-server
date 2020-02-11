@@ -9,6 +9,9 @@ class UserFactory(factory.DjangoModelFactory):
     class Meta:
         model = core.User
 
+    email = factory.Faker("ascii_email")
+    password = "testing"
+
 
 class MessageAuditFactory(factory.DjangoModelFactory):
     class Meta:
