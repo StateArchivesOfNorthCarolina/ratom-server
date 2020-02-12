@@ -41,17 +41,6 @@ def test_account_put_valid(ratom_file, api_client, celery_mock):
     assert response.status_code == 204
 
 
-def test_account_put_task_error(ratom_file, api_client, celery_mock):
-    # Test PUT with task error
-    url = reverse("account_detail", args=[ratom_file.account.pk])
-    data = {"filename": ratom_file.filename}
-    from celery.exceptions import OperationalError
-
-    celery_mock.delay.side_effect = OperationalError
-    response = api_client.put(url, data=data)
-    assert response.status_code == 500
-
-
 def test_account_delete(ratom_file, api_client):
     # Test Delete account
     url = reverse("account_detail", args=[ratom_file.account.pk])
@@ -88,13 +77,3 @@ def test_account_post_success(api_client, celery_mock):
     celery_mock.return_value = True
     response = api_client.post(url, data=data)
     assert response.status_code == 204
-
-
-def test_account_post_failure(api_client, celery_mock):
-    url = reverse("account_list")
-    data = {"title": "Good Title1", "filename": "Good Filename1"}
-    from celery.exceptions import OperationalError
-
-    celery_mock.delay.side_effect = OperationalError
-    response = api_client.put(url, data=data)
-    assert response.status_code == 500
