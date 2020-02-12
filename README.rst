@@ -112,20 +112,34 @@ Development
 Tests
 ----------
 
-To run the projet unit tests, use:
+To run the projet unit tests, use::
 
-```
-make test
-```
+    make test
 
-A full-stack test with a real Enron .pst file is skipped by default. To enable it, run:
+A full-stack test with a real Enron .pst file is skipped by default. To enable it, run::
 
-``
-TEST_ENRON_DATA_SET=true make test
-```
-
+    TEST_ENRON_DATA_SET=true make test
 
 HTML-based coverage reports are generated into ``htmlcov/``.
+
+
+Sample Data
+-----------
+
+An API endpoint, at ``/api/v1/reset-sample-data/``, will reset sample datasets
+with an authenicated POST request. This URL is disabled unless the
+``RATOM_SAMPLE_DATA_ENABLED`` environment variable is set to ``true``. This is
+enabled by default on staging and in development.
+
+To reset the project sample data using a management command, run::
+
+    python manage.py reset_sample_data
+
+To create a new sample dataset from an existing account in your database, run::
+
+    python manage.py sample_data --account="albert_meyers" --total=10 > ./api/sample_data/albert_meyers.json
+
+Then populate additional entries in ``api.sample_data.data.SAMPLE_DATA_SETS``.
 
 
 Deployment

@@ -1,10 +1,10 @@
 from django.core.management.base import BaseCommand
 
-from api.sample_data.data import extract_data
+from api.sample_data.etl import extract_data
 
 
 class Command(BaseCommand):
-    help = "Extract fake data"
+    help = "Extract sample data"
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -15,4 +15,4 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        print(extract_data(account=options["account"], total=options["total"]))
+        print(extract_data(account=options["account"], total=int(options["total"])))
