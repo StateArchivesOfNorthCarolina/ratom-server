@@ -22,9 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class FileSerializer(serializers.ModelSerializer):
-    account = serializers.PrimaryKeyRelatedField(
-        queryset=Account.objects.all(), required=False
-    )
+    account = serializers.PrimaryKeyRelatedField(required=False, read_only=True)
 
     class Meta:
         model = File

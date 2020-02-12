@@ -1,6 +1,7 @@
 import pytest
 from django.urls import reverse
 from core.models import File
+from unittest import mock
 
 
 def test_user_detail(api_client):
@@ -21,7 +22,29 @@ def test_account_detail_view(ratom_file, api_client):
     response = api_client.get(url)
     assert response.status_code == 404
 
-    # Figure out how to test PUT
+    # Test PUT with valid serializer
+    url = reverse("account_detail", args=[account.pk])
+    data = {"filename": ratom_file.filename}
+    with mock.patch("api.views.account.import_file_task") as mock_task:
+        mock_task.return_value = True
+        response = api_client.put(url, data=data)
+        assert response.status_code == 204
+
+    # Test PUT with invalid serializer
+    url = reverse("account_detail", args=[account.pk])
+    data = {"filename": "x" * 201}
+    response = api_client.put(url, data=data)
+    assert response.status_code == 400
+
+    # Test PUT with task error
+    url = reverse("account_detail", args=[account.pk])
+    data = {"filename": ratom_file.filename}
+    from celery.exceptions import OperationalError
+
+    with mock.patch("api.views.account.import_file_task") as mock_task:
+        mock_task.delay.side_effect = OperationalError
+        response = api_client.put(url, data=data)
+        assert response.status_code == 500
 
     # Test Delete account
     url = reverse("account_detail", args=[account.pk])
