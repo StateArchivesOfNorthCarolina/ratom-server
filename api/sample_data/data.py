@@ -1,7 +1,7 @@
 import logging
 
 from api.sample_data.etl import load_data
-from core.models import Account, MessageAudit
+from core.models import Account, MessageAudit, File
 
 SAMPLE_DATA_SETS = (
     {
@@ -41,4 +41,5 @@ def reset_dataset(title, files, source):
             message.object.audit = MessageAudit.objects.create()
             message.object.save()
         ratom_file.reported_total_messages = ratom_file.message_set.count()
+        ratom_file.import_status = File.COMPLETE
         ratom_file.save()
