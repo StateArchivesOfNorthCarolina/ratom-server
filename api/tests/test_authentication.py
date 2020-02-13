@@ -1,118 +1,64 @@
+from http import HTTPStatus
+import pytest
+
 from django.urls import reverse
-from rest_framework.test import APITestCase
+from django.views.generic.base import View
+
+no_credentials_msg = "Authentication credentials were not provided."
+bad_credentials_msg = "Given token not valid for any token type"
+http_method_names = set(View.http_method_names) - {"options"}
 
 
-class ProtectedRouteTestCase(APITestCase):
-    """
-    Requests to views decorated with @permission_classes([IsAuthenticated])
-    should return 401s if unauthenticated
-    """
+@pytest.mark.parametrize(
+    "url,pk",
+    [
+        ("user_detail", None),
+        ("account_list", None),
+        ("search_messages", None),
+        ("account_detail", 1),
+        ("message_detail", 1),
+    ],
+)
+def test_anonymous_unauthorized(api_client_anon, url, pk):
+    kwargs = {"pk": pk} if pk else None
+    response = api_client_anon.get(reverse(url, kwargs=kwargs))
+    assert response.status_code == HTTPStatus.UNAUTHORIZED.value
+    assert response.data["detail"] == no_credentials_msg
 
-    def setUp(self):
-        self.no_credentials_msg = "Authentication credentials were not provided."
-        self.bad_credentials_msg = "Token is invalid or expired"
 
-    def test_user_detail_without_credentials(self):
-        """
-        user_detail view returns 401 to unauthenticated request
-        with '...credentials were not provided' message.
-        """
-        response = self.client.get(reverse("user_detail"))
-        self.assertEqual(response.status_code, 401)
-        self.assertIn(self.no_credentials_msg, str(response.content))
+@pytest.mark.parametrize(
+    "url,pk",
+    [
+        ("user_detail", None),
+        ("account_list", None),
+        ("search_messages", None),
+        ("account_detail", 1),
+        ("message_detail", 1),
+    ],
+)
+def test_bad_token(api_client_anon, url, pk):
+    api_client_anon.credentials(HTTP_AUTHORIZATION="Bearer fake.auth.token")
+    kwargs = {"pk": pk} if pk else None
+    response = api_client_anon.get(reverse(url, kwargs=kwargs))
+    assert response.status_code == HTTPStatus.UNAUTHORIZED.value
+    assert response.data["detail"] == bad_credentials_msg
 
-    def test_user_detail_bad_credentials(self):
-        """
-        user_detail view returns 401 to unauthenticated request
-        with 'Token is invalid or expired' message.
-        """
-        self.client.credentials(HTTP_AUTHORIZATION="Bearer fake.auth.token")
-        response = self.client.get(reverse("user_detail"))
-        self.assertEqual(response.status_code, 401)
-        self.assertIn(self.bad_credentials_msg, str(response.content))
 
-    def test_account_list_without_credentials(self):
-        """
-        account_list view retuns 401 to requests without Auth headers
-        with '...credentials were not provided' message.
-        """
-        response = self.client.get(reverse("account_list"))
-        self.assertEqual(response.status_code, 401)
-        self.assertIn(self.no_credentials_msg, str(response.content))
-
-    def test_account_list_bad_credentials(self):
-        """
-        account_list view returns 401 to requests with bad token
-        with 'Token is invalid or expired' message.
-        """
-        self.client.credentials(HTTP_AUTHORIZATION="Bearer fake.auth.token")
-        response = self.client.get(reverse("account_list"))
-        self.assertEqual(response.status_code, 401)
-        self.assertIn(self.bad_credentials_msg, str(response.content))
-
-    def test_account_detail_without_credentials(self):
-        """
-        account_detail view retuns 401 to requests without Auth headers
-        with '...credentials were not provided' message.
-        """
-        response = self.client.get(reverse("account_detail", kwargs={"pk": "1"}))
-        self.assertEqual(response.status_code, 401)
-        self.assertIn(self.no_credentials_msg, str(response.content))
-
-    def test_account_detail_bad_credentials(self):
-        """
-        account_detail view returns 401 to requests with bad token
-        with 'Token is invalid or expired' message.
-        """
-        self.client.credentials(HTTP_AUTHORIZATION="Bearer fake.auth.token")
-        response = self.client.get(reverse("account_detail", kwargs={"pk": "1"}))
-        self.assertEqual(response.status_code, 401)
-        self.assertIn(self.bad_credentials_msg, str(response.content))
-
-    def test_search_messages_without_credentials(self):
-        """
-        search_messages view retuns 401 to requests without Auth headers
-        with '...credentials were not provided' message.
-        """
-        response = self.client.get(reverse("search_messages"))
-        self.assertEqual(response.status_code, 401)
-        self.assertIn(self.no_credentials_msg, str(response.content))
-
-    def test_search_messages_bad_credentials(self):
-        """
-        search_messages view returns 401 to requests with bad token
-        with 'Token is invalid or expired' message.
-        """
-        self.client.credentials(HTTP_AUTHORIZATION="Bearer fake.auth.token")
-        response = self.client.get(reverse("search_messages"))
-        self.assertEqual(response.status_code, 401)
-        self.assertIn(self.bad_credentials_msg, str(response.content))
-
-    def test_message_detail_without_credentials(self):
-        """
-        message_detail view retuns 401 to requests without Auth headers
-        with '...credentials were not provided' message.
-        """
-        response = self.client.get(reverse("message_detail", kwargs={"pk": "1"}))
-        self.assertEqual(response.status_code, 401)
-        self.assertIn(self.no_credentials_msg, str(response.content))
-
-    def test_message_detail_bad_credentials(self):
-        """
-        message_detail view returns 401 to requests with bad token
-        with 'Token is invalid or expired' message.
-        """
-        self.client.credentials(HTTP_AUTHORIZATION="Bearer fake.auth.token")
-        response = self.client.get(reverse("message_detail", kwargs={"pk": "1"}))
-        self.assertEqual(response.status_code, 401)
-        self.assertIn(self.bad_credentials_msg, str(response.content))
-
-    def test_message_search_bad_credentials(self):
-        """
-        message_search view returns 401 when bad token is provided
-        with 'Token is invalid or expired' message.
-        """
-        self.client.credentials(HTTP_AUTHORIZATION="Bearer fake.auth.token")
-        response = self.client.get(reverse("search_messages"))
-        self.assertEqual(response.status_code, 401)
-        self.assertIn(self.bad_credentials_msg, str(response.content))
+@pytest.mark.parametrize(
+    "url,pk,allowed_methods",
+    [
+        ("user_detail", None, {"get"}),
+        ("account_list", None, {"get", "post", "head"}),
+        ("account_detail", 1, {"get", "put", "delete"}),
+        ("search_messages", None, {"get", "head"}),
+        ("message_detail", 1, {"get"}),
+    ],
+)
+@pytest.mark.django_db
+def test_get_only_allowed_methods(api_client, url, pk, allowed_methods):
+    not_allowed_methods = http_method_names - allowed_methods
+    for method in not_allowed_methods:
+        client_request = getattr(api_client, method)
+        kwargs = {"pk": pk} if pk else None
+        response = client_request(reverse(url, kwargs=kwargs))
+        assert HTTPStatus.METHOD_NOT_ALLOWED.value == response.status_code, method

@@ -63,3 +63,7 @@ if os.getenv("DATABASE_URL"):
     # Update database configuration with $DATABASE_URL.
     db_from_env = dj_database_url.config(conn_max_age=500)
     DATABASES["default"].update(db_from_env)
+
+DATABASES["default"]["TEST"] = {"NAME": "test_" + DATABASES["default"]["NAME"]}
+
+RATOM_SAMPLE_DATA_ENABLED = True

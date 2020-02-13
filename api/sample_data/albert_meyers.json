@@ -1,0 +1,323 @@
+[
+{
+  "model": "core.message",
+  "pk": null,
+  "fields": {
+    "source_id": "2098212",
+    "file": null,
+    "account": null,
+    "audit": null,
+    "sent_date": "2001-04-06T12:02:00Z",
+    "msg_from": "\"Bert Meyers\"",
+    "msg_to": "\"Joy Werner\" <Joy Werner/Corp/Enron@ENRON>",
+    "msg_cc": "",
+    "msg_bcc": "",
+    "subject": "Re: deal 539246.1 REliant HLP dms 7634/7636",
+    "body": "Body-Type: plain-text\r\n\r\nI checke our Historical Caps for these deals and i am certain that we bought from and sold to Reliant (NES1) for hour ending 11.  If this were not the case\r\nwe would have failed phase 2 with the ISO.  I am searching my notes for the price and whom I spoke with at Reliant.\r\n\r\nRegards, \r\n\r\nBert \r\n\r\n***********\r\nEDRM Enron Email Data Set has been produced in EML, PST and NSF format by ZL Technologies, Inc. This Data Set is licensed under a Creative Commons Attribution 3.0 United States License <http://creativecommons.org/licenses/by/3.0/us/> . To provide attribution, please cite to \"ZL Technologies, Inc. (http://www.zlti.com).\"\r\n***********",
+    "directory": "/Top of Personal Folders/meyers-a/ExMerge - Meyers, Albert/Deleted Items",
+    "headers": {
+      "to": "\"Joy Werner\" <Joy Werner/Corp/Enron@ENRON>",
+      "date": "Fri, 6 Apr 2001 01:02:00 -0700 (PDT),Fri, 6 Apr 2001 01:02:00 -0700  (PDT)",
+      "from": "\"Bert Meyers\"",
+      "folder": "\\ExMerge - Meyers, Albert\\Deleted Items",
+      "subject": "Re: deal 539246.1 REliant HLP dms 7634/7636",
+      "filename": "bert meyers 6-25-02.PST",
+      "message-id": "<ML1KCRAP2G52RFDSYPSFSAQ0J30PDFMMB@zlsvr22>",
+      "content-type": "text/plain; charset=\"us-ascii\"",
+      "mime-version": "1.0",
+      "content-transfer-encoding": "7bit"
+    },
+    "errors": [],
+    "inserted_on": "2020-02-10T23:24:26.206Z"
+  }
+},
+{
+  "model": "core.message",
+  "pk": null,
+  "fields": {
+    "source_id": "2134244",
+    "file": null,
+    "account": null,
+    "audit": null,
+    "sent_date": "2001-05-03T22:27:47Z",
+    "msg_from": "Meyers",
+    "msg_to": "",
+    "msg_cc": "",
+    "msg_bcc": "",
+    "subject": "",
+    "body": "Body-Type: plain-text\r\n\r\n***********\r\nEDRM Enron Email Data Set has been produced in EML, PST and NSF format by ZL Technologies, Inc. This Data Set is licensed under a Creative Commons Attribution 3.0 United States License <http://creativecommons.org/licenses/by/3.0/us/> . To provide attribution, please cite to \"ZL Technologies, Inc. (http://www.zlti.com).\"\r\n***********",
+    "directory": "/Top of Personal Folders/meyers-a/ExMerge - Meyers, Albert/Contacts",
+    "headers": {
+      "date": "Thu, 3 May 2001 11:27:47 -0700 (PDT),Thu, 3 May 2001 11:27:47 -0700  (PDT)",
+      "from": "Meyers",
+      "folder": "\\ExMerge - Meyers, Albert\\Contacts",
+      "filename": "bert meyers 6-25-02.PST",
+      "message-id": "<FVME1ETGZFZMBELKDMEV2MPSML4JPTOFA@zlsvr22>",
+      "content-type": "text/plain; charset=\"us-ascii\"",
+      "mime-version": "1.0",
+      "content-transfer-encoding": "7bit"
+    },
+    "errors": [],
+    "inserted_on": "2020-02-10T23:26:31.346Z"
+  }
+},
+{
+  "model": "core.message",
+  "pk": null,
+  "fields": {
+    "source_id": "2098244",
+    "file": null,
+    "account": null,
+    "audit": null,
+    "sent_date": "2001-05-07T23:59:18Z",
+    "msg_from": "Meyers",
+    "msg_to": "Nelson, Kourtney </O=ENRON/OU=NA/CN=RECIPIENTS/CN=Knelson>",
+    "msg_cc": "",
+    "msg_bcc": "",
+    "subject": "Info on some cuts for 05/06/01 and 05/07/01",
+    "body": "Body-Type: plain-text\r\n\r\nCourtney:\r\n\r\nThought you might like to know that there were numerous cuts last night and into the morning hours.  \r\n\r\nThey are as follows:\r\n\r\n05/06/01\r\nISO cut import @ Four corners 9MW for HE 19 and Export @ Summit 9MW for HE 19.\r\nThe same schedule was cut for by 21MW for HE 21 thru 22.\r\n\r\nFor HE 23 the ISO cut a 21MW import @ PV and the corresponding export @ Summit.\r\n\r\nFor all these hours, the ISO kept our buy resale whole with NCPA SP15 to NP15.\r\n\r\nPAC Cut tag 14987 PSCO_AEPMWE_EPMIWE_EPMEWE_AVWP00 25 MW for HE 19-24.  PSCO booked out with Avista Water Power (WWP)  05/06/01.\r\n\r\n\r\n05/07/01\r\nPAC was cutting tag 14988 PSCO_EPMI_MECOLB_AVSTWE_CHPD 25MW for HE 01.  PSCO booked out with Avista Energy Trading (CHPD) 05/07/01.\r\n\r\nCISO cut schdule EPMI_CISO_5000 and EPMI_CISO_5001 by 1MW each at PV.  We resold the power to SRP for $5.00.  Not a great price but everyone in the SW was\r\ngetting cut at the same time.  The new deals in Enpower are as follows:  602984 and 602985.  If you have any questions please see cut note or lotus notes.\r\n\r\nAlso this morning the ISO was cutting and SC trade with NES1 in SP15 and dec'd load in PGE 1, 2, and 3.  Must be Path 15 Congestion.\r\n\r\nRegards, \r\n\r\nBert Meyers\r\n\r\n***********\r\nEDRM Enron Email Data Set has been produced in EML, PST and NSF format by ZL Technologies, Inc. This Data Set is licensed under a Creative Commons Attribution 3.0 United States License <http://creativecommons.org/licenses/by/3.0/us/> . To provide attribution, please cite to \"ZL Technologies, Inc. (http://www.zlti.com).\"\r\n***********",
+    "directory": "/Top of Personal Folders/meyers-a/ExMerge - Meyers, Albert/Deleted Items",
+    "headers": {
+      "to": "Nelson, Kourtney </O=ENRON/OU=NA/CN=RECIPIENTS/CN=Knelson>",
+      "date": "Mon, 7 May 2001 12:59:18 -0700 (PDT),Mon, 7 May 2001 12:59:18 -0700  (PDT)",
+      "from": "Meyers",
+      "folder": "\\ExMerge - Meyers, Albert\\Deleted Items",
+      "subject": "Info on some cuts for 05/06/01 and 05/07/01",
+      "filename": "bert meyers 6-25-02.PST",
+      "message-id": "<FPJG00ES2UI5I3JJ13PRXCRAVDU24ZKUA@zlsvr22>",
+      "content-type": "text/plain; charset=\"us-ascii\"",
+      "mime-version": "1.0",
+      "content-transfer-encoding": "7bit"
+    },
+    "errors": [],
+    "inserted_on": "2020-02-10T23:24:26.382Z"
+  }
+},
+{
+  "model": "core.message",
+  "pk": null,
+  "fields": {
+    "source_id": "2098308",
+    "file": null,
+    "account": null,
+    "audit": null,
+    "sent_date": "2001-05-20T09:49:40Z",
+    "msg_from": "Meyers",
+    "msg_to": "Robinson, Donald </O=ENRON/OU=NA/CN=RECIPIENTS/CN=Drobins>",
+    "msg_cc": "",
+    "msg_bcc": "",
+    "subject": "TAG #22872",
+    "body": "Body-Type: plain-text\r\n\r\nDonald,\r\n\r\nRalph from the Alberta Power Pool called to review tag #22872.  He is wondering if this tag should run both this sunday and the next sunday.  If you could please check it out when you have some time on Monday for the following week he would certainly appreciate it.  If there is no problem with the tag then he said not to bother.  The main issue is that the schedule will flow for this weekend.  \r\n\r\nAny questions please give me a call.\r\n\r\nRegards,\r\n\r\nBert Meyers\r\n\r\n***********\r\nEDRM Enron Email Data Set has been produced in EML, PST and NSF format by ZL Technologies, Inc. This Data Set is licensed under a Creative Commons Attribution 3.0 United States License <http://creativecommons.org/licenses/by/3.0/us/> . To provide attribution, please cite to \"ZL Technologies, Inc. (http://www.zlti.com).\"\r\n***********",
+    "directory": "/Top of Personal Folders/meyers-a/ExMerge - Meyers, Albert/Deleted Items",
+    "headers": {
+      "to": "Robinson, Donald </O=ENRON/OU=NA/CN=RECIPIENTS/CN=Drobins>",
+      "date": "Sat, 19 May 2001 22:49:40 -0700 (PDT),Sat, 19 May 2001 22:49:40 -0700  (PDT)",
+      "from": "Meyers",
+      "folder": "\\ExMerge - Meyers, Albert\\Deleted Items",
+      "subject": "TAG #22872",
+      "filename": "bert meyers 6-25-02.PST",
+      "message-id": "<JHQ4E25A4QMTALMYDWR1YHYRO33XCAN3B@zlsvr22>",
+      "content-type": "text/plain; charset=\"us-ascii\"",
+      "mime-version": "1.0",
+      "content-transfer-encoding": "7bit"
+    },
+    "errors": [],
+    "inserted_on": "2020-02-10T23:24:26.695Z"
+  }
+},
+{
+  "model": "core.message",
+  "pk": null,
+  "fields": {
+    "source_id": "2134340",
+    "file": null,
+    "account": null,
+    "audit": null,
+    "sent_date": "2001-05-22T13:15:54Z",
+    "msg_from": "Meyers",
+    "msg_to": "",
+    "msg_cc": "",
+    "msg_bcc": "",
+    "subject": "J Calza",
+    "body": "Body-Type: plain-text\r\n\r\n***********\r\nEDRM Enron Email Data Set has been produced in EML, PST and NSF format by ZL Technologies, Inc. This Data Set is licensed under a Creative Commons Attribution 3.0 United States License <http://creativecommons.org/licenses/by/3.0/us/> . To provide attribution, please cite to \"ZL Technologies, Inc. (http://www.zlti.com).\"\r\n***********",
+    "directory": "/Top of Personal Folders/meyers-a/ExMerge - Meyers, Albert/Contacts",
+    "headers": {
+      "date": "Tue, 22 May 2001 02:15:54 -0700 (PDT),Tue, 22 May 2001 02:15:54 -0700  (PDT)",
+      "from": "Meyers",
+      "folder": "\\ExMerge - Meyers, Albert\\Contacts",
+      "subject": "J Calza",
+      "filename": "bert meyers 6-25-02.PST",
+      "message-id": "<KFUMQIPOCQWNTQQA0JP2VI0IBLZITE52A@zlsvr22>",
+      "content-type": "text/plain; charset=\"us-ascii\"",
+      "mime-version": "1.0",
+      "content-transfer-encoding": "7bit"
+    },
+    "errors": [],
+    "inserted_on": "2020-02-10T23:26:31.544Z"
+  }
+},
+{
+  "model": "core.message",
+  "pk": null,
+  "fields": {
+    "source_id": "2098372",
+    "file": null,
+    "account": null,
+    "audit": null,
+    "sent_date": "2001-06-12T02:34:25Z",
+    "msg_from": "Meyers",
+    "msg_to": "Slinger, Ryan </O=ENRON/OU=NA/CN=RECIPIENTS/CN=Rslinger>",
+    "msg_cc": "",
+    "msg_bcc": "",
+    "subject": "Dates to Keep in mind",
+    "body": "Body-Type: plain-text\r\n\r\nRyan:\r\n\r\nPlease be aware that on the days of the 14, 15, and 16 of July.  I need to help my wife pack and unpack for our move to downtown Portland.  Any consideration you can arrange will be greatly appreciated.  \r\n\r\nGive me a call with any questions or concerns\r\n\r\nBert\r\n\r\n***********\r\nEDRM Enron Email Data Set has been produced in EML, PST and NSF format by ZL Technologies, Inc. This Data Set is licensed under a Creative Commons Attribution 3.0 United States License <http://creativecommons.org/licenses/by/3.0/us/> . To provide attribution, please cite to \"ZL Technologies, Inc. (http://www.zlti.com).\"\r\n***********",
+    "directory": "/Top of Personal Folders/meyers-a/ExMerge - Meyers, Albert/Deleted Items",
+    "headers": {
+      "to": "Slinger, Ryan </O=ENRON/OU=NA/CN=RECIPIENTS/CN=Rslinger>",
+      "date": "Mon, 11 Jun 2001 15:34:25 -0700 (PDT),Mon, 11 Jun 2001 15:34:25 -0700  (PDT)",
+      "from": "Meyers",
+      "folder": "\\ExMerge - Meyers, Albert\\Deleted Items",
+      "subject": "Dates to Keep in mind",
+      "filename": "bert meyers 6-25-02.PST",
+      "message-id": "<LIONHFZPWZP1SX33CIBUKNMK4TCSCQEEB@zlsvr22>",
+      "content-type": "text/plain; charset=\"us-ascii\"",
+      "mime-version": "1.0",
+      "content-transfer-encoding": "7bit"
+    },
+    "errors": [],
+    "inserted_on": "2020-02-10T23:24:26.863Z"
+  }
+},
+{
+  "model": "core.message",
+  "pk": null,
+  "fields": {
+    "source_id": "2098436",
+    "file": null,
+    "account": null,
+    "audit": null,
+    "sent_date": "2001-06-28T13:08:59Z",
+    "msg_from": "Meyers",
+    "msg_to": "\"Volume Management\", Test </O=ENRON/OU=NA/CN=RECIPIENTS/CN=Notesaddr/cn=9fc2e8ba-f0070e6-8625656e-6befdc>",
+    "msg_cc": "\"Williams III\", Bill </O=ENRON/OU=NA/CN=RECIPIENTS/CN=Bwillia5>",
+    "msg_bcc": "",
+    "subject": "LV Cogen cut for HE 19",
+    "body": "Body-Type: plain-text\r\n\r\nTag number 25430 was cut for HE 19 by 3 MW.  This was a buy from LV Cogen and a sell to SRP.  I resupplied the power from EPEC in the hour from El Paso Electric for $50 and gave it to SRP @ Palo Verde.  I spoke to Mike @ SRP for this deal and he agreed. In enpower I have made deals for a buy from EPE and a sell to LV Cogen under the ST West Services Book.  The deals are 666355 and 66356.\r\n\r\nIf you have any question please give me a call on the West short term services desk.\r\n\r\nRegards,\r\n\r\nBert Meyers\r\n\r\n***********\r\nEDRM Enron Email Data Set has been produced in EML, PST and NSF format by ZL Technologies, Inc. This Data Set is licensed under a Creative Commons Attribution 3.0 United States License <http://creativecommons.org/licenses/by/3.0/us/> . To provide attribution, please cite to \"ZL Technologies, Inc. (http://www.zlti.com).\"\r\n***********",
+    "directory": "/Top of Personal Folders/meyers-a/ExMerge - Meyers, Albert/Deleted Items",
+    "headers": {
+      "cc": "\"Williams III\", Bill </O=ENRON/OU=NA/CN=RECIPIENTS/CN=Bwillia5>",
+      "to": "\"Volume Management\", Test </O=ENRON/OU=NA/CN=RECIPIENTS/CN=Notesaddr/cn=9fc2e8ba-f0070e6-8625656e-6befdc>",
+      "date": "Thu, 28 Jun 2001 02:08:59 -0700 (PDT),Thu, 28 Jun 2001 02:08:59 -0700  (PDT)",
+      "from": "Meyers",
+      "folder": "\\ExMerge - Meyers, Albert\\Deleted Items",
+      "subject": "LV Cogen cut for HE 19",
+      "filename": "bert meyers 6-25-02.PST",
+      "message-id": "<A3VLVR5C0243VEVKDEELFOXT2IVQNJ22B@zlsvr22>",
+      "content-type": "text/plain; charset=\"us-ascii\"",
+      "mime-version": "1.0",
+      "content-transfer-encoding": "7bit"
+    },
+    "errors": [],
+    "inserted_on": "2020-02-10T23:24:27.130Z"
+  }
+},
+{
+  "model": "core.message",
+  "pk": null,
+  "fields": {
+    "source_id": "2098532",
+    "file": null,
+    "account": null,
+    "audit": null,
+    "sent_date": "2001-07-06T16:31:19Z",
+    "msg_from": "Meyers",
+    "msg_to": "\"Volume Management\", Test </O=ENRON/OU=NA/CN=RECIPIENTS/CN=Notesaddr/cn=9fc2e8ba-f0070e6-8625656e-6befdc>",
+    "msg_cc": "\"Williams III\", Bill </O=ENRON/OU=NA/CN=RECIPIENTS/CN=Bwillia5>",
+    "msg_bcc": "",
+    "subject": "TAG 26235",
+    "body": "Body-Type: plain-text\r\n\r\nTo Whom It May Concern:\r\n\r\n\r\nNEVP called at 21:00 and informed us the cut.  Dynegy was not able to resupply the energy so I bought APS tranny and power from EPE for $70.00 and will show it in the EL PASO model as a sell from EPE to DYNEGY 8MW @ $70 Palo Verde.  The Tranny from APS was $3.50, and I will show an annuity for this amount billed to Dynegy.  I built two annuities for the tranny purchase from APS and its subsequent billing to Dynegy (674830 & 674831).  The EPEC deals that relate to the cut are 674832 and 674833.\r\n\r\nPlease call me with any questions.\r\n\r\nRegards,\r\n\r\nBert Meyers\r\n\r\n***********\r\nEDRM Enron Email Data Set has been produced in EML, PST and NSF format by ZL Technologies, Inc. This Data Set is licensed under a Creative Commons Attribution 3.0 United States License <http://creativecommons.org/licenses/by/3.0/us/> . To provide attribution, please cite to \"ZL Technologies, Inc. (http://www.zlti.com).\"\r\n***********",
+    "directory": "/Top of Personal Folders/meyers-a/ExMerge - Meyers, Albert/Deleted Items",
+    "headers": {
+      "cc": "\"Williams III\", Bill </O=ENRON/OU=NA/CN=RECIPIENTS/CN=Bwillia5>",
+      "to": "\"Volume Management\", Test </O=ENRON/OU=NA/CN=RECIPIENTS/CN=Notesaddr/cn=9fc2e8ba-f0070e6-8625656e-6befdc>",
+      "date": "Fri, 6 Jul 2001 05:31:19 -0700 (PDT),Fri, 6 Jul 2001 05:31:19 -0700  (PDT)",
+      "from": "Meyers",
+      "folder": "\\ExMerge - Meyers, Albert\\Deleted Items",
+      "subject": "TAG 26235",
+      "filename": "bert meyers 6-25-02.PST",
+      "message-id": "<DSSWEDZ2DILZ0STEBDXVY0FWDWYLICYRA@zlsvr22>",
+      "content-type": "text/plain; charset=\"us-ascii\"",
+      "mime-version": "1.0",
+      "content-transfer-encoding": "7bit"
+    },
+    "errors": [],
+    "inserted_on": "2020-02-10T23:24:27.512Z"
+  }
+},
+{
+  "model": "core.message",
+  "pk": null,
+  "fields": {
+    "source_id": "2098564",
+    "file": null,
+    "account": null,
+    "audit": null,
+    "sent_date": "2001-07-22T02:35:58Z",
+    "msg_from": "Meyers",
+    "msg_to": "Rawson, Lester </O=ENRON/OU=NA/CN=RECIPIENTS/CN=Lrawson>",
+    "msg_cc": "\"Volume Management\", Test </O=ENRON/OU=NA/CN=RECIPIENTS/CN=Notesaddr/cn=9fc2e8ba-f0070e6-8625656e-6befdc>",
+    "msg_bcc": "",
+    "subject": "Frontier Unit Outage for 07/21/01",
+    "body": "Body-Type: plain-text\r\n\r\nFrontier was forced to bring their unit down as they had an ash problem and needed to do some work on their generator.  Starting @ 7:40 Frontier was producing 4MW instead of the pre-schedule 8MW.  We picked up some operating reserves for the remainder of HE 08 and for all of HE 09.  Since the schedule was sold unit contingent, I cut the schedule to a 4MW starting HE 10 till further.  Bonnie @ EWEB agreed to this curtailment.  The tag number for this deal is 27456.  If you have any questions please call me.\r\n\r\nRegards,\r\n\r\nBert Meyers\r\n\r\n***********\r\nEDRM Enron Email Data Set has been produced in EML, PST and NSF format by ZL Technologies, Inc. This Data Set is licensed under a Creative Commons Attribution 3.0 United States License <http://creativecommons.org/licenses/by/3.0/us/> . To provide attribution, please cite to \"ZL Technologies, Inc. (http://www.zlti.com).\"\r\n***********",
+    "directory": "/Top of Personal Folders/meyers-a/ExMerge - Meyers, Albert/Deleted Items",
+    "headers": {
+      "cc": "\"Volume Management\", Test </O=ENRON/OU=NA/CN=RECIPIENTS/CN=Notesaddr/cn=9fc2e8ba-f0070e6-8625656e-6befdc>",
+      "to": "Rawson, Lester </O=ENRON/OU=NA/CN=RECIPIENTS/CN=Lrawson>",
+      "date": "Sat, 21 Jul 2001 15:35:58 -0700 (PDT),Sat, 21 Jul 2001 15:35:58 -0700  (PDT)",
+      "from": "Meyers",
+      "folder": "\\ExMerge - Meyers, Albert\\Deleted Items",
+      "subject": "Frontier Unit Outage for 07/21/01",
+      "filename": "bert meyers 6-25-02.PST",
+      "message-id": "<E3ZCZBYBIYI44QBYRPR5IMCE5PDENYLGB@zlsvr22>",
+      "content-type": "text/plain; charset=\"us-ascii\"",
+      "mime-version": "1.0",
+      "content-transfer-encoding": "7bit"
+    },
+    "errors": [],
+    "inserted_on": "2020-02-10T23:24:27.605Z"
+  }
+},
+{
+  "model": "core.message",
+  "pk": null,
+  "fields": {
+    "source_id": "2098692",
+    "file": null,
+    "account": null,
+    "audit": null,
+    "sent_date": "2001-08-02T10:00:48Z",
+    "msg_from": "Meyers",
+    "msg_to": "\"DL-Portland Volume Mgmt\" </O=ENRON/OU=NA/CN=RECIPIENTS/CN=DL-PortlandVolumeMgmt>",
+    "msg_cc": "\"Williams III\", Bill </O=ENRON/OU=NA/CN=RECIPIENTS/CN=Bwillia5>",
+    "msg_bcc": "",
+    "subject": "Colstrip Cut 8/01/01",
+    "body": "Body-Type: plain-text\r\n\r\nTo Whom this may concern:\r\n\r\nPlease note that Colstrip tripped @ approx. 13:20 today.  I picked up tranny from BPA (Mid-C to MPC SYS) for 62 MW.  The first hour of the cut was an integrated number of 41MW.  After Starting HE 15 on the cut was for the full 62 MW each hour.  The deal numbers affected by this cut were reduced by the appropriate amount (711291 and 709803) and new deals were made to correct enpower.  These new deals are 714148 and 714150.\r\n\r\nIf you have any questions please see me.  My number @ the real time desk is 1-800-684-1336.\r\n\r\nRegards,\r\n\r\nBert Meyers\r\n\r\n***********\r\nEDRM Enron Email Data Set has been produced in EML, PST and NSF format by ZL Technologies, Inc. This Data Set is licensed under a Creative Commons Attribution 3.0 United States License <http://creativecommons.org/licenses/by/3.0/us/> . To provide attribution, please cite to \"ZL Technologies, Inc. (http://www.zlti.com).\"\r\n***********",
+    "directory": "/Top of Personal Folders/meyers-a/ExMerge - Meyers, Albert/Deleted Items",
+    "headers": {
+      "cc": "\"Williams III\", Bill </O=ENRON/OU=NA/CN=RECIPIENTS/CN=Bwillia5>",
+      "to": "\"DL-Portland Volume Mgmt\" </O=ENRON/OU=NA/CN=RECIPIENTS/CN=DL-PortlandVolumeMgmt>",
+      "date": "Wed, 1 Aug 2001 23:00:48 -0700 (PDT),Wed, 1 Aug 2001 23:00:48 -0700  (PDT)",
+      "from": "Meyers",
+      "folder": "\\ExMerge - Meyers, Albert\\Deleted Items",
+      "subject": "Colstrip Cut 8/01/01",
+      "filename": "bert meyers 6-25-02.PST",
+      "message-id": "<F3NUGYRKNPOKMOHXISRTZNW1A2GCP03LB@zlsvr22>",
+      "content-type": "text/plain; charset=\"us-ascii\"",
+      "mime-version": "1.0",
+      "content-transfer-encoding": "7bit"
+    },
+    "errors": [],
+    "inserted_on": "2020-02-10T23:24:28.017Z"
+  }
+}
+]
