@@ -78,6 +78,6 @@ def test_account_list_post_invalid_file(api_client):
 def test_account_post_success(api_client, celery_mock):
     url = reverse("account_list")
     data = {"title": "Good Title", "filename": "Good Filename"}
-    celery_mock.return_value = True
     response = api_client.post(url, data=data)
     assert response.status_code == 204
+    celery_mock.delay.assert_called_once_with([data["filename"]], data["title"])
