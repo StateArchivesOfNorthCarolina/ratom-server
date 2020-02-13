@@ -8,6 +8,7 @@ from .views import (
     AccountListView,
     message_detail,
     MessageDocumentView,
+    FileUpdateView,
     reset_sample_data,
 )
 
@@ -22,6 +23,11 @@ urlpatterns = [
 urlpatterns += [
     path("accounts/", AccountListView.as_view(), name="account_list"),
     path("accounts/<int:pk>/", account_detail, name="account_detail"),
+]
+
+# Files
+urlpatterns += [
+    path("files/", FileUpdateView.as_view(), name="restart_file"),
 ]
 
 # Messages

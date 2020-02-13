@@ -192,6 +192,7 @@ def import_psts(
     paths: List[str],
     account: str,
     clean: bool,
+    clean_file: bool = False,
     is_background: bool = False,
     is_remote=False,
 ) -> None:
@@ -207,6 +208,10 @@ def import_psts(
     if clean:
         logger.warning(f"Deleting {account.title} account files (if exists)")
         account.files.all().delete()
+    if clean_file:
+        logger.warning(f"Deleting failed file for {account.title}")
+        # MVP: We assume there is only 1 failed file per account.
+        account.files.get(import_status=ratom.File.FAILED).delete()
     for path in paths:
         provider = import_provider_factory(provider=ProviderTypes.FILESYSTEM)
         if is_remote:

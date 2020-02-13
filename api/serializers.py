@@ -22,11 +22,15 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class FileSerializer(serializers.ModelSerializer):
+    account = serializers.PrimaryKeyRelatedField(required=False, read_only=True)
+
     class Meta:
         model = File
+        fields = ["account", "filename"]
 
     def to_representation(self, instance: File):
         return {
+            "account": instance.account,
             "filename": instance.filename,
             "original_path": instance.original_path,
             "reported_total_messages": instance.reported_total_messages,

@@ -16,6 +16,12 @@ def ratom_file(account):
 
 
 @pytest.fixture
+def file_account(ratom_file):
+    """Get a file's account"""
+    yield ratom_file.account
+
+
+@pytest.fixture
 def user(django_db_blocker):
     """ratom.core.models.File instance"""
     with django_db_blocker.unblock():
