@@ -13,4 +13,4 @@ def test_reset(settings, api_client):
     settings.RATOM_SAMPLE_DATA_ENABLED = True
     response = api_client.post(reverse("reset_sample_data"))
     assert response.status_code == HTTPStatus.OK.value
-    assert File.objects.count() == 2
+    assert File.objects.filter(import_status=File.COMPLETE).count() == 2
