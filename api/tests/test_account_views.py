@@ -1,10 +1,15 @@
 import pytest
 from django.urls import reverse
 from core.models import Account, File
+from unittest import mock
 
 pytestmark = pytest.mark.django_db
 
-# Account
+
+@pytest.fixture
+def celery_mock():
+    with mock.patch("api.views.account.import_file_task") as _mock:
+        yield _mock
 
 
 def test_user_detail(api_client):
@@ -83,27 +88,3 @@ def test_account_post_success(api_client, celery_mock):
     response = api_client.post(url, data=data)
     assert response.status_code == 204
     celery_mock.delay.assert_called_once_with([data["filename"]], data["title"])
-
-
-# File
-
-
-def test_file_restart_file_ingest(ratom_file, api_client, celery_mock):
-    ratom_file.import_status = File.FAILED
-    ratom_file.save()
-    url = reverse("restart_file")
-    celery_mock.delay.return_value = True
-    response = api_client.post(url, data={"id": ratom_file.account.pk})
-    assert response.status_code == 204
-
-
-def test_file_restart_file_ingest_fail(ratom_file, api_client):
-    # When no file has a FAILED status
-    ratom_file.import_status = File.IMPORTING
-    ratom_file.save()
-    url = reverse("restart_file")
-    response = api_client.post(url, data={"id": ratom_file.account.pk})
-    assert response.status_code == 404
-    # Should also return 404 if there is no account id
-    response = api_client.post(url, data={"id": 600})
-    assert response.status_code == 404
