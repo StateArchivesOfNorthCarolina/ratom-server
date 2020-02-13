@@ -1,6 +1,6 @@
 import pytest
 from django.urls import reverse
-from core.models import File
+from core.models import Account, File
 
 pytestmark = pytest.mark.django_db
 
@@ -48,6 +48,8 @@ def test_account_delete(ratom_file, api_client):
     url = reverse("account_detail", args=[ratom_file.account.pk])
     response = api_client.delete(url)
     assert response.status_code == 204
+    assert File.objects.count() == 0
+    assert Account.objects.count() == 0
 
 
 def test_account_list_get(file_account, api_client):
