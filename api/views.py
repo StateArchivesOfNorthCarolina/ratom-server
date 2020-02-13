@@ -1,25 +1,24 @@
+from django.conf import settings
+from django_elasticsearch_dsl_drf import constants, filter_backends
+from django_elasticsearch_dsl_drf.pagination import LimitOffsetPagination
+from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
+from elasticsearch_dsl import DateHistogramFacet, TermsFacet
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from django.conf import settings
-from django_elasticsearch_dsl_drf import constants, filter_backends
-from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
-from django_elasticsearch_dsl_drf.pagination import LimitOffsetPagination
-from elasticsearch_dsl import DateHistogramFacet, TermsFacet
-
 from api.documents.message import MessageDocument
 from api.documents.utils import LoggingPageNumberPagination
-from core.models import User, Account, Message
 from api.serializers import (
-    UserSerializer,
     AccountSerializer,
-    MessageSerializer,
+    MessageAuditSerializer,
     MessageDocumentSerializer,
+    MessageSerializer,
+    UserSerializer,
 )
-
+from core.models import Account, Message, User
 from etl.tasks import import_file_task
 
 
@@ -89,7 +88,7 @@ class AccountListView(APIView):
             )
 
 
-@api_view(["GET"])
+@api_view(["GET", "PUT"])
 @permission_classes([IsAuthenticated])
 def message_detail(request, pk):
     """
@@ -103,6 +102,18 @@ def message_detail(request, pk):
     if request.method == "GET":
         serialized_message = MessageSerializer(message)
         return Response(serialized_message.data)
+
+    if request.method == "PUT":
+        """
+        We don't really edit messages-- this endpoint updates an associated MessageAudit
+        """
+        serialized_audit = MessageAuditSerializer(
+            message.audit, data=request.data, partial=True
+        )
+        if serialized_audit.is_valid():
+            serialized_audit.save(updated_by=request.user)
+            return Response(serialized_audit.data)
+        return Response(serialized_audit.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 HIGHLIGHT_LABELS = {
@@ -157,7 +168,6 @@ class MessageDocumentView(DocumentViewSet):
             "field": "sent_date",
             "facet": DateHistogramFacet,
             "options": {"interval": "year",},
-            "enabled": True,
         },
     }
 
