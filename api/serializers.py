@@ -96,12 +96,11 @@ class MessageAuditSerializer(serializers.ModelSerializer):
         instance.is_record = validated_data.get("is_record")
         instance.date_processed = timezone.now()
         instance.restricted_until = validated_data.get("restricted_until")
-        instance.is_restricted = validated_data.get("is_restricted")
-        instance.needs_redaction = validated_data.get("needs_redaction")
+        instance.is_restricted = validated_data.get("is_restricted", False)
+        instance.needs_redaction = validated_data.get("needs_redaction", False)
         instance.updated_by = validated_data["updated_by"]
         instance.save()
         return instance
-        # TODO test ^
 
     class Meta:
         model = MessageAudit

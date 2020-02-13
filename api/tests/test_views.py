@@ -85,7 +85,7 @@ def test_account_post_success(api_client, celery_mock):
 
 def test_contradictory_audit_data_fails(api_client, ratom_message):
     url = reverse("message_detail", kwargs={"pk": ratom_message.pk})
-    data = {"is_record": False, "needs_redaction": True, "is_restricted": False}
+    data = {"is_record": False, "needs_redaction": True}
     response = api_client.put(url, data=data)
     assert (
         "A message cannot be a non-record and have redactions or restrictions"
