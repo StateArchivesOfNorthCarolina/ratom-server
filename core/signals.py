@@ -14,7 +14,3 @@ def update_document(sender, **kwargs):
     created = kwargs["created"]
     if isinstance(instance, MessageAudit) and not created:
         registry.update(instance.message)
-
-
-#  mock registry.update, assert called_once
-# TODO test ^

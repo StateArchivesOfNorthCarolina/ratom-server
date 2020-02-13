@@ -26,3 +26,12 @@ def user(django_db_blocker):
     """ratom.core.models.File instance"""
     with django_db_blocker.unblock():
         yield factories.UserFactory()
+
+
+@pytest.fixture
+def ratom_message_audit(ratom_file):
+    message = factories.MessageFactory(account=ratom_file.account, file=ratom_file)
+    audit = factories.MessageAuditFactory()
+    message.audit = audit
+    message.save()
+    yield audit
