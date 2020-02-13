@@ -36,9 +36,11 @@ def test_account_put_valid(ratom_file, api_client, celery_mock):
     # Test PUT with valid serializer
     url = reverse("account_detail", args=[ratom_file.account.pk])
     data = {"filename": ratom_file.filename}
-    celery_mock.return_value = True
     response = api_client.put(url, data=data)
     assert response.status_code == 204
+    celery_mock.delay.assert_called_once_with(
+        [ratom_file.filename], ratom_file.account.title
+    )
 
 
 def test_account_delete(ratom_file, api_client):
