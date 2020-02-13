@@ -1,6 +1,6 @@
 import pytest
 from django.urls import reverse
-from core.models import File
+from core.models import Account, File
 
 pytestmark = pytest.mark.django_db
 
@@ -38,9 +38,11 @@ def test_account_put_valid(ratom_file, api_client, celery_mock):
     # Test PUT with valid serializer
     url = reverse("account_detail", args=[ratom_file.account.pk])
     data = {"filename": ratom_file.filename}
-    celery_mock.return_value = True
     response = api_client.put(url, data=data)
     assert response.status_code == 204
+    celery_mock.delay.assert_called_once_with(
+        [ratom_file.filename], ratom_file.account.title
+    )
 
 
 def test_account_delete(ratom_file, api_client):
@@ -48,6 +50,8 @@ def test_account_delete(ratom_file, api_client):
     url = reverse("account_detail", args=[ratom_file.account.pk])
     response = api_client.delete(url)
     assert response.status_code == 204
+    assert File.objects.count() == 0
+    assert Account.objects.count() == 0
 
 
 def test_account_list_get(file_account, api_client):
@@ -76,9 +80,9 @@ def test_account_list_post_invalid_file(api_client):
 def test_account_post_success(api_client, celery_mock):
     url = reverse("account_list")
     data = {"title": "Good Title", "filename": "Good Filename"}
-    celery_mock.return_value = True
     response = api_client.post(url, data=data)
     assert response.status_code == 204
+    celery_mock.delay.assert_called_once_with([data["filename"]], data["title"])
 
 
 # File
