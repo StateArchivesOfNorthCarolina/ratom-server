@@ -92,7 +92,7 @@ def test_file_restart_file_ingest(ratom_file, api_client, celery_mock):
     ratom_file.import_status = File.FAILED
     ratom_file.save()
     url = reverse("restart_file")
-    celery_mock.return_value = True
+    celery_mock.delay.return_value = True
     response = api_client.post(url, data={"id": ratom_file.account.pk})
     assert response.status_code == 204
 
