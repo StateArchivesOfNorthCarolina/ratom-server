@@ -198,6 +198,6 @@ class MessageDocumentView(DocumentViewSet):
     }
 
     # Define ordering fields
-    ordering_fields = {"_score": "_score"}
+    ordering_fields = {"_score": "_score", "sent_date": "sent_date"}
     # Specify default ordering
-    ordering = ("-_score",)
+    ordering = ("-_score", "sent_date")

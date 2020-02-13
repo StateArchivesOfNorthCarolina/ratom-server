@@ -11,6 +11,10 @@ def update_document(sender, **kwargs):
     Update MessageDocument index if related `message.audit` changes.
     """
     instance = kwargs["instance"]
-    if isinstance(instance, MessageAudit):
-        print("=======================> Hopefully updating message document index!")
+    created = kwargs["created"]
+    if isinstance(instance, MessageAudit) and not created:
         registry.update(instance.message)
+
+
+#  mock registry.update, assert called_once
+# TODO test ^

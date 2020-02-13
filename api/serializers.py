@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from django.utils import timezone
 
 from rest_framework import serializers
 
@@ -90,13 +90,14 @@ class MessageAuditSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.processed = True
         instance.is_record = validated_data.get("is_record")
-        instance.date_processed = datetime.now()
+        instance.date_processed = timezone.now()
         instance.restricted_until = validated_data.get("restricted_until")
         instance.is_restricted = validated_data.get("is_restricted")
         instance.needs_redaction = validated_data.get("needs_redaction")
         instance.updated_by = validated_data["updated_by"]
         instance.save()
         return instance
+        # TODO test ^
 
     class Meta:
         model = MessageAudit
