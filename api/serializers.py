@@ -15,9 +15,7 @@ def file_exists(filename):
     provider = import_provider_factory(provider=settings.CLOUD_SERVICE_PROVIDER)
     storage_provider = provider(file_path=filename)
     if not storage_provider.exists:
-        raise serializers.ValidationError(
-            f"The file {filename} does not exist in {settings.CLOUD_SERVICE_PROVIDER}"
-        )
+        raise serializers.ValidationError(f"The file {filename} does not exist.")
 
 
 class UserSerializer(serializers.ModelSerializer):

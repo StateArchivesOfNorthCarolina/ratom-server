@@ -41,8 +41,6 @@ def test_account_put_invalid(ratom_file, api_client, file_serializer_validation_
     # Test PUT with invalid serializer
     url = reverse("account_detail", args=[ratom_file.account.pk])
     data = {"filename": "x" * 201}
-    instance = file_serializer_validation_mock.return_value
-    instance.exists = False
     response = api_client.put(url, data=data)
     assert response.status_code == 400
 
@@ -53,8 +51,6 @@ def test_account_put_valid(
     # Test PUT with valid serializer
     url = reverse("account_detail", args=[ratom_file.account.pk])
     data = {"filename": ratom_file.filename}
-    instance = file_serializer_validation_mock.return_value
-    instance.exists = True
     response = api_client.put(url, data=data)
     assert response.status_code == 204
     celery_mock.delay.assert_called_once_with(
