@@ -88,3 +88,14 @@ def test_account_post_success(api_client, celery_mock):
     response = api_client.post(url, data=data)
     assert response.status_code == 204
     celery_mock.delay.assert_called_once_with([data["filename"]], data["title"])
+
+
+def test_contradictory_audit_data_fails(api_client, ratom_message):
+    url = reverse("message_detail", kwargs={"pk": ratom_message.pk})
+    data = {"is_record": False, "needs_redaction": True}
+    response = api_client.put(url, data=data)
+    assert (
+        "A message cannot be a non-record and have redactions or restrictions"
+        in str(response.content)
+    )
+    assert response.status_code == 400

@@ -38,7 +38,8 @@ class MessageDocument(Document):
         properties={
             "processed": fields.BooleanField(),
             "is_record": fields.BooleanField(),
-            "date_processed": fields.DateField(),
+            "is_restricted": fields.BooleanField(),
+            "needs_redaction": fields.BooleanField(),
         }
     )
 
@@ -56,5 +57,3 @@ class MessageDocument(Document):
 
     class Django(object):
         model = Message
-        # True disables auto-indexing
-        ignore_signals = True

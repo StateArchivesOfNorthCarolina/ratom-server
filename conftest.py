@@ -1,6 +1,21 @@
 import pytest
+from unittest import mock
 
 from core.tests import factories
+
+
+@pytest.fixture(scope="function", autouse=True)
+def mock_es_registry():
+    """Fixture to mock ES registry and use it automatically in every test."""
+    with mock.patch("django_elasticsearch_dsl.signals.registry") as mock_registry:
+        yield mock_registry
+
+
+@pytest.fixture(scope="function", autouse=True)
+def mock_core_registry():
+    """Fixture to mock ES registry from core.signals and use it automatically in every test."""
+    with mock.patch("core.signals.registry") as mock_core_registry:
+        yield mock_core_registry
 
 
 @pytest.fixture
@@ -26,3 +41,14 @@ def user(django_db_blocker):
     """ratom.core.models.File instance"""
     with django_db_blocker.unblock():
         yield factories.UserFactory()
+
+
+@pytest.fixture
+def ratom_message(ratom_file):
+    message = factories.MessageFactory(account=ratom_file.account, file=ratom_file)
+    yield message
+
+
+@pytest.fixture
+def ratom_message_audit(ratom_message):
+    yield ratom_message.audit

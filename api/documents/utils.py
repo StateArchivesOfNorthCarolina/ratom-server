@@ -2,32 +2,20 @@ import logging
 import json
 
 from django.conf import settings
-from django_elasticsearch_dsl_drf.pagination import PageNumberPagination
 from elasticsearch_dsl import connections, Index
+from elasticsearch_dsl.search import Search
 
 logger = logging.getLogger(__name__)
 
 
-class LoggingPageNumberPagination(PageNumberPagination):
-    """
-    Pagination that also performs Elasticsearch query logging.
-    Only use for debugging.
-    """
+class LoggingSearch(Search):
+    """Elasticsearch DSL Search extension that performs optional logging."""
 
-    def paginate_queryset(self, queryset, request, view=None):
-        query = json.dumps(queryset.to_dict(), indent=2)
-        logger.debug(f"elasticsearch query: {query}")
-        page = super().paginate_queryset(queryset, request, view)
-        # This isn't ideal, but seemed easier than rewriting most of
-        # paginate_queryset(). Only use use for debugging.
-        logger.debug("Re-running last query...")
-        page_size = self.get_page_size(request)
-        paginator = self.django_paginator_class(queryset, page_size)
-        page_number = request.query_params.get(self.page_query_param, 1)
-        page = paginator.page(page_number)
-        full_query = json.dumps(page.object_list._d_, indent=2)
-        logger.debug(f"elasticsearch response: {full_query}")
-        return page
+    def execute(self, *args, **kwargs):
+        if settings.ELASTICSEARCH_LOG_QUERIES:
+            query = json.dumps(self.to_dict(), indent=2)
+            logger.debug(f"elasticsearch query: {query}")
+        return super().execute(*args, **kwargs)
 
 
 def enable_elasticsearch_debug_logging():
