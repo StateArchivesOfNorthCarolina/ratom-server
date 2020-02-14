@@ -1,3 +1,5 @@
+import datetime as dt
+from django.utils.timezone import make_aware
 import pytest
 
 import factory
@@ -85,3 +87,12 @@ def test_bad_values(field, faker_key):
     serializer = MessageAuditSerializer(data=data)
     assert not serializer.is_valid()
     assert field in serializer.errors
+
+
+def test_valid_restricted_until(ratom_message_audit):
+    date = dt.datetime.now()
+    iso_date = date.isoformat()
+    data = {"restricted_until": iso_date}
+    serializer = MessageAuditSerializer(instance=ratom_message_audit, data=data)
+    assert serializer.is_valid()
+    assert serializer.validated_data["restricted_until"] == make_aware(date)
