@@ -4,14 +4,14 @@ from unittest import mock
 from core.tests import factories
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="function", autouse=True)
 def mock_es_registry():
     """Fixture to mock ES registry and use it automatically in every test."""
     with mock.patch("django_elasticsearch_dsl.signals.registry") as mock_registry:
         yield mock_registry
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="function", autouse=True)
 def mock_core_registry():
     """Fixture to mock ES registry from core.signals and use it automatically in every test."""
     with mock.patch("core.signals.registry") as mock_core_registry:
