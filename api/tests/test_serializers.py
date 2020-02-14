@@ -1,5 +1,6 @@
 import pytest
 
+import factory
 from api.serializers import MessageAuditSerializer
 
 
@@ -68,3 +69,19 @@ def test_audit_flag_values(ratom_message_audit, user, field, val):
     assert field in serializer.validated_data
     instance = serializer.save(updated_by=user)
     assert getattr(instance, field) == val
+
+
+@pytest.mark.parametrize(
+    "field,faker_key",
+    [
+        ("is_record", "paragraph"),
+        ("restricted_until", "paragraph"),
+        ("is_restricted", "paragraph"),
+        ("needs_redaction", "paragraph"),
+    ],
+)
+def test_bad_values(field, faker_key):
+    data = {field: factory.Faker(faker_key)}
+    serializer = MessageAuditSerializer(data=data)
+    assert not serializer.is_valid()
+    assert field in serializer.errors
