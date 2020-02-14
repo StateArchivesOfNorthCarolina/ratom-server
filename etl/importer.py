@@ -211,7 +211,7 @@ def import_psts(
     if clean_file:
         logger.warning(f"Deleting failed file for {account.title}")
         # MVP: We assume there is only 1 failed file per account.
-        account.files.get(import_status=ratom.File.FAILED).delete()
+        account.files.filter(import_status=ratom.File.FAILED).delete()
     for path in paths:
         provider = import_provider_factory(provider=ProviderTypes.FILESYSTEM)
         if is_remote:

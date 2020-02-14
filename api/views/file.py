@@ -21,12 +21,12 @@ class FileUpdateView(APIView):
 
     def post(self, request):
         # MVP: We assume this will always be one and only one failed file.
-        qs = File.objects.filter(account=request.data["id"]).filter(
-            import_status=File.FAILED
+        qs = (
+            File.objects.filter(account=request.data["id"])
+            .filter(import_status=File.FAILED)
+            .first()
         )
         if qs:
-            import_file_task.delay(
-                [qs[0].filename], qs[0].account.title, clean_file=True
-            )
+            import_file_task.delay([qs.filename], qs.account.title, clean_file=True)
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)

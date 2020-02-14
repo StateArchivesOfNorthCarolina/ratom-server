@@ -30,6 +30,12 @@ def test_file_restart_file_ingest_fail(ratom_file, api_client):
     url = reverse("restart_file")
     response = api_client.post(url, data={"id": ratom_file.account.pk})
     assert response.status_code == 404
+
+
+def test_file_restart_file_fail_no_account_id(ratom_file, api_client):
+    ratom_file.import_status = File.IMPORTING
+    ratom_file.save()
+    url = reverse("restart_file")
     # Should also return 404 if there is no account id
     response = api_client.post(url, data={"id": 600})
     assert response.status_code == 404
