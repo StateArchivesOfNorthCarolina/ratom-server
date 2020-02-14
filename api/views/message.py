@@ -39,9 +39,7 @@ def message_detail(request, pk):
         """
         We don't really edit messages-- this endpoint updates an associated MessageAudit
         """
-        serialized_audit = MessageAuditSerializer(
-            message.audit, data=request.data, partial=True
-        )
+        serialized_audit = MessageAuditSerializer(message.audit, data=request.data)
         if serialized_audit.is_valid():
             serialized_audit.save(updated_by=request.user)
             return Response(serialized_audit.data, status=status.HTTP_201_CREATED)

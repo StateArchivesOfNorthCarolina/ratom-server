@@ -93,12 +93,16 @@ class MessageAuditSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         instance.processed = True
-        instance.is_record = validated_data.get("is_record")
         instance.date_processed = timezone.now()
-        instance.restricted_until = validated_data.get("restricted_until")
-        instance.is_restricted = validated_data.get("is_restricted", False)
-        instance.needs_redaction = validated_data.get("needs_redaction", False)
         instance.updated_by = validated_data["updated_by"]
+        if "is_record" in validated_data:
+            instance.is_record = validated_data["is_record"]
+        if "restricted_until" in validated_data:
+            instance.restricted_until = validated_data["restricted_until"]
+        if "is_restricted" in validated_data:
+            instance.is_restricted = validated_data["is_restricted"]
+        if "needs_redaction" in validated_data:
+            instance.needs_redaction = validated_data["needs_redaction"]
         instance.save()
         return instance
 

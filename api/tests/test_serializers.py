@@ -1,5 +1,5 @@
 import datetime as dt
-from django.utils.timezone import make_aware
+from django.utils import timezone
 import pytest
 
 import factory
@@ -96,7 +96,31 @@ def test_valid_restricted_until(ratom_message_audit, user):
         instance=ratom_message_audit, data={"restricted_until": date.isoformat()}
     )
     assert serializer.is_valid()
-    aware_date = make_aware(date)
+    aware_date = timezone.make_aware(date)
     assert serializer.validated_data["restricted_until"] == aware_date
     instance = serializer.save(updated_by=user)
     assert instance.restricted_until == aware_date
+
+
+@pytest.mark.parametrize(
+    "field,val",
+    [
+        ("is_record", True),
+        ("is_record", False),
+        ("restricted_until", timezone.now().isoformat()),
+        ("is_restricted", True),
+        ("is_restricted", False),
+        ("needs_redaction", True),
+        ("needs_redaction", False),
+    ],
+)
+def test_partial_updates_do_not_reset_omitted_fields(
+    ratom_message_audit, user, field, val
+):
+    """If only certian fields are supplied, make sure omitted fields are not reset to defaults."""
+    setattr(ratom_message_audit, field, val)
+    ratom_message_audit.save()
+    serializer = MessageAuditSerializer(instance=ratom_message_audit, data={})
+    assert serializer.is_valid()
+    instance = serializer.save(updated_by=user)
+    assert getattr(instance, field) == val
