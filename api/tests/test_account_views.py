@@ -37,10 +37,12 @@ def test_account_detail_no_account(api_client):
     assert response.status_code == 404
 
 
-def test_account_put_invalid(ratom_file, api_client):
+def test_account_put_invalid(ratom_file, api_client, file_serializer_validation_mock):
     # Test PUT with invalid serializer
     url = reverse("account_detail", args=[ratom_file.account.pk])
     data = {"filename": "x" * 201}
+    instance = file_serializer_validation_mock.return_value
+    instance.exists = False
     response = api_client.put(url, data=data)
     assert response.status_code == 400
 
@@ -85,9 +87,11 @@ def test_account_list_post_invalid_account(api_client):
     assert response.status_code == 400
 
 
-def test_account_list_post_invalid_file(api_client):
+def test_account_list_post_invalid_file(api_client, file_serializer_validation_mock):
     url = reverse("account_list")
     data = {"title": "Good Title", "filename": "x" * 201}
+    instance = file_serializer_validation_mock.return_value
+    instance.exists = False
     response = api_client.post(url, data=data)
     assert response.status_code == 400
 
