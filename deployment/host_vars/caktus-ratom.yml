@@ -58,3 +58,4 @@ k8s_environment_variables:
   AZURE_URL: "ratomstaging.blob.core.windows.net"
   AZURE_CONTAINER: "a-public-container"
   RATOM_SAMPLE_DATA_ENABLED: "true"
+  ELASTICSEARCH_LOG_QUERIES: "true"

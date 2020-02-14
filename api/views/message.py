@@ -1,7 +1,5 @@
-from django.conf import settings
 from django_elasticsearch_dsl_drf import constants, filter_backends
 from django_elasticsearch_dsl_drf.pagination import LimitOffsetPagination
-from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
 from elasticsearch_dsl import DateHistogramFacet, TermsFacet
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -9,13 +7,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from api.documents.message import MessageDocument
-from api.documents.utils import LoggingPageNumberPagination
 from core.models import Message
 from api.serializers import (
     MessageAuditSerializer,
     MessageDocumentSerializer,
     MessageSerializer,
 )
+from api.views.utils import LoggingDocumentViewSet
 
 __all__ = ("message_detail", "MessageDocumentView")
 
@@ -54,7 +52,7 @@ HIGHLIGHT_LABELS = {
 }
 
 
-class MessageDocumentView(DocumentViewSet):
+class MessageDocumentView(LoggingDocumentViewSet):
     """The MessageDocument view."""
 
     permission_classes = (IsAuthenticated,)
@@ -71,8 +69,6 @@ class MessageDocumentView(DocumentViewSet):
         filter_backends.FacetedSearchFilterBackend,
         filter_backends.HighlightBackend,
     ]
-    if settings.ELASTICSEARCH_LOG_QUERIES:
-        pagination_class = LoggingPageNumberPagination
 
     # Define search fields
     search_fields = (
