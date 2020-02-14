@@ -112,6 +112,7 @@ class MessageAuditSerializer(serializers.ModelSerializer):
             "needs_redaction",
             "updated_by",
         ]
+        read_only_fields = ["processed", "date_processed", "updated_by"]
 
 
 class MessageSerializer(serializers.ModelSerializer):
