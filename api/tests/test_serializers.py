@@ -89,10 +89,14 @@ def test_bad_values(field, faker_key):
     assert field in serializer.errors
 
 
-def test_valid_restricted_until(ratom_message_audit):
+def test_valid_restricted_until(ratom_message_audit, user):
+    """Make sure restricted_until date sets properly."""
     date = dt.datetime.now()
-    iso_date = date.isoformat()
-    data = {"restricted_until": iso_date}
-    serializer = MessageAuditSerializer(instance=ratom_message_audit, data=data)
+    serializer = MessageAuditSerializer(
+        instance=ratom_message_audit, data={"restricted_until": date.isoformat()}
+    )
     assert serializer.is_valid()
-    assert serializer.validated_data["restricted_until"] == make_aware(date)
+    aware_date = make_aware(date)
+    assert serializer.validated_data["restricted_until"] == aware_date
+    instance = serializer.save(updated_by=user)
+    assert instance.restricted_until == aware_date
