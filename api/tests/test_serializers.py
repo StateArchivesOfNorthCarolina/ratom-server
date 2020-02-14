@@ -14,6 +14,7 @@ def test_serializer_expected_fields(ratom_message_audit):
         "date_processed",
         "is_restricted",
         "needs_redaction",
+        "restricted_until",
         "updated_by",
     }
 
