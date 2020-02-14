@@ -51,7 +51,7 @@ def test_bad_token(api_client_anon, url, pk):
         ("account_list", None, {"get", "post", "head"}),
         ("account_detail", 1, {"get", "put", "delete"}),
         ("search_messages", None, {"get", "head"}),
-        ("message_detail", 1, {"get"}),
+        ("message_detail", 1, {"get", "put"}),
     ],
 )
 @pytest.mark.django_db

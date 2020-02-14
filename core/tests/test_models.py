@@ -77,11 +77,11 @@ class TestAccount(TestCase):
             messages = m.Message.objects.all()
             if messages.count() > 1:
                 should_have = 2
-
-            for mes in messages[0:should_have]:
-                mes.audit.is_record = False
-                mes.audit.processed = True
-                mes.audit.save()
+                messages = m.Message.objects.all()[0:2]
+                for mes in messages:
+                    mes.audit.is_record = False
+                    mes.audit.processed = True
+                    mes.audit.save()
             self.assertEqual(self.account.total_processed_messages, should_have)
 
     def test_account_dates(self):

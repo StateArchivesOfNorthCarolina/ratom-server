@@ -1,10 +1,12 @@
 import logging
-from rest_framework import serializers
-from core.models import User, Account, Message, File
 from django.conf import settings
+from django.utils import timezone
+
+from rest_framework import serializers
 
 from api.documents.message import MessageDocument
 from etl.providers.factory import import_provider_factory
+from core.models import Account, File, Message, MessageAudit, User
 
 logger = logging.getLogger(__file__)
 
@@ -69,7 +71,6 @@ class AccountSerializer(serializers.ModelSerializer):
         return instance
 
     def to_representation(self, instance: Account):
-
         return {
             "id": instance.id,
             "title": instance.title,
@@ -86,7 +87,52 @@ class AccountSerializer(serializers.ModelSerializer):
         }
 
 
+class MessageAuditSerializer(serializers.ModelSerializer):
+    def validate(self, data):
+        is_record = data.get("is_record")
+        if is_record is False:
+            # if user determines something is not a record,
+            # validate that they have not also set a redaction or restriction
+            needs_redaction = data.get("needs_redaction")
+            is_restricted = data.get("is_restricted")
+            if is_restricted is True or needs_redaction is True:
+                raise serializers.ValidationError(
+                    "A message cannot be a non-record and have redactions or restrictions"
+                )
+        return data
+
+    def update(self, instance, validated_data):
+        instance.processed = True
+        instance.date_processed = timezone.now()
+        instance.updated_by = validated_data["updated_by"]
+        if "is_record" in validated_data:
+            instance.is_record = validated_data["is_record"]
+        if "restricted_until" in validated_data:
+            instance.restricted_until = validated_data["restricted_until"]
+        if "is_restricted" in validated_data:
+            instance.is_restricted = validated_data["is_restricted"]
+        if "needs_redaction" in validated_data:
+            instance.needs_redaction = validated_data["needs_redaction"]
+        instance.save()
+        return instance
+
+    class Meta:
+        model = MessageAudit
+        fields = [
+            "processed",
+            "is_record",
+            "date_processed",
+            "is_restricted",
+            "needs_redaction",
+            "restricted_until",
+            "updated_by",
+        ]
+        read_only_fields = ["processed", "date_processed", "updated_by"]
+
+
 class MessageSerializer(serializers.ModelSerializer):
+    audit = MessageAuditSerializer(read_only=True)
+
     class Meta:
         model = Message
         fields = [
@@ -98,6 +144,7 @@ class MessageSerializer(serializers.ModelSerializer):
             "subject",
             "body",
             "directory",
+            "audit",
         ]
 
 
@@ -116,6 +163,7 @@ class MessageDocumentSerializer(serializers.Serializer):
     highlight = serializers.SerializerMethodField()
     score = serializers.SerializerMethodField()
     processed = serializers.SerializerMethodField(method_name="get_processed")
+    audit = MessageAuditSerializer(read_only=True)
 
     def get_labels(self, obj):
         """Get labels."""
@@ -137,6 +185,9 @@ class MessageDocumentSerializer(serializers.Serializer):
             return obj.audit.processed
         return False
 
+    def get_audit(self, obj):
+        return obj.audit
+
     class Meta(object):
         document = MessageDocument
         fields = (
@@ -150,4 +201,5 @@ class MessageDocumentSerializer(serializers.Serializer):
             "directory",
             "labels",
             "highlight",
+            "audit",
         )

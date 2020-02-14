@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.fields import JSONField
 from django.db import models
 
 from simple_history.models import HistoricalRecords
@@ -139,15 +139,6 @@ class File(models.Model):
         return qs.first().sent_date, qs.last().sent_date
 
 
-class RestrictionAuthority(models.Model):
-    authorities = ArrayField(base_field=models.CharField(max_length=128, blank=True))
-
-
-class Redaction(models.Model):
-    redacted_subject = models.TextField(blank=True)
-    redacted_body = models.TextField(blank=True)
-
-
 class Label(models.Model):
     USER = "U"
     IMPORTER = "I"
@@ -170,12 +161,11 @@ class Label(models.Model):
 
 class MessageAudit(models.Model):
     processed = models.BooleanField(default=False)
-    is_record = models.BooleanField(default=True, null=True)
+    is_record = models.BooleanField(default=True)
     date_processed = models.DateTimeField(null=True)
-    restrictions = models.ForeignKey(
-        RestrictionAuthority, null=True, on_delete=models.PROTECT
-    )
-    redactions = models.ForeignKey(Redaction, null=True, on_delete=models.PROTECT)
+    restricted_until = models.DateTimeField(null=True)
+    is_restricted = models.BooleanField(default=False)
+    needs_redaction = models.BooleanField(default=False)
     labels = models.ManyToManyField(Label)
     updated_by = models.ForeignKey(User, null=True, on_delete=models.PROTECT)
     history = HistoricalRecords()
