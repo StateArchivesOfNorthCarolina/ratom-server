@@ -30,6 +30,7 @@ def test_import_psts(mock_import_psts, local_file):
     assert mock_import_psts.call_args[1]["account"] == local_file.file_name
     assert mock_import_psts.call_args[1]["paths"][0] == str(local_file.path)
     assert not mock_import_psts.call_args[1]["clean"]
+    assert not mock_import_psts.call_args[1]["clean_file"]
 
 
 def test_import_psts__clean(mock_import_psts, local_file):

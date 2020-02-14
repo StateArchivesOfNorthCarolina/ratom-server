@@ -16,7 +16,13 @@ class Command(BaseCommand):
             "--clean",
             default=False,
             action="store_true",
-            help="Clear collection records before starting import",
+            help="Clear account's messages before starting import",
+        )
+        parser.add_argument(
+            "--clean_file",
+            default=False,
+            action="store_true",
+            help="Clear a file's messages before starting import",
         )
         parser.add_argument(
             "--remote",
@@ -42,6 +48,7 @@ class Command(BaseCommand):
             "paths": paths,
             "account": options["account"],
             "clean": options["clean"],
+            "clean_file": options["clean_file"],
             "is_remote": options["remote"],
         }
         if options["detach"]:

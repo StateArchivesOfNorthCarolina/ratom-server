@@ -1,8 +1,21 @@
 import pytest
 from django.urls import reverse
 from core.models import Account, File
+from unittest import mock
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture
+def celery_mock():
+    with mock.patch("api.views.account.import_file_task") as _mock:
+        yield _mock
+
+
+@pytest.fixture
+def file_serializer_validation_mock():
+    with mock.patch("api.serializers.import_provider_factory") as _file_mock:
+        yield _file_mock
 
 
 def test_user_detail(api_client):
@@ -32,10 +45,14 @@ def test_account_put_invalid(ratom_file, api_client):
     assert response.status_code == 400
 
 
-def test_account_put_valid(ratom_file, api_client, celery_mock):
+def test_account_put_valid(
+    ratom_file, api_client, celery_mock, file_serializer_validation_mock
+):
     # Test PUT with valid serializer
     url = reverse("account_detail", args=[ratom_file.account.pk])
     data = {"filename": ratom_file.filename}
+    instance = file_serializer_validation_mock.return_value
+    instance.exists = True
     response = api_client.put(url, data=data)
     assert response.status_code == 204
     celery_mock.delay.assert_called_once_with(
@@ -75,9 +92,11 @@ def test_account_list_post_invalid_file(api_client):
     assert response.status_code == 400
 
 
-def test_account_post_success(api_client, celery_mock):
+def test_account_post_success(api_client, celery_mock, file_serializer_validation_mock):
     url = reverse("account_list")
     data = {"title": "Good Title", "filename": "Good Filename"}
+    instance = file_serializer_validation_mock.return_value
+    instance.exists = True
     response = api_client.post(url, data=data)
     assert response.status_code == 204
     celery_mock.delay.assert_called_once_with([data["filename"]], data["title"])
