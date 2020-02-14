@@ -65,5 +65,6 @@ def test_updated_by(ratom_message_audit, user):
 def test_audit_flag_values(ratom_message_audit, user, field, val):
     serializer = MessageAuditSerializer(instance=ratom_message_audit, data={field: val})
     assert serializer.is_valid()
+    assert field in serializer.validated_data
     instance = serializer.save(updated_by=user)
     assert getattr(instance, field) == val
