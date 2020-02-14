@@ -74,7 +74,8 @@ class TestAccount(TestCase):
 
         with self.subTest("2 processed messages"):
             should_have = 1
-            if m.Message.objects.all().count() > 1:
+            messages = m.Message.objects.all()
+            if messages.count() > 1:
                 should_have = 2
                 messages = m.Message.objects.all()[0:2]
                 for mes in messages:

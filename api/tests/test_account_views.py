@@ -1,8 +1,15 @@
 import pytest
 from django.urls import reverse
 from core.models import Account, File
+from unittest import mock
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture
+def celery_mock():
+    with mock.patch("api.views.account.import_file_task") as _mock:
+        yield _mock
 
 
 def test_user_detail(api_client):
