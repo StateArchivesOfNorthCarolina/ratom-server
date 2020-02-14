@@ -157,6 +157,11 @@ LOGGING = {
             "level": "ERROR",
             "propagate": True,
         },
+        "elasticsearch": {
+            "level": "WARNING",
+            "handlers": ["console"],
+            "propagate": False,
+        },
         "azure": {"level": "WARNING", "handlers": ["console"], "propagate": False,},
         "api": {"level": "DEBUG", "handlers": ["console"], "propagate": False,},
     },
