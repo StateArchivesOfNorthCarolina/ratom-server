@@ -44,7 +44,7 @@ def message_detail(request, pk):
         )
         if serialized_audit.is_valid():
             serialized_audit.save(updated_by=request.user)
-            return Response(serialized_audit.data)
+            return Response(serialized_audit.data, status=status.HTTP_201_CREATED)
         return Response(serialized_audit.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
