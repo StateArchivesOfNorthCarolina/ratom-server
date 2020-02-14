@@ -46,13 +46,9 @@ def user(django_db_blocker):
 @pytest.fixture
 def ratom_message(ratom_file):
     message = factories.MessageFactory(account=ratom_file.account, file=ratom_file)
-    message.audit = factories.MessageAuditFactory()
     yield message
 
 
 @pytest.fixture
-def ratom_message_audit(ratom_file):
-    message = factories.MessageFactory(account=ratom_file.account, file=ratom_file)
-    audit = factories.MessageAuditFactory()
-    message.audit = audit
-    yield audit
+def ratom_message_audit(ratom_message):
+    yield ratom_message.audit
