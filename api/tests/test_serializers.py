@@ -58,7 +58,6 @@ def test_updated_by(ratom_message_audit, user):
     [
         ("is_record", True),
         ("is_record", False),
-        ("is_record", None),
         ("is_restricted", True),
         ("is_restricted", False),
         ("needs_redaction", True),

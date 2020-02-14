@@ -60,7 +60,6 @@ class AccountSerializer(serializers.ModelSerializer):
         return instance
 
     def to_representation(self, instance: Account):
-
         return {
             "id": instance.id,
             "title": instance.title,
