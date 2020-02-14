@@ -106,7 +106,7 @@ def test_valid_restricted_until(ratom_message_audit, user):
     [
         ("is_record", True),
         ("is_record", False),
-        ("restricted_until", timezone.now().isoformat()),
+        ("restricted_until", timezone.now()),
         ("is_restricted", True),
         ("is_restricted", False),
         ("needs_redaction", True),
