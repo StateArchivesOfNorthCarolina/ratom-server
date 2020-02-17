@@ -81,16 +81,13 @@ class MessageDocumentView(LoggingDocumentViewSet):
     # )
 
     multi_match_search_fields = {
-        "subject": {"boost": 4},
-        "body": {"boost": 2},
+        "subject": None,
+        "body": None,
     }
 
     multi_match_options = {"type": "phrase"}
 
-    simple_query_string_search_fields = {
-        "subject": {"boost": 4},
-        "body": {"boost": 2},
-    }
+    simple_query_string_search_fields = {"subject": None, "body": None}
 
     simple_query_string_options = {
         "default_operator": "and",
