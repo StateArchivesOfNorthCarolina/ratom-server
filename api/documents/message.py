@@ -19,7 +19,7 @@ class MessageDocument(Document):
     """Message Elasticsearch Document"""
 
     id = fields.IntegerField(attr="id")
-    source_id = fields.TextField()
+    source_id = fields.TextField(fielddata=True)
     msg_from = fields.TextField()
     msg_to = fields.TextField()
     subject = fields.TextField()

@@ -68,15 +68,30 @@ class MessageDocumentView(LoggingDocumentViewSet):
         filter_backends.CompoundSearchFilterBackend,
         filter_backends.FacetedSearchFilterBackend,
         filter_backends.HighlightBackend,
+        filter_backends.MultiMatchSearchFilterBackend,
+        filter_backends.SimpleQueryStringSearchFilterBackend,
     ]
 
     # Define search fields
-    search_fields = (
-        "msg_from",
-        "msg_to",
-        "subject",
-        "body",
-    )
+    # search_fields = (
+    #     "msg_from",
+    #     "msg_to",
+    #     "subject",
+    #     "body",
+    # )
+
+    multi_match_search_fields = {
+        "subject": None,
+        "body": None,
+    }
+
+    multi_match_options = {"type": "phrase"}
+
+    simple_query_string_search_fields = {"subject": None, "body": None}
+
+    simple_query_string_options = {
+        "default_operator": "and",
+    }
 
     faceted_search_fields = {
         "processed": {
@@ -119,11 +134,13 @@ class MessageDocumentView(LoggingDocumentViewSet):
     highlight_fields = {
         "body": {"enabled": True, "options": HIGHLIGHT_LABELS},
         "subject": {"enabled": True, "options": HIGHLIGHT_LABELS},
-        "msg_to": {"options": HIGHLIGHT_LABELS},
-        "msg_from": {"options": HIGHLIGHT_LABELS},
     }
 
     # Define ordering fields
-    ordering_fields = {"_score": "_score", "sent_date": "sent_date"}
+    ordering_fields = {
+        "_score": "_score",
+        "sent_date": "sent_date",
+        "source_id": "source_id",
+    }
     # Specify default ordering
-    ordering = ("-_score", "sent_date")
+    ordering = ("-_score", "sent_date", "source_id")
