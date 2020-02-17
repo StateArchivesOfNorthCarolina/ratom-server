@@ -15,7 +15,11 @@ class LoggingSearch(Search):
         if settings.ELASTICSEARCH_LOG_QUERIES:
             query = json.dumps(self.to_dict(), indent=2)
             logger.debug(f"elasticsearch query: {query}")
-        return super().execute(*args, **kwargs)
+        response = super().execute(*args, **kwargs)
+        if settings.ELASTICSEARCH_LOG_QUERIES:
+            output = json.dumps(response.to_dict(), indent=2)
+            logger.debug(f"elasticsearch response: {output}")
+        return response
 
 
 def enable_elasticsearch_debug_logging():
