@@ -25,7 +25,7 @@ notebooks/.ipynb_checkpoints
 media/
 htmlcov/
 docker-compose.override.yml
-
+docker-compose.kibana.yml
 ## JMG
 .envs/
 .idea/
