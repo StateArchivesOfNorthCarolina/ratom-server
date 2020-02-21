@@ -27,7 +27,7 @@ def enable_elasticsearch_debug_logging():
     Configure Elasticsearch itself to use more verbose logging.
 
     For now manually run in manage.py shell:
-        from ratom.search_utils import enable_elasticsearch_debug_logging
+        from api.documents.utils import enable_elasticsearch_debug_logging
         enable_elasticsearch_debug_logging()
 
     More info:
@@ -38,7 +38,7 @@ def enable_elasticsearch_debug_logging():
     cluster_settings = {"transient": {"logger.discovery": "DEBUG"}}
     logger.info(f"setting: {cluster_settings}")
     logger.info(conn.cluster.put_settings(cluster_settings))
-    index_name = settings.ELASTICSEARCH_INDEX_NAMES["ratom.documents.message"]
+    index_name = settings.ELASTICSEARCH_INDEX_NAMES["api.documents.message"]
     index = Index(index_name)
     index_settings = {
         "index.search.slowlog.threshold.query.warn": "2ms",

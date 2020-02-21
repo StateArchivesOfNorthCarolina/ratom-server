@@ -68,24 +68,11 @@ class MessageDocumentView(LoggingDocumentViewSet):
         filter_backends.CompoundSearchFilterBackend,
         filter_backends.FacetedSearchFilterBackend,
         filter_backends.HighlightBackend,
-        filter_backends.MultiMatchSearchFilterBackend,
         filter_backends.SimpleQueryStringSearchFilterBackend,
     ]
 
     # Define search fields
-    # search_fields = (
-    #     "msg_from",
-    #     "msg_to",
-    #     "subject",
-    #     "body",
-    # )
-
-    multi_match_search_fields = {
-        "subject": None,
-        "body": None,
-    }
-
-    multi_match_options = {"type": "phrase"}
+    search_fields = ("msg_from", "msg_to")
 
     simple_query_string_search_fields = {"subject": None, "body": None}
 
@@ -116,6 +103,7 @@ class MessageDocumentView(LoggingDocumentViewSet):
     filter_fields = {
         "account": "account.id",
         "sent_date": "sent_date",
+        "msg_to": "msg_to",
         "msg_from": "msg_from",
         "body": "body",
         "processed": "audit.processed",
@@ -134,6 +122,8 @@ class MessageDocumentView(LoggingDocumentViewSet):
     highlight_fields = {
         "body": {"enabled": True, "options": HIGHLIGHT_LABELS},
         "subject": {"enabled": True, "options": HIGHLIGHT_LABELS},
+        "msg_from": {"options": HIGHLIGHT_LABELS},
+        "msg_to": {"options": HIGHLIGHT_LABELS},
     }
 
     # Define ordering fields
