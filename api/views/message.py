@@ -7,13 +7,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from api.documents.message import MessageDocument
-from core.models import Message
 from api.serializers import (
     MessageAuditSerializer,
     MessageDocumentSerializer,
     MessageSerializer,
 )
 from api.views.utils import LoggingDocumentViewSet
+from api.filter_backends import CustomFilteringFilterBackend
+from core.models import Message
 
 __all__ = ("message_detail", "MessageDocumentView")
 
@@ -62,7 +63,7 @@ class MessageDocumentView(LoggingDocumentViewSet):
     serializer_class = MessageDocumentSerializer
     lookup_field = "id"
     filter_backends = [
-        filter_backends.FilteringFilterBackend,
+        CustomFilteringFilterBackend,
         filter_backends.OrderingFilterBackend,
         filter_backends.DefaultOrderingFilterBackend,
         filter_backends.CompoundSearchFilterBackend,
@@ -102,9 +103,7 @@ class MessageDocumentView(LoggingDocumentViewSet):
     # Define filtering fields
     filter_fields = {
         "account": "account.id",
-        "sent_date": "sent_date",
-        "msg_to": "msg_to",
-        "msg_from": "msg_from",
+        "email": "msg_to",
         "body": "body",
         "processed": "audit.processed",
         "labels": {
