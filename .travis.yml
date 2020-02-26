@@ -22,7 +22,7 @@ before_script:
   - make build-test
 
 script:
-  - make ci-pre-commit
+  # - make ci-pre-commit
   - make ci-test
 
 before_deploy:
