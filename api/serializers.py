@@ -4,7 +4,7 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from api.documents.message import MessageDocument
-from core.models import Account, File, Message, MessageAudit, User
+from core.models import Account, File, Message, Attachments, MessageAudit, User
 
 logger = logging.getLogger(__file__)
 
@@ -121,6 +121,10 @@ class MessageAuditSerializer(serializers.ModelSerializer):
 
 class MessageSerializer(serializers.ModelSerializer):
     audit = MessageAuditSerializer(read_only=True)
+    attachments = serializers.SerializerMethodField()
+
+    def get_attachments(self, obj):
+        return Attachments.objects.filter(message=obj)
 
     class Meta:
         model = Message
@@ -134,6 +138,7 @@ class MessageSerializer(serializers.ModelSerializer):
             "body",
             "directory",
             "audit",
+            "attachments",
         ]
 
 
