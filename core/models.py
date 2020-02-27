@@ -170,6 +170,21 @@ class MessageAudit(models.Model):
     updated_by = models.ForeignKey(User, null=True, on_delete=models.PROTECT)
     history = HistoricalRecords()
 
+    def get_labels(self):
+        """
+        Compiles the various labels and returns them as a dict. For the moment the only type
+        of labels that we will have are Static and Importer
+        :return:
+        """
+        static_labels = [
+            {"value": x.attname}
+            for x in self._meta.fields
+            if getattr(self, x.attname) is True
+        ]
+        importer_labels = [{"value": x.name} for x in self.labels.all()]
+        label_dict = {"labels": {"static": static_labels, "importer": importer_labels,}}
+        return label_dict
+
 
 class Message(models.Model):
     """A model to store individual email messages.
