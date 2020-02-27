@@ -77,6 +77,8 @@ class AccountSerializer(serializers.ModelSerializer):
 
 
 class MessageAuditSerializer(serializers.ModelSerializer):
+    labels = serializers.SerializerMethodField()
+
     def validate(self, data):
         is_record = data.get("is_record")
         if is_record is False:
@@ -105,6 +107,22 @@ class MessageAuditSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+    def get_labels(self, obj):
+        """
+        Compiles the various labels and returns them as a dict. For the moment the only type
+        of labels that we will have are Static and Importer
+        :return:
+        """
+        static_labels = [
+            {"type": x.attname}
+            for x in obj._meta.fields
+            if getattr(obj, x.attname) is True
+        ]
+        return {
+            "static": static_labels,
+            "importer": [{"type": x.name} for x in obj.labels.all()],
+        }
+
     class Meta:
         model = MessageAudit
         fields = [
@@ -115,6 +133,7 @@ class MessageAuditSerializer(serializers.ModelSerializer):
             "needs_redaction",
             "restricted_until",
             "updated_by",
+            "labels",
         ]
         read_only_fields = ["processed", "date_processed", "updated_by"]
 
