@@ -29,13 +29,19 @@ class MessageDocument(Document):
     subject = fields.TextField(analyzer=html_strip)
     body = fields.TextField(analyzer=html_strip)
     sent_date = fields.DateField()
-    labels = fields.StringField(
+    labels = fields.NestedField(
         attr="labels_indexing",
-        fields={
-            "raw": fields.KeywordField(multi=True),
-            "suggest": fields.CompletionField(multi=True),
-        },
-        multi=True,
+        properties={
+            "importer": fields.NestedField(
+                properties={"name": fields.StringField()}, multi=True
+            ),
+        }
+        # attr="labels_indexing",
+        # fields={
+        #     "raw": fields.KeywordField(multi=True),
+        #     "suggest": fields.CompletionField(multi=True),
+        # },
+        # multi=True,
     )
 
     audit = fields.ObjectField(

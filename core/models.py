@@ -170,6 +170,17 @@ class MessageAudit(models.Model):
     updated_by = models.ForeignKey(User, null=True, on_delete=models.PROTECT)
     history = HistoricalRecords()
 
+    @property
+    def labels_indexing(self):
+        """
+        Compiles the various labels and returns them as a dict. For the moment the only type
+        of labels that we will have are Static and Importer
+        :return:
+        """
+        return {
+            "importer": [{"name": x.name} for x in self.labels.all()],
+        }
+
 
 class Message(models.Model):
     """A model to store individual email messages.
@@ -224,7 +235,8 @@ class Message(models.Model):
 
     @property
     def labels_indexing(self):
-        return list(self.audit.labels.values_list("name", flat=True))
+        print(self.audit.labels_indexing)
+        return dict_to_obj(self.audit.labels_indexing)
 
     def __str__(self):
         return f"{self.subject[:40]}..."
