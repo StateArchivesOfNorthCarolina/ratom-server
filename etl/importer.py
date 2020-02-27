@@ -1,14 +1,13 @@
 import logging
 from typing import List
 from django.conf import settings
-from libratom.lib.entities import load_spacy_model
 from spacy.language import Language
 from tqdm import tqdm
 import pypff
 
 from core import models as ratom
 from etl.message.forms import ArchiveMessageForm
-from etl.message.nlp import extract_labels
+from etl.message.nlp import extract_labels, load_nlp_model
 from etl.providers.base import ImportProvider, ImportProviderError
 from etl.providers.factory import import_provider_factory, ProviderTypes
 
@@ -197,13 +196,7 @@ def import_psts(
     is_remote=False,
 ) -> None:
     logger.info("Import process started")
-    spacy_model_name = "en_core_web_sm"
-    logger.info(f"Loading {spacy_model_name} spacy model")
-    spacy_model, spacy_model_version = load_spacy_model(spacy_model_name)
-    assert spacy_model
-    logger.info(
-        f"Loaded spacy model: {spacy_model_name}, version: {spacy_model_version}"
-    )
+    spacy_model = load_nlp_model()
     account, _ = ratom.Account.objects.get_or_create(title=account)
     if clean:
         logger.warning(f"Deleting {account.title} account files (if exists)")

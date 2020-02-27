@@ -1,6 +1,7 @@
 import logging
 from django.utils import timezone
 
+from django_elasticsearch_dsl_drf.wrappers import obj_to_dict
 from rest_framework import serializers
 
 from api.documents.message import MessageDocument
@@ -77,6 +78,8 @@ class AccountSerializer(serializers.ModelSerializer):
 
 
 class MessageAuditSerializer(serializers.ModelSerializer):
+    # labels = serializers.SerializerMethodField()
+
     def validate(self, data):
         is_record = data.get("is_record")
         if is_record is False:
@@ -105,6 +108,9 @@ class MessageAuditSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+    # def labels(self, obj):
+    #     return obj.audit.labels_indexing
+
     class Meta:
         model = MessageAudit
         fields = [
@@ -115,6 +121,7 @@ class MessageAuditSerializer(serializers.ModelSerializer):
             "needs_redaction",
             "restricted_until",
             "updated_by",
+            # "labels",
         ]
         read_only_fields = ["processed", "date_processed", "updated_by"]
 
@@ -162,8 +169,8 @@ class MessageDocumentSerializer(serializers.Serializer):
     def get_labels(self, obj):
         """Get labels."""
         if obj.labels:
-            return list(obj.labels)
-        return []
+            return obj_to_dict(obj.labels)["_d_"]
+        return {}
 
     def get_highlight(self, obj):
         if hasattr(obj.meta, "highlight"):
