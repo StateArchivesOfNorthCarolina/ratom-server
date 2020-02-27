@@ -32,16 +32,10 @@ class MessageDocument(Document):
     labels = fields.NestedField(
         attr="labels_indexing",
         properties={
-            "importer": fields.NestedField(
-                properties={"name": fields.StringField()}, multi=True
-            ),
-        }
-        # attr="labels_indexing",
-        # fields={
-        #     "raw": fields.KeywordField(multi=True),
-        #     "suggest": fields.CompletionField(multi=True),
-        # },
-        # multi=True,
+            "importer": fields.StringField(
+                fields={"raw": fields.KeywordField(multi=True)}, multi=True
+            )
+        },
     )
 
     audit = fields.ObjectField(

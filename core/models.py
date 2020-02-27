@@ -178,7 +178,7 @@ class MessageAudit(models.Model):
         :return:
         """
         return {
-            "importer": [{"name": x.name} for x in self.labels.all()],
+            "importer": [x.name for x in self.labels.all()],
         }
 
 

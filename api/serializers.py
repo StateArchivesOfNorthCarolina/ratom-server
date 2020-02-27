@@ -78,7 +78,7 @@ class AccountSerializer(serializers.ModelSerializer):
 
 
 class MessageAuditSerializer(serializers.ModelSerializer):
-    # labels = serializers.SerializerMethodField()
+    labels = serializers.SerializerMethodField()
 
     def validate(self, data):
         is_record = data.get("is_record")
@@ -108,8 +108,8 @@ class MessageAuditSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-    # def labels(self, obj):
-    #     return obj.audit.labels_indexing
+    def get_labels(self, obj):
+        return obj.labels_indexing
 
     class Meta:
         model = MessageAudit
@@ -121,7 +121,7 @@ class MessageAuditSerializer(serializers.ModelSerializer):
             "needs_redaction",
             "restricted_until",
             "updated_by",
-            # "labels",
+            "labels",
         ]
         read_only_fields = ["processed", "date_processed", "updated_by"]
 
@@ -164,7 +164,7 @@ class MessageDocumentSerializer(serializers.Serializer):
     highlight = serializers.SerializerMethodField()
     score = serializers.SerializerMethodField()
     processed = serializers.SerializerMethodField(method_name="get_processed")
-    audit = MessageAuditSerializer(read_only=True)
+    audit = serializers.SerializerMethodField()
 
     def get_labels(self, obj):
         """Get labels."""
@@ -187,7 +187,7 @@ class MessageDocumentSerializer(serializers.Serializer):
         return False
 
     def get_audit(self, obj):
-        return obj.audit
+        return obj_to_dict(obj.audit)["_d_"]
 
     class Meta(object):
         document = MessageDocument
