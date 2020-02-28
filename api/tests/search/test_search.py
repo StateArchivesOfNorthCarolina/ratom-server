@@ -20,11 +20,26 @@ def test_label_match_single_term(url, api_client, sally1, event):
     assert event.name in response.data["results"][0]["labels"]["importer"]
 
 
-def test_label_match_exclude_others(url, api_client, sally1, sally2, event, org):
+def test_label_match_excludes_others(url, api_client, sally1, sally2, event, org):
     sally1.audit.labels.add(event)
-    sally1.save()
     sally2.audit.labels.add(org)
+    sally1.save()
     sally2.save()
     response = api_client.get(url, data={"labels_importer": event.name})
     assert event.name in response.data["results"][0]["labels"]["importer"]
     assert org.name not in response.data["results"][0]["labels"]["importer"]
+
+
+def test_label_match__or(url, api_client, sally1, sally2, sally3, event, org, date):
+    sally1.audit.labels.add(event)
+    sally2.audit.labels.add(org)
+    sally3.audit.labels.add(date)
+    sally1.save()
+    sally2.save()
+    sally3.save()
+    response = api_client.get(
+        url, data={"labels_importer__terms": f"{event.name}__{org.name}"}
+    )
+    matched_messages = [result["id"] for result in response.data["results"]]
+    assert sally1.pk in matched_messages and sally2.pk in matched_messages
+    assert sally3.pk not in matched_messages

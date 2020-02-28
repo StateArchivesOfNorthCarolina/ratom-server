@@ -57,6 +57,11 @@ def sally2(file_sally):
 
 
 @pytest.fixture
+def sally3(file_sally):
+    return factories.MessageFactory(account=file_sally.account, file=file_sally)
+
+
+@pytest.fixture
 def event():
     return factories.LabelFactory(name="EVENT")
 
@@ -64,3 +69,8 @@ def event():
 @pytest.fixture
 def org():
     return factories.LabelFactory(name="ORG")
+
+
+@pytest.fixture
+def date():
+    return factories.LabelFactory(name="DATE")
