@@ -235,7 +235,6 @@ class Message(models.Model):
 
     @property
     def labels_indexing(self):
-        print(self.audit.labels_indexing)
         return dict_to_obj(self.audit.labels_indexing)
 
     def __str__(self):
