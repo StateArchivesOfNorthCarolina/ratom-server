@@ -1,8 +1,19 @@
 import pytest
 
 from django.urls import reverse
+from django_elasticsearch_dsl.registries import registry
 
+from api.documents.message import MessageDocument
 from core.tests import factories
+
+
+@pytest.fixture(scope="function", autouse=True)
+def elasticsearch():
+    registry.register_document(MessageDocument)
+    for index in registry.get_indices():
+        index.delete(ignore=404)
+    for index in registry.get_indices():
+        index.create()
 
 
 @pytest.fixture
