@@ -1,6 +1,13 @@
+import os
 import pytest
 
-pytestmark = pytest.mark.django_db
+pytestmark = [
+    pytest.mark.skipif(
+        os.getenv("TEST_ELASTICSEARCH", "false") == "false",
+        reason="TEST_ELASTICSEARCH is not set to 'true'",
+    ),
+    pytest.mark.django_db,
+]
 
 
 def test_account_message_in_results(url, api_client, ratom_message):
