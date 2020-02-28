@@ -8,12 +8,18 @@ from core.tests import factories
 
 
 @pytest.fixture(scope="function", autouse=True)
-def elasticsearch():
+def elasticsearch(request):
     registry.register_document(MessageDocument)
-    for index in registry.get_indices():
-        index.delete(ignore=404)
+
+    def delete_indices():
+        for index in registry.get_indices():
+            index.delete(ignore=404)
+
+    delete_indices()
     for index in registry.get_indices():
         index.create()
+    # always clean up indicies at end of scoped context
+    request.addfinalizer(delete_indices)
 
 
 @pytest.fixture
