@@ -29,14 +29,6 @@ class MessageDocument(Document):
     subject = fields.TextField(analyzer=html_strip)
     body = fields.TextField(analyzer=html_strip)
     sent_date = fields.DateField()
-    labels = fields.NestedField(
-        attr="labels_indexing",
-        properties={
-            "type": fields.StringField(fields={"raw": fields.KeywordField()}),
-            "name": fields.StringField(fields={"raw": fields.KeywordField()}),
-        },
-        multi=True,
-    )
 
     audit = fields.ObjectField(
         properties={

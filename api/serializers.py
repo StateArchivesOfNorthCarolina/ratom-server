@@ -160,17 +160,10 @@ class MessageDocumentSerializer(serializers.Serializer):
     subject = serializers.CharField(read_only=True)
     body = serializers.CharField(read_only=True)
     directory = serializers.CharField(read_only=True)
-    labels = serializers.SerializerMethodField()
     highlight = serializers.SerializerMethodField()
     score = serializers.SerializerMethodField()
     processed = serializers.SerializerMethodField(method_name="get_processed")
     audit = serializers.SerializerMethodField()
-
-    def get_labels(self, obj):
-        """Get labels."""
-        if obj.labels:
-            return obj.labels
-        return {}
 
     def get_highlight(self, obj):
         if hasattr(obj.meta, "highlight"):
