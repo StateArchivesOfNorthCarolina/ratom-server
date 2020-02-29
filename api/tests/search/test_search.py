@@ -24,7 +24,7 @@ def test_label_match_single_term(url, api_client, sally1, event):
     sally1.audit.labels.add(event)
     sally1.save()
     response = api_client.get(url, data={"labels_importer": event.name})
-    assert event.name in response.data["results"][0]["labels"]["importer"]
+    assert event.name in response.data["results"][0]["audit"]["labels"][0]["name"]
 
 
 def test_label_match_excludes_others(url, api_client, sally1, sally2, event, org):
@@ -33,8 +33,8 @@ def test_label_match_excludes_others(url, api_client, sally1, sally2, event, org
     sally1.save()
     sally2.save()
     response = api_client.get(url, data={"labels_importer": event.name})
-    assert event.name in response.data["results"][0]["labels"]["importer"]
-    assert org.name not in response.data["results"][0]["labels"]["importer"]
+    assert event.name in response.data["results"][0]["audit"]["labels"][0]["name"]
+    assert org.name not in response.data["results"][0]["audit"]["labels"][0]["name"]
 
 
 def test_label_match__or(url, api_client, sally1, sally2, sally3, event, org, date):
