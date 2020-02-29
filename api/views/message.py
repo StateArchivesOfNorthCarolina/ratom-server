@@ -110,7 +110,7 @@ class MessageDocumentView(LoggingDocumentViewSet):
     }
 
     nested_filter_fields = {
-        "labels_importer": {"field": "labels.importer.raw", "path": "labels"},
+        "labels_importer": {"field": "audit.labels.name.raw", "path": "audit.labels"},
     }
 
     highlight_fields = {

@@ -169,7 +169,7 @@ class MessageDocumentSerializer(serializers.Serializer):
     def get_labels(self, obj):
         """Get labels."""
         if obj.labels:
-            return obj_to_dict(obj.labels)["_d_"]
+            return obj.labels
         return {}
 
     def get_highlight(self, obj):
@@ -181,7 +181,6 @@ class MessageDocumentSerializer(serializers.Serializer):
         return obj.meta.score
 
     def get_processed(self, obj):
-        logger.info(obj.__repr__())
         if obj.audit:
             return obj.audit.processed
         return False

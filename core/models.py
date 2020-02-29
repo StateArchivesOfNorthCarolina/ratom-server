@@ -177,9 +177,7 @@ class MessageAudit(models.Model):
         of labels that we will have are Static and Importer
         :return:
         """
-        return {
-            "importer": [x.name for x in self.labels.all()],
-        }
+        return list(self.labels.values("type", "name"))
 
 
 class Message(models.Model):
@@ -216,6 +214,7 @@ class Message(models.Model):
                 "processed": self.audit.processed,
                 "is_record": self.audit.is_record,
                 "date_processed": self.audit.date_processed,
+                "labels": self.audit.labels_indexing,
             }
         )
 
@@ -235,7 +234,7 @@ class Message(models.Model):
 
     @property
     def labels_indexing(self):
-        return dict_to_obj(self.audit.labels_indexing)
+        return self.audit.labels_indexing
 
     def __str__(self):
         return f"{self.subject[:40]}..."
