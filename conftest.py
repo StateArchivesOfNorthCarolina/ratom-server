@@ -5,17 +5,23 @@ from core.tests import factories
 
 
 @pytest.fixture(scope="function", autouse=True)
-def mock_es_registry():
+def mock_es_registry(request):
     """Fixture to mock ES registry and use it automatically in every test."""
-    with mock.patch("django_elasticsearch_dsl.signals.registry") as mock_registry:
-        yield mock_registry
+    if "elasticsearch" not in request.fixturenames:
+        with mock.patch("django_elasticsearch_dsl.signals.registry") as mock_registry:
+            yield mock_registry
+    else:
+        yield None
 
 
 @pytest.fixture(scope="function", autouse=True)
-def mock_core_registry():
+def mock_core_registry(request):
     """Fixture to mock ES registry from core.signals and use it automatically in every test."""
-    with mock.patch("core.signals.registry") as mock_core_registry:
-        yield mock_core_registry
+    if "elasticsearch" not in request.fixturenames:
+        with mock.patch("core.signals.registry") as mock_core_registry:
+            yield mock_core_registry
+    else:
+        yield None
 
 
 @pytest.fixture
