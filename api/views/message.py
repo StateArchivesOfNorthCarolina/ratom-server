@@ -103,6 +103,7 @@ class MessageDocumentView(LoggingDocumentViewSet):
     # Define filtering fields
     filter_fields = {
         "account": "account.id",
+        "sent_date": "sent_date",
         "email": "msg_to",
         "body": "body",
         "processed": "audit.processed",
