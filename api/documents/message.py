@@ -29,14 +29,6 @@ class MessageDocument(Document):
     subject = fields.TextField(analyzer=html_strip)
     body = fields.TextField(analyzer=html_strip)
     sent_date = fields.DateField()
-    labels = fields.StringField(
-        attr="labels_indexing",
-        fields={
-            "raw": fields.KeywordField(multi=True),
-            "suggest": fields.CompletionField(multi=True),
-        },
-        multi=True,
-    )
 
     audit = fields.ObjectField(
         properties={
@@ -44,6 +36,13 @@ class MessageDocument(Document):
             "is_record": fields.BooleanField(),
             "is_restricted": fields.BooleanField(),
             "needs_redaction": fields.BooleanField(),
+            "labels": fields.NestedField(
+                properties={
+                    "type": fields.StringField(fields={"raw": fields.KeywordField()}),
+                    "name": fields.StringField(fields={"raw": fields.KeywordField()}),
+                },
+                multi=True,
+            ),
         }
     )
 

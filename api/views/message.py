@@ -1,4 +1,4 @@
-from django_elasticsearch_dsl_drf import constants, filter_backends
+from django_elasticsearch_dsl_drf import filter_backends
 from django_elasticsearch_dsl_drf.pagination import LimitOffsetPagination
 from elasticsearch_dsl import DateHistogramFacet, TermsFacet
 from rest_framework import status
@@ -70,6 +70,7 @@ class MessageDocumentView(LoggingDocumentViewSet):
         filter_backends.FacetedSearchFilterBackend,
         filter_backends.HighlightBackend,
         filter_backends.SimpleQueryStringSearchFilterBackend,
+        filter_backends.NestedFilteringFilterBackend,
     ]
 
     # Define search fields
@@ -107,16 +108,10 @@ class MessageDocumentView(LoggingDocumentViewSet):
         "email": "msg_to",
         "body": "body",
         "processed": "audit.processed",
-        "labels": {
-            "field": "labels",
-            "lookups": [
-                constants.LOOKUP_FILTER_TERMS,
-                constants.LOOKUP_FILTER_PREFIX,
-                constants.LOOKUP_FILTER_WILDCARD,
-                constants.LOOKUP_QUERY_IN,
-                constants.LOOKUP_QUERY_EXCLUDE,
-            ],
-        },
+    }
+
+    nested_filter_fields = {
+        "labels_importer": {"field": "audit.labels.name.raw", "path": "audit.labels"},
     }
 
     highlight_fields = {
