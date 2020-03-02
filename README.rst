@@ -165,7 +165,7 @@ deploy a tag with a commit sha to ensure the that the Kubernetes ``Deployment``
 updates the underlying pods. You can override the ``k8s_container_image_tag`` on
 the command line, if needed, to deploy a different image::
 
-    ansible-playbook deploy.yaml -l ratom-staging -e k8s_container_image_tag=my-docker-tag
+    ansible-playbook deploy.yaml -l caktus-ratom -e k8s_container_image_tag=my-docker-tag
 
 You can see the available images in
 `DockerHub <https://hub.docker.com/repository/docker/govsanc/ratom-server>`_

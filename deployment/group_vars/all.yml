@@ -20,6 +20,7 @@ k8s_elasticsearch_enabled: true
 # Celery
 k8s_worker_enabled: true
 k8s_worker_celery_app: "ratom"
+k8s_worker_replicas: 1
 # Bump worker resources to handle large file imports
 k8s_worker_resources:
   requests:
