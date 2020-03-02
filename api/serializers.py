@@ -5,7 +5,7 @@ from django_elasticsearch_dsl_drf.wrappers import obj_to_dict
 from rest_framework import serializers
 
 from api.documents.message import MessageDocument
-from core.models import Account, File, Message, Attachments, MessageAudit, User
+from core.models import Account, File, Message, Attachments, MessageAudit, User, Label
 
 logger = logging.getLogger(__file__)
 
@@ -74,6 +74,7 @@ class AccountSerializer(serializers.ModelSerializer):
                 "%Y-%m-%d", as_string=False
             ),
             "account_status": instance.get_account_status(),
+            "labels": Label.objects.all().values("type", "name"),
         }
 
 
