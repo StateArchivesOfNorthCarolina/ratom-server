@@ -43,6 +43,10 @@ def test_account_put_invalid(ratom_file, api_client, file_serializer_validation_
     data = {"filename": "x" * 201}
     response = api_client.put(url, data=data)
     assert response.status_code == 400
+    assert (
+        str(response.data["filename"][0])
+        == "Ensure this field has no more than 200 characters."
+    )
 
 
 def test_account_put_valid(
