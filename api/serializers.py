@@ -74,8 +74,19 @@ class AccountSerializer(serializers.ModelSerializer):
                 "%Y-%m-%d", as_string=False
             ),
             "account_status": instance.get_account_status(),
-            "labels": Label.objects.all().values("type", "name"),
+            "labels": self.get_label_suggestions(),
         }
+
+    def get_label_suggestions(self):
+        suggestions = []
+        for l in Label.objects.all():
+            suggestions.append(
+                {
+                    "section_type": l.type,
+                    "label_suggestions": {"id": l.pk, "name": l.name},
+                }
+            )
+        return suggestions
 
 
 class MessageAuditSerializer(serializers.ModelSerializer):
