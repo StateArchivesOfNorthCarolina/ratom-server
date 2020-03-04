@@ -37,7 +37,7 @@ vault_azure_blob_key: !vault |
 k8s_environment_variables:
   DJANGO_SECRET_KEY: "{{ vault_secret_key }}"
   ENVIRONMENT: "{{ env_name }}"
-  DATABASE_URL: "postgres://ratom_production%40ratomdb:{{ vault_database_password }}@ratomdb-dncr.postgres.database.azure.com:5432/ratom_production"
+  DATABASE_URL: "postgres://ratom_production%40ratomdb-dncr:{{ vault_database_password }}@ratomdb-dncr.postgres.database.azure.com:5432/ratom_production"
   DOMAIN: "{{ k8s_domain_names[0] }}"
   SENTRY_DSN: https://a0ca0bdd3f3d4d66b0bb7baaaa322a81@sentry.caktus-built.com/18
   DJANGO_MANAGEPY_MIGRATE: "on"
