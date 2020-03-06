@@ -2,11 +2,12 @@ import logging
 from django.conf import settings
 from django.utils import timezone
 
+from django_elasticsearch_dsl_drf.wrappers import obj_to_dict
 from rest_framework import serializers
 
 from api.documents.message import MessageDocument
 from etl.providers.factory import import_provider_factory
-from core.models import Account, File, Message, MessageAudit, User
+from core.models import Account, File, Message, Attachments, MessageAudit, User, Label
 
 logger = logging.getLogger(__file__)
 
@@ -82,10 +83,13 @@ class AccountSerializer(serializers.ModelSerializer):
                 "%Y-%m-%d", as_string=False
             ),
             "account_status": instance.get_account_status(),
+            "labels": Label.objects.all().values("type", "name"),
         }
 
 
 class MessageAuditSerializer(serializers.ModelSerializer):
+    labels = serializers.SerializerMethodField()
+
     def validate(self, data):
         is_record = data.get("is_record")
         if is_record is False:
@@ -114,6 +118,9 @@ class MessageAuditSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+    def get_labels(self, obj):
+        return obj.labels_indexing
+
     class Meta:
         model = MessageAudit
         fields = [
@@ -124,12 +131,17 @@ class MessageAuditSerializer(serializers.ModelSerializer):
             "needs_redaction",
             "restricted_until",
             "updated_by",
+            "labels",
         ]
         read_only_fields = ["processed", "date_processed", "updated_by"]
 
 
 class MessageSerializer(serializers.ModelSerializer):
     audit = MessageAuditSerializer(read_only=True)
+    attachments = serializers.SerializerMethodField()
+
+    def get_attachments(self, obj):
+        return Attachments.objects.filter(message=obj)
 
     class Meta:
         model = Message
@@ -143,6 +155,7 @@ class MessageSerializer(serializers.ModelSerializer):
             "body",
             "directory",
             "audit",
+            "attachments",
         ]
 
 
@@ -157,17 +170,10 @@ class MessageDocumentSerializer(serializers.Serializer):
     subject = serializers.CharField(read_only=True)
     body = serializers.CharField(read_only=True)
     directory = serializers.CharField(read_only=True)
-    labels = serializers.SerializerMethodField()
     highlight = serializers.SerializerMethodField()
     score = serializers.SerializerMethodField()
     processed = serializers.SerializerMethodField(method_name="get_processed")
-    audit = MessageAuditSerializer(read_only=True)
-
-    def get_labels(self, obj):
-        """Get labels."""
-        if obj.labels:
-            return list(obj.labels)
-        return []
+    audit = serializers.SerializerMethodField()
 
     def get_highlight(self, obj):
         if hasattr(obj.meta, "highlight"):
@@ -178,13 +184,12 @@ class MessageDocumentSerializer(serializers.Serializer):
         return obj.meta.score
 
     def get_processed(self, obj):
-        logger.info(obj.__repr__())
         if obj.audit:
             return obj.audit.processed
         return False
 
     def get_audit(self, obj):
-        return obj.audit
+        return obj_to_dict(obj.audit)["_d_"]
 
     class Meta(object):
         document = MessageDocument

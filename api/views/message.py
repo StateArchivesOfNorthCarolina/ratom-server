@@ -1,4 +1,4 @@
-from django_elasticsearch_dsl_drf import constants, filter_backends
+from django_elasticsearch_dsl_drf import filter_backends
 from django_elasticsearch_dsl_drf.pagination import LimitOffsetPagination
 from elasticsearch_dsl import DateHistogramFacet, TermsFacet
 from rest_framework import status
@@ -7,13 +7,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from api.documents.message import MessageDocument
-from core.models import Message
 from api.serializers import (
     MessageAuditSerializer,
     MessageDocumentSerializer,
     MessageSerializer,
 )
 from api.views.utils import LoggingDocumentViewSet
+from api.filter_backends import CustomFilteringFilterBackend
+from core.models import Message
 
 __all__ = ("message_detail", "MessageDocumentView")
 
@@ -62,21 +63,24 @@ class MessageDocumentView(LoggingDocumentViewSet):
     serializer_class = MessageDocumentSerializer
     lookup_field = "id"
     filter_backends = [
-        filter_backends.FilteringFilterBackend,
+        CustomFilteringFilterBackend,
         filter_backends.OrderingFilterBackend,
         filter_backends.DefaultOrderingFilterBackend,
         filter_backends.CompoundSearchFilterBackend,
         filter_backends.FacetedSearchFilterBackend,
         filter_backends.HighlightBackend,
+        filter_backends.SimpleQueryStringSearchFilterBackend,
+        filter_backends.NestedFilteringFilterBackend,
     ]
 
     # Define search fields
-    search_fields = (
-        "msg_from",
-        "msg_to",
-        "subject",
-        "body",
-    )
+    search_fields = ("msg_from", "msg_to")
+
+    simple_query_string_search_fields = {"subject": None, "body": None}
+
+    simple_query_string_options = {
+        "default_operator": "and",
+    }
 
     faceted_search_fields = {
         "processed": {
@@ -101,29 +105,27 @@ class MessageDocumentView(LoggingDocumentViewSet):
     filter_fields = {
         "account": "account.id",
         "sent_date": "sent_date",
-        "msg_from": "msg_from",
+        "email": "msg_to",
         "body": "body",
         "processed": "audit.processed",
-        "labels": {
-            "field": "labels",
-            "lookups": [
-                constants.LOOKUP_FILTER_TERMS,
-                constants.LOOKUP_FILTER_PREFIX,
-                constants.LOOKUP_FILTER_WILDCARD,
-                constants.LOOKUP_QUERY_IN,
-                constants.LOOKUP_QUERY_EXCLUDE,
-            ],
-        },
+    }
+
+    nested_filter_fields = {
+        "labels_importer": {"field": "audit.labels.name.raw", "path": "audit.labels"},
     }
 
     highlight_fields = {
         "body": {"enabled": True, "options": HIGHLIGHT_LABELS},
         "subject": {"enabled": True, "options": HIGHLIGHT_LABELS},
-        "msg_to": {"options": HIGHLIGHT_LABELS},
         "msg_from": {"options": HIGHLIGHT_LABELS},
+        "msg_to": {"options": HIGHLIGHT_LABELS},
     }
 
     # Define ordering fields
-    ordering_fields = {"_score": "_score", "sent_date": "sent_date"}
+    ordering_fields = {
+        "_score": "_score",
+        "sent_date": "sent_date",
+        "source_id": "source_id",
+    }
     # Specify default ordering
-    ordering = ("-_score", "sent_date")
+    ordering = ("-_score", "sent_date", "source_id")

@@ -1,6 +1,7 @@
 import logging
 import re
 from typing import Dict
+from bs4 import BeautifulSoup
 
 from django import forms
 from django.utils.timezone import make_aware
@@ -10,6 +11,8 @@ from etl.message.headers import MessageHeader
 
 
 logger = logging.getLogger(__name__)
+
+FORBIDDEN_TAGS = ["script", "style"]
 
 
 def clean_null_chars(obj: str) -> str:
@@ -22,6 +25,14 @@ def clean_null_chars(obj: str) -> str:
         str
     """
     return re.sub("\x00", "", obj)
+
+
+def clean_html(html: str) -> str:
+    """Removes script tags and their contents"""
+    soup = BeautifulSoup(html, "html.parser")
+    for script in soup(FORBIDDEN_TAGS):
+        script.decompose()
+    return str(soup)
 
 
 class ArchiveMessageForm(forms.ModelForm):
@@ -77,7 +88,8 @@ class ArchiveMessageForm(forms.ModelForm):
         return sent_date
 
     def clean_body(self):
-        return clean_null_chars(self.cleaned_data["body"])
+        denulled = clean_null_chars(self.cleaned_data["body"])
+        return clean_html(denulled)
 
     class Meta:
         model = Message

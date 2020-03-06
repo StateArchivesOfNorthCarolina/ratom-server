@@ -13,26 +13,22 @@ html_strip = analyzer(
     char_filter=["html_strip"],
 )
 
+lowercase_analyzer = analyzer(
+    "lowercase_analyzer", tokenizer="keyword", filter=["lowercase"]
+)
+
 
 @INDEX.doc_type
 class MessageDocument(Document):
     """Message Elasticsearch Document"""
 
     id = fields.IntegerField(attr="id")
-    source_id = fields.TextField()
-    msg_from = fields.TextField()
-    msg_to = fields.TextField()
-    subject = fields.TextField()
-    body = fields.TextField()
+    source_id = fields.TextField(fielddata=True)
+    msg_to = fields.StringField(analyzer=lowercase_analyzer)
+    msg_from = fields.StringField(analyzer=lowercase_analyzer)
+    subject = fields.TextField(analyzer=html_strip)
+    body = fields.TextField(analyzer=html_strip)
     sent_date = fields.DateField()
-    labels = fields.StringField(
-        attr="labels_indexing",
-        fields={
-            "raw": fields.KeywordField(multi=True),
-            "suggest": fields.CompletionField(multi=True),
-        },
-        multi=True,
-    )
 
     audit = fields.ObjectField(
         properties={
@@ -40,6 +36,13 @@ class MessageDocument(Document):
             "is_record": fields.BooleanField(),
             "is_restricted": fields.BooleanField(),
             "needs_redaction": fields.BooleanField(),
+            "labels": fields.NestedField(
+                properties={
+                    "type": fields.StringField(fields={"raw": fields.KeywordField()}),
+                    "name": fields.StringField(fields={"raw": fields.KeywordField()}),
+                },
+                multi=True,
+            ),
         }
     )
 

@@ -75,3 +75,11 @@ class MessageFactory(factory.DjangoModelFactory):
             obj.file = kwargs["file"]
         obj.save()
         return obj
+
+
+class LabelFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = core.Label
+
+    name = factory.Faker("State")
+    type = core.Label.IMPORTER
