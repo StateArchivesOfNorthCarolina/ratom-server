@@ -95,6 +95,7 @@ class LabelSerializer(serializers.ModelSerializer):
 
 class MessageAuditSerializer(serializers.ModelSerializer):
     labels = LabelSerializer(many=True, required=False)
+    append_user_label = serializers.CharField(max_length=64, required=False)
 
     def validate(self, data):
         is_record = data.get("is_record")
@@ -121,10 +122,11 @@ class MessageAuditSerializer(serializers.ModelSerializer):
             instance.is_restricted = validated_data["is_restricted"]
         if "needs_redaction" in validated_data:
             instance.needs_redaction = validated_data["needs_redaction"]
-        # if "labels" in validated_data:
-        #     for label in validated_data["labels"]:
-        #         l = Label.objects.get_or_create(**label)
-        #         instance.labels.add(l)
+        if "append_user_label" in validated_data:
+            label, _ = Label.objects.get_or_create(
+                name=validated_data["append_user_label"], type=Label.USER
+            )
+            instance.labels.add(label)
         instance.save()
         return instance
 
@@ -142,6 +144,7 @@ class MessageAuditSerializer(serializers.ModelSerializer):
             "restricted_until",
             "updated_by",
             "labels",
+            "append_user_label",
         ]
         read_only_fields = ["processed", "date_processed", "updated_by"]
 

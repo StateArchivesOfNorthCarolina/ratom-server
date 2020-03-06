@@ -4,7 +4,7 @@ import pytest
 
 import factory
 from api.serializers import MessageAuditSerializer
-
+from core.models import Label
 
 pytestmark = pytest.mark.django_db
 
@@ -124,3 +124,37 @@ def test_partial_updates_do_not_reset_omitted_fields(
     assert serializer.is_valid()
     instance = serializer.save(updated_by=user)
     assert getattr(instance, field) == val
+
+
+def test_audit_append_user_label__new(ratom_message_audit, user):
+    name = "new"
+    serializer = MessageAuditSerializer(
+        instance=ratom_message_audit, data={"append_user_label": name}
+    )
+    assert serializer.is_valid()
+    instance = serializer.save(updated_by=user)
+    assert instance.labels.filter(type=Label.USER, name=name).exists()
+
+
+def test_audit_append_user_label__existing(ratom_message_audit, user, user_label):
+    serializer = MessageAuditSerializer(
+        instance=ratom_message_audit, data={"append_user_label": user_label.name}
+    )
+    assert serializer.is_valid()
+    instance = serializer.save(updated_by=user)
+    assert instance.labels.filter(type=Label.USER, name=user_label.name).exists()
+    assert Label.objects.count() == 1  # still only should be one label
+
+
+def test_audit_append_user_label__case_insensitive_existing(
+    ratom_message_audit, user, user_label
+):
+    ratom_message_audit.labels.add(user_label)
+    serializer = MessageAuditSerializer(
+        instance=ratom_message_audit,
+        data={"append_user_label": user_label.name.upper()},
+    )
+    assert serializer.is_valid()
+    instance = serializer.save(updated_by=user)
+    assert instance.labels.count() == 1
+    assert Label.objects.count() == 1  # still only should be one label

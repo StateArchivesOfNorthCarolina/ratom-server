@@ -1,6 +1,7 @@
 import pytest
 from unittest import mock
 
+from core.models import Label
 from core.tests import factories
 
 
@@ -58,3 +59,8 @@ def ratom_message(ratom_file):
 @pytest.fixture
 def ratom_message_audit(ratom_message):
     yield ratom_message.audit
+
+
+@pytest.fixture
+def user_label():
+    return factories.LabelFactory(type=Label.USER)

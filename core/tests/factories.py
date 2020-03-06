@@ -81,5 +81,5 @@ class LabelFactory(factory.DjangoModelFactory):
     class Meta:
         model = core.Label
 
-    name = factory.Faker("State")
+    name = factory.Faker("state")
     type = core.Label.IMPORTER
