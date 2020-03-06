@@ -85,7 +85,7 @@ class LabelSerializer(serializers.ModelSerializer):
 
 
 class MessageAuditSerializer(serializers.ModelSerializer):
-    labels = LabelSerializer(many=True)
+    labels = LabelSerializer(many=True, required=False)
 
     def validate(self, data):
         is_record = data.get("is_record")
