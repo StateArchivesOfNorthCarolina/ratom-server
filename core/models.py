@@ -143,10 +143,12 @@ class Label(models.Model):
     USER = "U"
     IMPORTER = "I"
     STATIC = "S"
+    RESTRICTED = "R"
     LABEL_TYPE = [
         (USER, "User"),
         (IMPORTER, "Importer"),
         (STATIC, "Static"),
+        (RESTRICTED, "Restricted"),
     ]
     type = models.CharField(max_length=1, choices=LABEL_TYPE,)
 
