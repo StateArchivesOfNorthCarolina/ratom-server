@@ -74,7 +74,7 @@ class AccountSerializer(serializers.ModelSerializer):
                 "%Y-%m-%d", as_string=False
             ),
             "account_status": instance.get_account_status(),
-            "labels": Label.objects.all().values("type", "name"),
+            "labels": list(Label.objects.all().values("type", "name")),
         }
 
 
