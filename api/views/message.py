@@ -38,7 +38,7 @@ def message_detail(request, pk):
         """
         We don't really edit messages-- this endpoint updates an associated MessageAudit
         """
-        label = request.data.get("label", [None])
+        label = request.data.get("label")
         if label:
             lb, _ = Label.objects.get_or_create(**label)
             if lb not in message.audit.labels.all():
