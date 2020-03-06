@@ -135,7 +135,6 @@ class MessageAuditSerializer(serializers.ModelSerializer):
             "labels",
         ]
         read_only_fields = ["processed", "date_processed", "updated_by"]
-        validators = [serializers.UniqueTogetherValidator]
 
 
 class MessageSerializer(serializers.ModelSerializer):
