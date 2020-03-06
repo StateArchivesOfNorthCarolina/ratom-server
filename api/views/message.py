@@ -42,7 +42,6 @@ def message_detail(request, pk):
             for label in request.data["labels"]:
                 (lb, _) = Label.objects.get_or_create(**label)
                 if lb not in message.audit.labels.all():
-                    # import pdb; pdb.set_trace()
                     message.audit.labels.add(lb)
                     message.audit.save()
             message.save()
