@@ -14,7 +14,7 @@ from api.serializers import (
 )
 from api.views.utils import LoggingDocumentViewSet
 from api.filter_backends import CustomFilteringFilterBackend
-from core.models import Message
+from core.models import Message, Label
 
 __all__ = ("message_detail", "MessageDocumentView")
 
@@ -38,11 +38,24 @@ def message_detail(request, pk):
         """
         We don't really edit messages-- this endpoint updates an associated MessageAudit
         """
-        serialized_audit = MessageAuditSerializer(message.audit, data=request.data)
-        if serialized_audit.is_valid():
-            serialized_audit.save(updated_by=request.user)
-            return Response(serialized_audit.data, status=status.HTTP_201_CREATED)
-        return Response(serialized_audit.errors, status=status.HTTP_400_BAD_REQUEST)
+        if "label" in request.data:
+            label = request.data["label"]
+            lb, _ = Label.objects.get_or_create(**label)
+            if lb not in message.audit.labels.all():
+                message.audit.labels.add(lb)
+                message.audit.save()
+                message.save()
+            serialized_message = MessageSerializer(message)
+            return Response(serialized_message.data, status=status.HTTP_201_CREATED)
+        else:
+            serialized_audit = MessageAuditSerializer(
+                message.audit, data=request.data, partial=True
+            )
+            if serialized_audit.is_valid():
+                serialized_audit.save(updated_by=request.user)
+                serialized_message = MessageSerializer(message)
+                return Response(serialized_message.data, status=status.HTTP_201_CREATED)
+            return Response(serialized_audit.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 HIGHLIGHT_LABELS = {
