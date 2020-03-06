@@ -38,24 +38,22 @@ def message_detail(request, pk):
         """
         We don't really edit messages-- this endpoint updates an associated MessageAudit
         """
-        if "label" in request.data:
-            label = request.data["label"]
-            lb, _ = Label.objects.get_or_create(**label)
+        labels = request.data.get("labels", [None])[0]
+        if labels:
+            lb, _ = Label.objects.get_or_create(**labels)
             if lb not in message.audit.labels.all():
                 message.audit.labels.add(lb)
                 message.audit.save()
-                message.save()
+            request.data.pop("labels")
+
+        serialized_audit = MessageAuditSerializer(
+            message.audit, data=request.data, partial=True
+        )
+        if serialized_audit.is_valid():
+            serialized_audit.save(updated_by=request.user)
             serialized_message = MessageSerializer(message)
             return Response(serialized_message.data, status=status.HTTP_201_CREATED)
-        else:
-            serialized_audit = MessageAuditSerializer(
-                message.audit, data=request.data, partial=True
-            )
-            if serialized_audit.is_valid():
-                serialized_audit.save(updated_by=request.user)
-                serialized_message = MessageSerializer(message)
-                return Response(serialized_message.data, status=status.HTTP_201_CREATED)
-            return Response(serialized_audit.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serialized_audit.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 HIGHLIGHT_LABELS = {
