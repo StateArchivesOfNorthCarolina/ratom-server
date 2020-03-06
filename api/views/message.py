@@ -38,13 +38,13 @@ def message_detail(request, pk):
         """
         We don't really edit messages-- this endpoint updates an associated MessageAudit
         """
-        labels = request.data.get("labels", [None])[0]
-        if labels:
-            lb, _ = Label.objects.get_or_create(**labels)
+        label = request.data.get("label", [None])
+        if label:
+            lb, _ = Label.objects.get_or_create(**label)
             if lb not in message.audit.labels.all():
                 message.audit.labels.add(lb)
                 message.audit.save()
-            request.data.pop("labels")
+            request.data.pop("label")
 
         serialized_audit = MessageAuditSerializer(
             message.audit, data=request.data, partial=True
