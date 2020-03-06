@@ -1,13 +1,22 @@
 import logging
+from django.conf import settings
 from django.utils import timezone
 
 from django_elasticsearch_dsl_drf.wrappers import obj_to_dict
 from rest_framework import serializers
 
 from api.documents.message import MessageDocument
+from etl.providers.factory import import_provider_factory
 from core.models import Account, File, Message, Attachments, MessageAudit, User, Label
 
 logger = logging.getLogger(__file__)
+
+
+def file_exists(filename):
+    provider = import_provider_factory(provider=settings.CLOUD_SERVICE_PROVIDER)
+    storage_provider = provider(file_path=filename)
+    if not storage_provider.exists:
+        raise serializers.ValidationError(f"The file {filename} does not exist.")
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -26,6 +35,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class FileSerializer(serializers.ModelSerializer):
     account = serializers.PrimaryKeyRelatedField(required=False, read_only=True)
+    filename = serializers.CharField(max_length=200, validators=[file_exists])
 
     class Meta:
         model = File
@@ -34,7 +44,6 @@ class FileSerializer(serializers.ModelSerializer):
     def to_representation(self, instance: File):
         return {
             "account": instance.account,
-            "filename": instance.filename,
             "original_path": instance.original_path,
             "reported_total_messages": instance.reported_total_messages,
             "accession_date": instance.accession_date,
@@ -74,7 +83,7 @@ class AccountSerializer(serializers.ModelSerializer):
                 "%Y-%m-%d", as_string=False
             ),
             "account_status": instance.get_account_status(),
-            "labels": Label.objects.all().values("type", "name"),
+            "labels": list(Label.objects.all().values("type", "name")),
         }
 
 

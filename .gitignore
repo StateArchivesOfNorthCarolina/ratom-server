@@ -26,6 +26,7 @@ media/
 htmlcov/
 docker-compose.override.yml
 docker-compose.kibana.yml
+.ipynb_checkpoints/
 
 ## JMG
 .envs/
