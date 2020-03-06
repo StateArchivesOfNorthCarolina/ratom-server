@@ -78,8 +78,14 @@ class AccountSerializer(serializers.ModelSerializer):
         }
 
 
+class LabelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Label
+        fields = "__all__"
+
+
 class MessageAuditSerializer(serializers.ModelSerializer):
-    labels = serializers.SerializerMethodField()
+    labels = LabelSerializer(many=True)
 
     def validate(self, data):
         is_record = data.get("is_record")
@@ -106,6 +112,10 @@ class MessageAuditSerializer(serializers.ModelSerializer):
             instance.is_restricted = validated_data["is_restricted"]
         if "needs_redaction" in validated_data:
             instance.needs_redaction = validated_data["needs_redaction"]
+        # if "labels" in validated_data:
+        #     for label in validated_data["labels"]:
+        #         l = Label.objects.get_or_create(**label)
+        #         instance.labels.add(l)
         instance.save()
         return instance
 
@@ -125,6 +135,7 @@ class MessageAuditSerializer(serializers.ModelSerializer):
             "labels",
         ]
         read_only_fields = ["processed", "date_processed", "updated_by"]
+        validators = [serializers.UniqueTogetherValidator]
 
 
 class MessageSerializer(serializers.ModelSerializer):
