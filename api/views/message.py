@@ -14,7 +14,7 @@ from api.serializers import (
 )
 from api.views.utils import LoggingDocumentViewSet
 from api.filter_backends import CustomFilteringFilterBackend
-from core.models import Message, Label
+from core.models import Message
 
 __all__ = ("message_detail", "MessageDocumentView")
 
@@ -38,14 +38,6 @@ def message_detail(request, pk):
         """
         We don't really edit messages-- this endpoint updates an associated MessageAudit
         """
-        label = request.data.get("label")
-        if label:
-            lb, _ = Label.objects.get_or_create(**label)
-            if lb not in message.audit.labels.all():
-                message.audit.labels.add(lb)
-                message.audit.save()
-            request.data.pop("label")
-
         serialized_audit = MessageAuditSerializer(
             message.audit, data=request.data, partial=True
         )

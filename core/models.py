@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import JSONField, CICharField
 from django.db import models
 
 from simple_history.models import HistoricalRecords
@@ -151,14 +151,13 @@ class Label(models.Model):
         (RESTRICTED, "Restricted"),
     ]
     type = models.CharField(max_length=1, choices=LABEL_TYPE,)
-
-    name = models.CharField(max_length=64)
+    name = CICharField(max_length=64)
 
     def __str__(self):
         return f"{self.type}:{self.name}"
 
     class Meta:
-        unique_together = ["type", "name"]
+        unique_together = ("type", "name")
 
 
 class MessageAudit(models.Model):
