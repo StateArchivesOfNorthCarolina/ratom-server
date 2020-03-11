@@ -4,7 +4,7 @@ import ast
 from django.utils.timezone import now
 from rest_framework.response import Response
 from rest_framework import renderers
-
+from rest_framework.permissions import IsAuthenticated
 from api.views import MessageDocumentView
 from api.serializers import ExportDocumentSerializer
 
@@ -39,27 +39,25 @@ class ExportDocumentView(MessageDocumentView):
     }
     """
 
+    authentication_classes = [IsAuthenticated]
     serializer_class = ExportDocumentSerializer
     pagination_class = None
     renderer_classes = [FileRenderer]
 
-    def dispatch(self, request, *args, **kwargs):
-        returned_file_name = f"rr-{now().strftime('%Y-%m-%dT%H%M%S')}.gz"
-        response = super().dispatch(request, *args, **kwargs)
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
         current_file = {}
-        for id, filename in decompose_drf_data(response.data):
+        for id, filename in decompose_drf_data(serializer.data):
             if filename in current_file.keys():
                 current_file[filename].append(id)
             else:
                 current_file[filename] = [id]
         dataIO = compress_response(current_file)
-        new_response = Response(
+        returned_file_name = f"rr-{now().strftime('%Y-%m-%dT%H%M%S')}.gz"
+        return Response(
             data=dataIO,
             headers={
                 "Content-Disposition": f"attachment; filename={returned_file_name}"
             },
         )
-        new_response.accepted_renderer = FileRenderer()
-        new_response.accepted_media_type = "application/zip"
-        new_response.renderer_context = {}
-        return new_response
