@@ -54,7 +54,7 @@ class ExportDocumentView(MessageDocumentView):
             else:
                 current_file[filename] = [id]
         dataIO = compress_response(current_file)
-        returned_file_name = f"rr-{now().strftime('%Y-%m-%dT%H%M%S')}.gz"
+        returned_file_name = f"rr-{now().strftime('%Y-%m-%dT%H%M%S')}.txt.gz"
         return Response(
             data=dataIO,
             headers={
