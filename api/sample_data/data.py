@@ -18,20 +18,16 @@ SAMPLE_DATA_SETS = (
 )
 logger = logging.getLogger(__name__)
 
+ADDITIONAL_FILE_FOR_ACCOUNT = (
+    {
+        "title": "Bill Rapp [Sample Data]",
+        "files": ["albert_meyers_sample_in_bm.pst"],
+        "source": "albert_meyers.json",
+    },
+)
 
-def sample_reset_all():
-    """Reset all sample datasets."""
-    spacy_model = load_nlp_model()
-    for dataset in SAMPLE_DATA_SETS:
-        reset_dataset(**dataset, spacy_model=spacy_model)
 
-
-def reset_dataset(title, files, source, spacy_model):
-    """Reset specified sample data."""
-    logger.info(f"Resetting sample dataset: {title}")
-    account, _ = Account.objects.get_or_create(title=title)
-    # Delete all messages associated with fake account
-    account.files.all().delete()
+def ingest_files(account, spacy_model, files, source):
     for filename in files:
         ratom_file = account.files.create(
             filename=filename, original_path=f"/tmp/{filename}",
@@ -49,3 +45,34 @@ def reset_dataset(title, files, source, spacy_model):
         ratom_file.reported_total_messages = ratom_file.message_set.count()
         ratom_file.import_status = File.COMPLETE
         ratom_file.save()
+
+
+def sample_reset_all():
+    """Reset all sample datasets."""
+    spacy_model = load_nlp_model()
+    for dataset in SAMPLE_DATA_SETS:
+        reset_dataset(**dataset, spacy_model=spacy_model)
+
+
+def sample_add_additional():
+    spacy_model = load_nlp_model()
+    for dataset in ADDITIONAL_FILE_FOR_ACCOUNT:
+        add_dataset(**dataset, spacy_model=spacy_model)
+
+
+def add_dataset(title, spacy_model, **dataset):
+    logger.info(f"Adding new file to: {title}")
+    account, created = Account.objects.get_or_create(title=title)
+    if created:
+        logger.info(f"The account {title} does not exist. Try reset_sample_data first.")
+        return
+    ingest_files(account=account, spacy_model=spacy_model, **dataset)
+
+
+def reset_dataset(title, spacy_model, **dataset):
+    """Reset specified sample data."""
+    logger.info(f"Resetting sample dataset: {title}")
+    account, _ = Account.objects.get_or_create(title=title)
+    # Delete all messages associated with fake account
+    account.files.all().delete()
+    ingest_files(account=account, spacy_model=spacy_model, **dataset)

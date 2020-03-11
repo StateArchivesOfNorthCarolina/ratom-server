@@ -58,5 +58,7 @@ class MessageDocument(Document):
         },
     )
 
+    file = fields.ObjectField(properties={"filename": fields.StringField()},)
+
     class Django(object):
         model = Message
