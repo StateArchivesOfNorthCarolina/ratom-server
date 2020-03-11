@@ -10,8 +10,8 @@ from api.serializers import ExportDocumentSerializer
 
 
 class FileRenderer(renderers.BaseRenderer):
-    media_type = "application/zip"
-    format = "gz"
+    media_type = "application/x-gzip"
+    format = "gzip"
     charset = None
     render_style = "binary"
 
@@ -54,7 +54,7 @@ class ExportDocumentView(MessageDocumentView):
             else:
                 current_file[filename] = [id]
         dataIO = compress_response(current_file)
-        returned_file_name = f"rr-{now().strftime('%Y-%m-%dT%H%M%S')}.gz"
+        returned_file_name = f"rr-{now().strftime('%Y-%m-%dT%H%M%S')}.gzip"
         return Response(
             data=dataIO,
             headers={
