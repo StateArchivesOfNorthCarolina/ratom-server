@@ -28,6 +28,11 @@ def url():
 
 
 @pytest.fixture
+def export_url():
+    return reverse("export_messages")
+
+
+@pytest.fixture
 def account_eric():
     return factories.AccountFactory()
 

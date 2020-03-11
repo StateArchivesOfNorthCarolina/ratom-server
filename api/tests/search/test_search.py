@@ -1,5 +1,7 @@
 import os
 import pytest
+import gzip
+import json
 
 pytestmark = [
     pytest.mark.skipif(
@@ -50,3 +52,31 @@ def test_label_match__or(url, api_client, sally1, sally2, sally3, event, org, da
     matched_messages = [result["id"] for result in response.data["results"]]
     assert sally1.pk in matched_messages and sally2.pk in matched_messages
     assert sally3.pk not in matched_messages
+
+
+def test_export_match_one_file(export_url, api_client, sally1, eric1, org, event):
+    sally1.audit.labels.add(event)
+    sally1.save()
+    eric1.audit.labels.add(org)
+    eric1.save()
+    response = api_client.get(
+        export_url, data={"labels_importer__terms": f"{org.name}"}
+    )
+    resp_data = json.loads(gzip.decompress(response.data))
+    assert len(resp_data) == 1
+    assert eric1.file.filename in list(resp_data.keys())
+
+
+def test_export_match_two_file(export_url, api_client, sally1, eric1, org, event):
+    sally1.audit.labels.add(event)
+    sally1.save()
+    eric1.audit.labels.add(org)
+    eric1.save()
+    response = api_client.get(
+        export_url, data={"labels_importer__terms": f"{org.name}__{event.name}"}
+    )
+    resp_data = json.loads(gzip.decompress(response.data))
+    keys = list(resp_data.keys())
+    assert len(resp_data) == 2
+    assert eric1.file.filename in keys
+    assert sally1.file.filename in keys
