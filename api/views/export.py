@@ -39,7 +39,7 @@ class ExportDocumentView(MessageDocumentView):
     }
     """
 
-    authentication_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     serializer_class = ExportDocumentSerializer
     pagination_class = None
     renderer_classes = [FileRenderer]
@@ -54,7 +54,7 @@ class ExportDocumentView(MessageDocumentView):
             else:
                 current_file[filename] = [id]
         dataIO = compress_response(current_file)
-        returned_file_name = f"rr-{now().strftime('%Y-%m-%dT%H%M%S')}.gzip"
+        returned_file_name = f"rr-{now().strftime('%Y-%m-%dT%H%M%S')}.gz"
         return Response(
             data=dataIO,
             headers={
