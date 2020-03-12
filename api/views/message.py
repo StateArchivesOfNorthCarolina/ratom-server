@@ -97,6 +97,21 @@ class MessageDocumentView(LoggingDocumentViewSet):
             "facet": TermsFacet,
             # "enabled": True,
         },
+        "is_record": {
+            "field": "audit.is_record",
+            "facet": TermsFacet,
+            "enabled": True,
+        },
+        "is_restricted": {
+            "field": "audit.is_restricted",
+            "facet": TermsFacet,
+            "enabled": True,
+        },
+        "needs_redaction": {
+            "field": "audit.needs_redaction",
+            "facet": TermsFacet,
+            "enabled": True,
+        },
         "sent_date": {
             "field": "sent_date",
             "facet": DateHistogramFacet,
@@ -111,6 +126,9 @@ class MessageDocumentView(LoggingDocumentViewSet):
         "email": "msg_to",
         "body": "body",
         "processed": "audit.processed",
+        "needs_redaction": "audit.needs_redaction",
+        "is_restricted": "audit.is_restricted",
+        "is_record": "audit.is_record",
     }
 
     nested_filter_fields = {
