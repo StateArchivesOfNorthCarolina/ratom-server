@@ -6,7 +6,6 @@ from rest_framework.response import Response
 from rest_framework import renderers
 from rest_framework.permissions import IsAuthenticated
 from api.views import MessageDocumentView
-from api.serializers import ExportDocumentSerializer
 
 
 class FileRenderer(renderers.BaseRenderer):
@@ -34,7 +33,6 @@ class ExportDocumentView(MessageDocumentView):
     """
 
     permission_classes = [IsAuthenticated]
-    serializer_class = ExportDocumentSerializer
     pagination_class = None
     renderer_classes = [FileRenderer]
 
