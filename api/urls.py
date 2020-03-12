@@ -10,6 +10,7 @@ from .views import (
     MessageDocumentView,
     FileUpdateView,
     reset_sample_data,
+    ExportDocumentView,
 )
 
 # Auth
@@ -38,6 +39,13 @@ urlpatterns += [
         name="search_messages",
     ),
     path("messages/<int:pk>/", message_detail, name="message_detail"),
+]
+
+# Export
+urlpatterns += [
+    path(
+        "export/", ExportDocumentView.as_view({"get": "list"}), name="export_messages",
+    )
 ]
 
 if settings.RATOM_SAMPLE_DATA_ENABLED:
