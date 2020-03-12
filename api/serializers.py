@@ -172,20 +172,6 @@ class MessageSerializer(serializers.ModelSerializer):
         ]
 
 
-class ExportDocumentSerializer(serializers.Serializer):
-    """Serializer for Export document"""
-
-    source_id = serializers.CharField(read_only=True)
-    file = serializers.CharField(read_only=True)
-
-    class Meta:
-        document = MessageDocument
-        fields = (
-            "source_id",
-            "file",
-        )
-
-
 class MessageDocumentSerializer(serializers.Serializer):
     """Serializer for the Message document."""
 
