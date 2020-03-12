@@ -1,6 +1,7 @@
 import gzip
 import json
 import ast
+from collections import defaultdict
 from django.utils.timezone import now
 from rest_framework.response import Response
 from rest_framework import renderers
@@ -46,14 +47,11 @@ class ExportDocumentView(MessageDocumentView):
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(queryset, many=True)
-        current_file = {}
-        for id, filename in decompose_drf_data(serializer.data):
-            if filename in current_file.keys():
-                current_file[filename].append(id)
-            else:
-                current_file[filename] = [id]
-        dataIO = compress_response(current_file)
+        hits = queryset.source(fields=["source_id", "file"]).scan()
+        export = defaultdict(list)
+        for hit in hits:
+            export[hit.file["filename"]].append(hit.source_id)
+        dataIO = compress_response(export)
         returned_file_name = f"rr-{now().strftime('%Y-%m-%dT%H%M%S')}.txt.gz"
         return Response(
             data=dataIO,
