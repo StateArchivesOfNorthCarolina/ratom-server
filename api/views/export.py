@@ -1,6 +1,5 @@
 import gzip
 import json
-import ast
 from collections import defaultdict
 from django.utils.timezone import now
 from rest_framework.response import Response
@@ -18,12 +17,6 @@ class FileRenderer(renderers.BaseRenderer):
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
         return data
-
-
-def decompose_drf_data(od):
-    for export_list in od:
-        v = list(export_list.values())
-        yield v[0], ast.literal_eval(v[1])["filename"]
 
 
 def compress_response(data):

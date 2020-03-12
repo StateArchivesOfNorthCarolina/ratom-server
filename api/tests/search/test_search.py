@@ -65,6 +65,7 @@ def test_export_match_one_file(export_url, api_client, sally1, eric1, org, event
     resp_data = json.loads(gzip.decompress(response.data))
     assert len(resp_data) == 1
     assert eric1.file.filename in list(resp_data.keys())
+    assert eric1.source_id in list(resp_data.values())[0]
 
 
 def test_export_match_two_file(export_url, api_client, sally1, eric1, org, event):
@@ -79,4 +80,6 @@ def test_export_match_two_file(export_url, api_client, sally1, eric1, org, event
     keys = list(resp_data.keys())
     assert len(resp_data) == 2
     assert eric1.file.filename in keys
+    assert eric1.source_id in list(resp_data.values())[1]
     assert sally1.file.filename in keys
+    assert sally1.source_id in list(resp_data.values())[0]
