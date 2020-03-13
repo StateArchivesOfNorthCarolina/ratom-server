@@ -112,7 +112,7 @@ class File(models.Model):
     reported_total_messages = models.IntegerField(null=True)
     accession_date = models.DateField(null=True)
     file_size = models.BigIntegerField(null=True)
-    md5_hash = models.CharField(max_length=32)
+    hash_digest = models.CharField(max_length=64, default="")
     import_status = models.CharField(
         max_length=2, choices=IMPORT_STATUS, default=CREATED
     )

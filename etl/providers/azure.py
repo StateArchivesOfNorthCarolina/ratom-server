@@ -51,6 +51,7 @@ class AzureServiceProvider(ImportProvider):
         return False
 
     def _get_file(self):
+
         tmp_file = NamedTemporaryFile(delete=False, prefix="ratom-")
         logger.info(f"Downloading to {tmp_file.name}")
         with Path(tmp_file.name).open(mode="wb") as fh:
@@ -62,6 +63,8 @@ class AzureServiceProvider(ImportProvider):
     def open(self):
         self._setup()
         self._get_file()
+        logger.info(f"Generating cryptographic hash of {self._data}")
+        self.hash_file()
         super().open()
         # Clean up temporary file once it is finished
         logger.info(f"Deleting temporary file {self._data}")
