@@ -48,7 +48,7 @@ class FileSerializer(serializers.ModelSerializer):
             "reported_total_messages": instance.reported_total_messages,
             "accession_date": instance.accession_date,
             "file_size": instance.file_size,
-            "md5_hash": instance.md5_hash,
+            "hash_digest": instance.hash_digest,
             "import_status": instance.get_import_status_display(),
             "date_imported": instance.date_imported.strftime("%Y-%d-%m, %H:%M:%S"),
         }
