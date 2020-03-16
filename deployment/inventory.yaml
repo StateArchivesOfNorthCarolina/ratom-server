@@ -1,9 +1,0 @@
-all:
-  children:
-    k8s_clusters:
-      hosts:
-        caktus-ratom:
-        ratom-staging:
-    staging:
-      children:
-        k8s_clusters:
