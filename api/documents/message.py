@@ -58,7 +58,9 @@ class MessageDocument(Document):
         },
     )
 
-    file = fields.ObjectField(properties={"filename": fields.StringField()},)
+    file = fields.ObjectField(
+        properties={"filename": fields.StringField(), "sha256": fields.StringField(),},
+    )
 
     class Django(object):
         model = Message

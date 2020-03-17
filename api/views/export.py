@@ -1,6 +1,5 @@
 import gzip
 import json
-from collections import defaultdict
 from django.utils.timezone import now
 from rest_framework.response import Response
 from rest_framework import renderers
@@ -39,9 +38,20 @@ class ExportDocumentView(MessageDocumentView):
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         hits = queryset.source(fields=["source_id", "file"]).scan()
-        export = defaultdict(list)
+        export = []
+        current_dict = {}
         for hit in hits:
-            export[hit.file["filename"]].append(hit.source_id)
+            if not current_dict:
+                current_dict = self._new_dict(hit.file["filename"], hit.file["sha256"])
+                current_dict["id_list"].append(hit.source_id)
+                continue
+            if hit.file["filename"] != current_dict["filename"]:
+                export.append(current_dict.copy())
+                current_dict = self._new_dict(hit.file["filename"], hit.file["sha256"])
+                current_dict["id_list"].append(hit.source_id)
+                continue
+            current_dict["id_list"].append(hit.source_id)
+        export.append(current_dict.copy())
         dataIO = compress_response(export)
         returned_file_name = f"rr-{now().strftime('%Y-%m-%dT%H%M%S')}.txt.gz"
         return Response(
@@ -50,3 +60,6 @@ class ExportDocumentView(MessageDocumentView):
                 "Content-Disposition": f"attachment; filename={returned_file_name}"
             },
         )
+
+    def _new_dict(self, filename: str, sha256: str):
+        return {"filename": f"{filename}", "sha256": f"{sha256}", "id_list": []}

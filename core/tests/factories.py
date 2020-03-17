@@ -32,7 +32,7 @@ class FileFactory(factory.DjangoModelFactory):
     account = factory.SubFactory(AccountFactory)
     filename = factory.Faker("file_name", extension="pst")
     original_path = factory.Faker("file_path", extension="pst")
-    hash_digest = factory.Faker("text", max_nb_chars=64)
+    sha256 = factory.Faker("text", max_nb_chars=64)
     import_status = core.File.CREATED
 
     @classmethod

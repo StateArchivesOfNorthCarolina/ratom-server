@@ -78,7 +78,7 @@ class PstImporter:
             account=account,
             filename=str(import_provider.file_name),
             original_path=str(import_provider.path),
-            hash_digest=str(import_provider.crypt_hash),
+            sha256=str(import_provider.crypt_hash),
         )
         return ratom_file
 
