@@ -12,6 +12,7 @@ pytestmark = pytest.mark.django_db
 def test_serializer_expected_fields(ratom_message_audit):
     serializer = MessageAuditSerializer(instance=ratom_message_audit)
     assert set(serializer.data.keys()) == {
+        "id",
         "processed",
         "is_record",
         "date_processed",
