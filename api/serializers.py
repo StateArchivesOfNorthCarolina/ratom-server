@@ -107,7 +107,7 @@ class MessageAuditListSerializer(serializers.ListSerializer):
 
 
 class MessageAuditSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField()
+    id = serializers.IntegerField(required=False)
     labels = LabelSerializer(many=True, required=False)
     append_user_label = serializers.CharField(max_length=64, required=False)
 
