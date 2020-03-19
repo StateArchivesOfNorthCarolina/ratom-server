@@ -64,22 +64,31 @@ def test_export_match_one_file(export_url, api_client, sally1, eric1, org, event
     )
     resp_data = json.loads(gzip.decompress(response.data))
     assert len(resp_data) == 1
-    assert eric1.file.filename in list(resp_data.keys())
-    assert eric1.source_id in list(resp_data.values())[0]
+    assert eric1.file.filename in resp_data[0].values()
+    assert eric1.file.sha256 in resp_data[0].values()
+    assert eric1.source_id in list(resp_data[0].values())[2]
 
 
-def test_export_match_two_file(export_url, api_client, sally1, eric1, org, event):
+def test_export_match_two_file(
+    export_url, api_client, sally1, sally2, eric1, org, event
+):
     sally1.audit.labels.add(event)
+    sally2.audit.labels.add(org)
     sally1.save()
+    sally2.save()
     eric1.audit.labels.add(org)
     eric1.save()
     response = api_client.get(
         export_url, data={"labels_importer__terms": f"{org.name}__{event.name}"}
     )
     resp_data = json.loads(gzip.decompress(response.data))
-    keys = list(resp_data.keys())
     assert len(resp_data) == 2
-    assert eric1.file.filename in keys
-    assert eric1.source_id in list(resp_data.values())[1]
-    assert sally1.file.filename in keys
-    assert sally1.source_id in list(resp_data.values())[0]
+    decomposed = list(resp_data[0].values()) + list(resp_data[1].values())
+    source_ids = decomposed[2] + decomposed[5]
+    assert eric1.file.filename in decomposed
+    assert eric1.file.sha256 in decomposed
+    assert sally1.file.filename in decomposed
+    assert sally1.file.sha256 in decomposed
+    assert eric1.source_id in source_ids
+    assert sally1.source_id in source_ids
+    assert sally2.source_id in source_ids
