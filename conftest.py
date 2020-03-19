@@ -57,8 +57,19 @@ def ratom_message(ratom_file):
 
 
 @pytest.fixture
+def ratom_message_2(ratom_file):
+    message = factories.MessageFactory(account=ratom_file.account, file=ratom_file)
+    yield message
+
+
+@pytest.fixture
 def ratom_message_audit(ratom_message):
     yield ratom_message.audit
+
+
+@pytest.fixture
+def ratom_message_audit_2(ratom_message_2):
+    yield ratom_message_2.audit
 
 
 @pytest.fixture

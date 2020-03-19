@@ -158,3 +158,22 @@ def test_audit_append_user_label__case_insensitive_existing(
     instance = serializer.save(updated_by=user)
     assert instance.labels.count() == 1
     assert Label.objects.count() == 1  # still only should be one label
+
+
+def test_bulk_audit_update(ratom_message_audit, ratom_message_audit_2, user):
+    audits = [ratom_message_audit, ratom_message_audit_2]
+    effect_args = {
+        "is_record": False,
+        "is_restricted": False,
+        "needs_redaction": False,
+    }
+    data = [{"id": a.pk, **effect_args} for a in audits]
+    serializer = MessageAuditSerializer(
+        data=data, instance=audits, many=True, partial=True
+    )
+    assert serializer.is_valid()
+    serializer.save(updated_by=user)
+    for audit in audits:
+        assert not audit.is_record
+        assert not audit.is_restricted
+        assert not audit.needs_redaction
