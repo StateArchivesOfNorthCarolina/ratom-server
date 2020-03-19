@@ -93,7 +93,21 @@ class LabelSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class MessageAuditListSerializer(serializers.ListSerializer):
+    def update(self, instances, validated_data):
+        message_audit_mapping = {
+            message_audit.id: message_audit for message_audit in instances
+        }
+        data_mapping = {item["id"]: item for item in validated_data}
+        message_audits = []
+        for ma_id, data in data_mapping.items():
+            ma = message_audit_mapping.get(ma_id, None)
+            message_audits.append(self.child.update(ma, data))
+        return message_audits
+
+
 class MessageAuditSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField()
     labels = LabelSerializer(many=True, required=False)
     append_user_label = serializers.CharField(max_length=64, required=False)
 
@@ -135,7 +149,9 @@ class MessageAuditSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MessageAudit
+        list_serializer_class = MessageAuditListSerializer
         fields = [
+            "id",
             "processed",
             "is_record",
             "date_processed",
