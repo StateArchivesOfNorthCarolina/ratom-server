@@ -134,14 +134,15 @@ if "DOKKU_NGINX_SSL_PORT" in os.environ:
 
 
 SENTRY_DSN = os.getenv("SENTRY_DSN")
-
 if SENTRY_DSN:
     import sentry_sdk
     from sentry_sdk.integrations.django import DjangoIntegration
     from sentry_sdk.integrations.celery import CeleryIntegration
 
     sentry_sdk.init(
-        dsn=SENTRY_DSN, integrations=[DjangoIntegration(), CeleryIntegration()]
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration(), CeleryIntegration()],
+        environment=ENVIRONMENT,
     )
 
 AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "us-east-1")
