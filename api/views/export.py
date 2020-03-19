@@ -24,11 +24,18 @@ def compress_response(data):
 
 class ExportDocumentView(MessageDocumentView):
     """Returns a zipped json file that has this structure:
-
-    {
-        "filename01.pst": [001,002,003,004],
-        "filename02.pst": [005,006,007,008],
-    }
+    [
+        {
+            "filename": "filename01.pst",
+            "sha256": "55fce039aeeb2921dbb54e1c2c65955bcb2fe81259df74dd9463f38a847f3286"
+            "file_ids": [001,002,003,004],
+        },
+        {
+            "filename": "filename02.pst",
+            "sha256": "836917539e0b02d4ecc722ff82354c6514181b7314b647ccfc7cf4d7ba65265d",
+            "file_ids": [005,006,007,008],
+        }
+    ]
     """
 
     permission_classes = [IsAuthenticated]
