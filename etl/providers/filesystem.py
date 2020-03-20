@@ -18,6 +18,11 @@ class FilesystemProvider(ImportProvider):
         self.local_path = Path(kwargs.get("file_path", "/"))
         self._data = str(self.local_path.absolute())
 
+    def open(self):
+        logger.info(f"Generating cryptographic hash of {self._data}")
+        self.hash_file()
+        super().open()
+
     @property
     def path(self):
         return str(self.local_path.absolute())

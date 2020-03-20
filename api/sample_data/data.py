@@ -1,4 +1,5 @@
 import logging
+from hashlib import sha256
 
 from api.sample_data.etl import load_data
 from core.models import Account, MessageAudit, File
@@ -29,8 +30,10 @@ ADDITIONAL_FILE_FOR_ACCOUNT = (
 
 def ingest_files(account, spacy_model, files, source):
     for filename in files:
+        di = sha256()
+        di.update(filename.encode("utf-8"))
         ratom_file = account.files.create(
-            filename=filename, original_path=f"/tmp/{filename}",
+            filename=filename, original_path=f"/tmp/{filename}", sha256=di.hexdigest()
         )
         messages = load_data(source)
         for message in messages:
