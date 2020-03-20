@@ -12,6 +12,7 @@ pytestmark = pytest.mark.django_db
 def test_serializer_expected_fields(ratom_message_audit):
     serializer = MessageAuditSerializer(instance=ratom_message_audit)
     assert set(serializer.data.keys()) == {
+        "id",
         "processed",
         "is_record",
         "date_processed",
@@ -29,7 +30,7 @@ def test_serializer_expected_fields(ratom_message_audit):
 def test_ignore_read_only_fields(ratom_message_audit, user, field, val):
     """Read-only field and should be ignored."""
     serializer = MessageAuditSerializer(instance=ratom_message_audit, data={field: val})
-    assert serializer.is_valid()
+    assert serializer.is_valid(), serializer.errors
     instance = serializer.save(updated_by=user)
     assert getattr(instance, field)
 
@@ -40,7 +41,7 @@ def test_always_processed(ratom_message_audit, user):
     ratom_message_audit.date_processed = None
     ratom_message_audit.save()
     serializer = MessageAuditSerializer(instance=ratom_message_audit, data={})
-    assert serializer.is_valid()
+    assert serializer.is_valid(), serializer.errors
     instance = serializer.save(updated_by=user)
     assert instance.processed
     assert instance.date_processed
@@ -49,7 +50,7 @@ def test_always_processed(ratom_message_audit, user):
 def test_updated_by(ratom_message_audit, user):
     """User is supplied in save() method"""
     serializer = MessageAuditSerializer(instance=ratom_message_audit, data={})
-    assert serializer.is_valid()
+    assert serializer.is_valid(), serializer.errors
     instance = serializer.save(updated_by=user)
     assert instance.updated_by == user
 
@@ -67,7 +68,7 @@ def test_updated_by(ratom_message_audit, user):
 )
 def test_audit_flag_values(ratom_message_audit, user, field, val):
     serializer = MessageAuditSerializer(instance=ratom_message_audit, data={field: val})
-    assert serializer.is_valid()
+    assert serializer.is_valid(), serializer.errors
     assert field in serializer.validated_data
     instance = serializer.save(updated_by=user)
     assert getattr(instance, field) == val
@@ -95,7 +96,7 @@ def test_valid_restricted_until(ratom_message_audit, user):
     serializer = MessageAuditSerializer(
         instance=ratom_message_audit, data={"restricted_until": date.isoformat()}
     )
-    assert serializer.is_valid()
+    assert serializer.is_valid(), serializer.errors
     aware_date = timezone.make_aware(date)
     assert serializer.validated_data["restricted_until"] == aware_date
     instance = serializer.save(updated_by=user)
@@ -121,7 +122,7 @@ def test_partial_updates_do_not_reset_omitted_fields(
     setattr(ratom_message_audit, field, val)
     ratom_message_audit.save()
     serializer = MessageAuditSerializer(instance=ratom_message_audit, data={})
-    assert serializer.is_valid()
+    assert serializer.is_valid(), serializer.errors
     instance = serializer.save(updated_by=user)
     assert getattr(instance, field) == val
 
@@ -131,7 +132,7 @@ def test_audit_append_user_label__new(ratom_message_audit, user):
     serializer = MessageAuditSerializer(
         instance=ratom_message_audit, data={"append_user_label": name}
     )
-    assert serializer.is_valid()
+    assert serializer.is_valid(), serializer.errors
     instance = serializer.save(updated_by=user)
     assert instance.labels.filter(type=Label.USER, name=name).exists()
 
@@ -140,7 +141,7 @@ def test_audit_append_user_label__existing(ratom_message_audit, user, user_label
     serializer = MessageAuditSerializer(
         instance=ratom_message_audit, data={"append_user_label": user_label.name}
     )
-    assert serializer.is_valid()
+    assert serializer.is_valid(), serializer.errors
     instance = serializer.save(updated_by=user)
     assert instance.labels.filter(type=Label.USER, name=user_label.name).exists()
     assert Label.objects.count() == 1  # still only should be one label
@@ -154,7 +155,26 @@ def test_audit_append_user_label__case_insensitive_existing(
         instance=ratom_message_audit,
         data={"append_user_label": user_label.name.upper()},
     )
-    assert serializer.is_valid()
+    assert serializer.is_valid(), serializer.errors
     instance = serializer.save(updated_by=user)
     assert instance.labels.count() == 1
     assert Label.objects.count() == 1  # still only should be one label
+
+
+def test_bulk_audit_update(ratom_message_audit, ratom_message_audit_2, user):
+    audits = [ratom_message_audit, ratom_message_audit_2]
+    effect_args = {
+        "is_record": False,
+        "is_restricted": False,
+        "needs_redaction": False,
+    }
+    data = [{"id": a.pk, **effect_args} for a in audits]
+    serializer = MessageAuditSerializer(
+        data=data, instance=audits, many=True, partial=True
+    )
+    assert serializer.is_valid(), serializer.errors
+    serializer.save(updated_by=user)
+    for audit in audits:
+        assert not audit.is_record
+        assert not audit.is_restricted
+        assert not audit.needs_redaction

@@ -7,6 +7,7 @@ from .views import (
     account_detail,
     AccountListView,
     message_detail,
+    messages_batch,
     MessageDocumentView,
     FileUpdateView,
     reset_sample_data,
@@ -39,6 +40,7 @@ urlpatterns += [
         name="search_messages",
     ),
     path("messages/<int:pk>/", message_detail, name="message_detail"),
+    path("messages/batch/", messages_batch, name="messages_batch"),
 ]
 
 # Export

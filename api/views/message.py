@@ -7,16 +7,16 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from api.documents.message import MessageDocument
+from api.filter_backends import CustomFilteringFilterBackend
 from api.serializers import (
     MessageAuditSerializer,
     MessageDocumentSerializer,
     MessageSerializer,
 )
 from api.views.utils import LoggingDocumentViewSet
-from api.filter_backends import CustomFilteringFilterBackend
-from core.models import Message
+from core.models import Message, MessageAudit
 
-__all__ = ("message_detail", "MessageDocumentView")
+__all__ = ("message_detail", "messages_batch", "MessageDocumentView")
 
 
 @api_view(["GET", "PUT"])
@@ -46,6 +46,96 @@ def message_detail(request, pk):
             serialized_message = MessageSerializer(message)
             return Response(serialized_message.data, status=status.HTTP_201_CREATED)
         return Response(serialized_audit.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Actions
+RECORD_STATUS = "record_status"
+ALLOWED_ACTIONS = [RECORD_STATUS]
+
+# Effects
+OPEN_RECORD = "open_record"
+NON_RECORD = "non-record"
+REDACTED = "redacted"
+RESTRICTED = "restricted"
+ALLOWED_EFFECTS_BY_ACTION = {
+    RECORD_STATUS: [OPEN_RECORD, NON_RECORD, REDACTED, RESTRICTED]
+}
+
+
+def get_data_from_record_status(audits, effect):
+    if effect == OPEN_RECORD:
+        effect_args = {
+            "is_record": True,
+            "is_restricted": False,
+            "needs_redaction": False,
+        }
+    if effect == NON_RECORD:
+        effect_args = {
+            "is_record": False,
+            "is_restricted": False,
+            "needs_redaction": False,
+        }
+    if effect == REDACTED:
+        effect_args = {
+            "is_record": True,
+            "is_restricted": False,
+            "needs_redaction": True,
+        }
+    if effect == RESTRICTED:
+        effect_args = {
+            "is_record": True,
+            "is_restricted": True,
+            "needs_redaction": False,
+        }
+    return [{"id": a.pk, **effect_args} for a in audits]
+
+
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+def messages_batch(request):
+    if request.method == "PUT":
+        """
+        Performs a single action on a batch of messages
+        """
+        REQUIRED_DATA = ["messages", "action", "effect"]
+
+        if None in [request.data.get(d) for d in REQUIRED_DATA]:
+            return Response(
+                {"error": "Missing required data"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        action = request.data.get("action")
+        if action not in ALLOWED_ACTIONS:
+            return Response(
+                {"error": f"'{action}' is not a permitted action"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        effect = request.data.get("effect")
+        if effect not in ALLOWED_EFFECTS_BY_ACTION[action]:
+            return Response(
+                {
+                    "error": f"'{effect}' is not a permitted effect for action '{action}'"
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if action == RECORD_STATUS:
+            audits = MessageAudit.objects.filter(
+                message__pk__in=request.data.get("messages")
+            )
+            data = get_data_from_record_status(audits, effect)
+            serialized_audits = MessageAuditSerializer(
+                data=data, instance=audits, many=True, partial=True
+            )
+            if serialized_audits.is_valid():
+                serialized_audits.save(updated_by=request.user)
+                return Response(serialized_audits.data, status=status.HTTP_201_CREATED)
+            return Response(
+                serialized_audits.errors, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 HIGHLIGHT_LABELS = {
