@@ -20,8 +20,14 @@ class MessageHeader:
             )
             for header_item in decomp:
                 s = header_item.split(":", 1)
-                key = s[0].lower()
-                val = s[1].lstrip()
+                if len(s) != 2:
+                    # The header is malformed based on RFC 2822.
+                    # Set a key and assign the full value to the key.
+                    key = "Malformed-Header-Item"
+                    val = header_item
+                else:
+                    key = s[0].lower()
+                    val = s[1].lstrip()
                 self.parsed_headers[key] = val
 
     def get_header(self, key: str) -> str:
