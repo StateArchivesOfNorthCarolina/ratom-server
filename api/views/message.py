@@ -135,6 +135,8 @@ def messages_batch(request):
                 serialized_audits.errors, status=status.HTTP_400_BAD_REQUEST
             )
 
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
 
 HIGHLIGHT_LABELS = {
     "pre_tags": ["<strong>"],
