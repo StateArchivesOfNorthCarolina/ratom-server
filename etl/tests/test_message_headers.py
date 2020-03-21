@@ -3,6 +3,7 @@ import pytest
 from etl.message.headers import MessageHeader
 
 
+@pytest.mark.skip(reason="Python is handling header parsing now.")
 class TestHeaders:
     @pytest.mark.parametrize(
         "line,key,val",

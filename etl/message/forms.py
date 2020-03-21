@@ -1,5 +1,6 @@
 import logging
 import re
+from email.parser import Parser
 from typing import Dict
 from bs4 import BeautifulSoup
 
@@ -9,6 +10,7 @@ from django.utils.timezone import make_aware
 from core.models import Message
 from etl.message.headers import MessageHeader
 
+p = Parser()
 
 logger = logging.getLogger(__name__)
 
@@ -55,8 +57,9 @@ class ArchiveMessageForm(forms.ModelForm):
     def _prepare_message(self) -> Dict[str, str]:
         """Prepare message for Form-based validation."""
         msg_data = {}
+        message = p.parsestr(self.archive.format_message(self.archive_msg))
         try:
-            headers = MessageHeader(self.archive_msg.transport_headers)
+            headers = MessageHeader(message)
         except AttributeError as e:
             logger.exception(f"{e}")
             raise
@@ -69,11 +72,10 @@ class ArchiveMessageForm(forms.ModelForm):
                 "msg_bcc": headers.get_header("Bcc"),
                 "subject": headers.get_header("Subject"),
                 "headers": headers.get_full_headers(),
-                "body": self.archive.format_message(
-                    self.archive_msg, with_headers=False
-                ),
+                "body": message.get_payload(),
             }
         )
+        message = None
         return msg_data
 
     def clean_sent_date(self):
