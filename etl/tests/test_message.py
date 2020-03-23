@@ -47,7 +47,7 @@ def test_headers_clean(test_archive, archive_msg):
     form = ArchiveMessageForm(archive=test_archive(), archive_msg=archive_msg)
     assert form.is_valid()
     assert "headers" in form.cleaned_data
-    assert "from" in form.cleaned_data["headers"]
+    assert "From" in form.cleaned_data["headers"]
 
 
 def test_headers_good_with_malformed_data(test_archive, archive_msg):
@@ -58,4 +58,4 @@ def test_headers_good_with_malformed_data(test_archive, archive_msg):
     form = ArchiveMessageForm(archive=test_archive(), archive_msg=archive_msg)
     assert form.is_valid()
     assert "headers" in form.cleaned_data
-    assert "from" in form.cleaned_data["headers"]
+    assert "From" in form.cleaned_data["headers"]
