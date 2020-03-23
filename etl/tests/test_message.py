@@ -39,23 +39,3 @@ def test_sent_date__make_aware_fails(test_archive, archive_msg):
         assert form.is_valid(), form.errors
         assert not form.cleaned_data["sent_date"]
         assert len(form.msg_errors) == 1
-
-
-def test_headers_clean(test_archive, archive_msg):
-    """Make sure transport_headers appear in cleaned_data."""
-    archive_msg.transport_headers = 'From: "Lester Rawson"\r\n'
-    form = ArchiveMessageForm(archive=test_archive(), archive_msg=archive_msg)
-    assert form.is_valid()
-    assert "headers" in form.cleaned_data
-    assert "From" in form.cleaned_data["headers"]
-
-
-def test_headers_good_with_malformed_data(test_archive, archive_msg):
-    """Make sure that transport headers don't blow up during import with a bad header"""
-    archive_msg.transport_headers = (
-        'Microsoft Mail Internet Headers Version 2.0\r\nFrom: "Lester Rawson"\r\n'
-    )
-    form = ArchiveMessageForm(archive=test_archive(), archive_msg=archive_msg)
-    assert form.is_valid()
-    assert "headers" in form.cleaned_data
-    assert "From" in form.cleaned_data["headers"]

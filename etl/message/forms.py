@@ -13,6 +13,7 @@ from core.models import Message
 logger = logging.getLogger(__name__)
 
 FORBIDDEN_TAGS = ["script", "style"]
+INVALID_MESSAGE_HEADERS = ("Microsoft Mail Internet Headers Version 2.0\r\n",)
 
 
 def clean_null_chars(obj: str) -> str:
@@ -44,21 +45,27 @@ class ArchiveMessageForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.archive = kwargs.pop("archive")
         self.archive_msg = kwargs.pop("archive_msg")
+        self.msg_errors = []
         msg_data = self._prepare_message()
         kwargs["data"] = msg_data
         super().__init__(*args, **kwargs)
         # Remove ProhibitNullCharactersValidator since we want to
         # remove them in clean rather than returning invalid
         self.fields["body"].validators = []
-        self.msg_errors = []
 
     def _prepare_message(self) -> Dict[str, str]:
         """Prepare message for Form-based validation."""
         rfc822 = self.archive.format_message(self.archive_msg)
-        # remove bad header line before creating EmailMessage
-        rfc822 = rfc822.replace("Microsoft Mail Internet Headers Version 2.0\r\n", "")
+        # remove bad header lines before creating EmailMessage
+        for header in INVALID_MESSAGE_HEADERS:
+            rfc822 = rfc822.replace(header, "")
         # convert to Python's EmailMessage
         message = message_from_string(rfc822)
+        # track any errors associated with the conversion
+        for defect in message.defects:
+            name = defect.__class__.__name__
+            logger.warning(f"{name} [msg.identifier=={self.archive_msg.identifier}]")
+            self.msg_errors.append(("headers", name, ""))
         msg_data = {
             "source_id": self.archive_msg.identifier,
             "msg_from": message.get("From", ""),
