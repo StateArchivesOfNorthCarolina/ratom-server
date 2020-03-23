@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from typing import List
 from core import models as ratom
 
 admin.site.register(ratom.Account)
@@ -84,17 +85,24 @@ class MessageAuditAdmin(admin.ModelAdmin):
     )
 
     def get_history(self, instance):
-        # import pudb; pudb.set_trace()
+        # import pudb;pudb.set_trace()
         # history = instance.history.intersection()
+        # html_table = self._stringify_history(instance.history.all())
+        pass
+
+    def _stringify_history(self, histories: List[ratom.HistoricalRecords]):
         history_line = []
         history_line.append("\n\nChanged Field\tBefore Change\tAfter Change\n")
-        new_record, old_record = instance.history.all()
-        delta = new_record.diff_against(old_record)
-        for change in delta.changes:
-            history_line.append(
-                f"{change.field}\t" f"{change.old}\t" f"{change.new}\t" f"\n\n"
-            )
-        return "".join(history_line)
+        if len(histories) == 1:
+            pass
+        else:
+            new_record, old_record = histories
+            delta = new_record.diff_against(old_record)
+            for change in delta.changes:
+                history_line.append(
+                    f"{change.field}\t" f"{change.old}\t" f"{change.new}\t" f"\n\n"
+                )
+            return "".join(history_line)
 
 
 @admin.register(ratom.File)
