@@ -1,6 +1,6 @@
 import logging
 import re
-from email.parser import Parser
+from email import message_from_string
 from typing import Dict
 from bs4 import BeautifulSoup
 
@@ -10,7 +10,6 @@ from django.utils.timezone import make_aware
 from core.models import Message
 from etl.message.headers import MessageHeader
 
-p = Parser()
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +56,10 @@ class ArchiveMessageForm(forms.ModelForm):
     def _prepare_message(self) -> Dict[str, str]:
         """Prepare message for Form-based validation."""
         msg_data = {}
-        message = p.parsestr(self.archive.format_message(self.archive_msg))
+        rfc822 = self.archive.format_message(self.archive_msg)
+        # remove bad header line before creating EmailMessage
+        rfc822 = rfc822.replace("Microsoft Mail Internet Headers Version 2.0\r\n", "")
+        message = message_from_string(rfc822)
         try:
             headers = MessageHeader(message)
         except AttributeError as e:
