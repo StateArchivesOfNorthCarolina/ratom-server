@@ -63,11 +63,38 @@ class MessageAuditAdmin(admin.ModelAdmin):
         "date_processed",
         "updated_by",
     )
+    readonly_fields = ("get_history",)
     list_select_related = ("message",)
     list_filter = ("is_record", "processed")
     search_fields = ("message__body", "pk")
     date_hierarchy = "date_processed"
     ordering = ("-message__sent_date",)
+
+    fieldsets = (
+        (
+            None,
+            {
+                "fields": (
+                    ("processed", "is_record", "is_restricted", "needs_redaction"),
+                )
+            },
+        ),
+        ("Labels", {"fields": ("labels",)}),
+        ("History", {"classes": ("collapse",), "fields": ("get_history",)}),
+    )
+
+    def get_history(self, instance):
+        # import pudb; pudb.set_trace()
+        # history = instance.history.intersection()
+        history_line = []
+        history_line.append("\n\nChanged Field\tBefore Change\tAfter Change\n")
+        new_record, old_record = instance.history.all()
+        delta = new_record.diff_against(old_record)
+        for change in delta.changes:
+            history_line.append(
+                f"{change.field}\t" f"{change.old}\t" f"{change.new}\t" f"\n\n"
+            )
+        return "".join(history_line)
 
 
 @admin.register(ratom.File)
