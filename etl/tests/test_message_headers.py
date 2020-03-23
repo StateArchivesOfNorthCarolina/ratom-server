@@ -35,7 +35,7 @@ class TestHeaders:
         archive_msg.transport_headers = line
         form = ArchiveMessageForm(archive=test_archive(), archive_msg=archive_msg)
         assert form.is_valid(), form.errors
-        assert "from" in form.cleaned_data["headers"]
+        assert form.cleaned_data["msg_from"] == '"Lester Rawson"'
 
     @pytest.mark.parametrize(
         "header,form_field",
@@ -55,3 +55,13 @@ class TestHeaders:
         form = ArchiveMessageForm(archive=test_archive(), archive_msg=archive_msg)
         assert form.is_valid(), form.errors
         assert form.cleaned_data[form_field]
+
+    @pytest.mark.parametrize(
+        "header", ["From", "To", "CC", "BCC", "Subject", "Other-Header"],
+    )
+    def test_saved_header_values(self, test_archive, archive_msg, header):
+        """All headers should end up in the `headers` JSON field."""
+        archive_msg.transport_headers = f"{header}: test\r\n"
+        form = ArchiveMessageForm(archive=test_archive(), archive_msg=archive_msg)
+        assert form.is_valid(), form.errors
+        assert form.cleaned_data["headers"][header] == "test"
