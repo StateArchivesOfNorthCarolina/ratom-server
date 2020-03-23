@@ -49,6 +49,7 @@ class PstImporter:
         self.ratom_file.import_status = ratom.File.IMPORTING
         self.ratom_file.reported_total_messages = self.archive.message_count
         self.ratom_file.file_size = self.import_provider.file_size
+        self.ratom_file.sha256 = self.import_provider.crypt_hash
         self.ratom_file.save()
         logger.info(f"Opened {self.archive.message_count} messages in archive")
 
@@ -78,7 +79,6 @@ class PstImporter:
             account=account,
             filename=str(import_provider.file_name),
             original_path=str(import_provider.path),
-            sha256=str(import_provider.crypt_hash),
         )
         return ratom_file
 

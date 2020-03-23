@@ -22,6 +22,20 @@ def test_create_ratom_file__missing(pst_importer, account, local_file):
     assert not ratom_file.file_size
 
 
+def test_get_sha256_before_open_fails(pst_importer, account, local_file):
+    pst_importer._create_ratom_file(account, local_file)
+    pst_importer.initializing_stage()
+    with pytest.raises(AssertionError):
+        assert pst_importer.ratom_file.sha256
+
+
+def test_get_sha256_after_open_succeeds(pst_importer, account, local_file):
+    pst_importer._create_ratom_file(account, local_file)
+    pst_importer.initializing_stage()
+    pst_importer.importing_stage()
+    assert pst_importer.ratom_file.sha256
+
+
 @pytest.mark.parametrize("message_count", [100, 1_000])
 def test_importing_stage_message_count(test_archive, pst_importer, message_count):
     """Acrhive's reported total messages is saved to model"""
