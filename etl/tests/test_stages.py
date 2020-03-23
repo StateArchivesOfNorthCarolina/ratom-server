@@ -58,7 +58,7 @@ def test_add_file_error__no_msg(pst_importer):
     assert pst_importer.ratom_file_errors[0]["context"] == context
 
 
-def test_sent_date__errors(pst_importer, archive_msg):
+def test_sent_date__errors(pst_importer, email_message):
     """sent_date errors should be saved to message object."""
     with mock.patch("etl.message.forms.make_aware", side_effect=Exception):
         pst_importer.run()
