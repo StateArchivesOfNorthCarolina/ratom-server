@@ -65,6 +65,7 @@ class PstImporter:
         """If import was successful, set import_status to COMPLETE."""
         logger.info("--- Success Stage ---")
         self.ratom_file.import_status = ratom.File.COMPLETE
+        self.ratom_file.errors = self.ratom_file_errors
         self.ratom_file.save()
         logger.info(f"ratom.File[{self.ratom_file.pk}] imported successfully")
 

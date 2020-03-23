@@ -93,3 +93,11 @@ class TestFileErrors:
         errors = ratom_file.errors
         assert len(errors) == 1
         assert errors[0]["name"] == "Unrecoverable import error"
+
+    def test_import_success__message_failure(self, pst_importer, archive_msg):
+        """Failed message errors should still be saved to DB."""
+        type(archive_msg).transport_headers = mock.PropertyMock(side_effect=Exception)
+        pst_importer.run()
+        ratom_file = ratom.File.objects.get()
+        assert ratom_file.import_status == ratom.File.COMPLETE
+        assert "create_message() failed" in ratom_file.errors[0]["name"]
