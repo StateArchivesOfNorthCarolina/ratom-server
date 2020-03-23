@@ -3,6 +3,9 @@ import pytest
 from unittest import mock
 from email.message import EmailMessage
 
+
+from libratom.lib.pff import PffArchive
+
 from etl.importer import PstImporter
 from etl.providers.factory import import_provider_factory, ProviderTypes
 
@@ -98,6 +101,7 @@ def test_archive(archive_folder):
         archive = _mock.return_value
         archive.message_count = 1
         archive.folders.return_value = [archive_folder]
+        archive.format_message = mock.MagicMock(side_effect=PffArchive.format_message)
         yield _mock
 
 

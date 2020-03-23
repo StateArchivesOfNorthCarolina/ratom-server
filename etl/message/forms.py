@@ -1,6 +1,6 @@
 import logging
 import re
-from email.parser import Parser
+from email import message_from_string
 from typing import Dict
 from bs4 import BeautifulSoup
 
@@ -8,9 +8,7 @@ from django import forms
 from django.utils.timezone import make_aware
 
 from core.models import Message
-from etl.message.headers import MessageHeader
 
-p = Parser()
 
 logger = logging.getLogger(__name__)
 
@@ -56,26 +54,21 @@ class ArchiveMessageForm(forms.ModelForm):
 
     def _prepare_message(self) -> Dict[str, str]:
         """Prepare message for Form-based validation."""
-        msg_data = {}
-        message = p.parsestr(self.archive.format_message(self.archive_msg))
-        try:
-            headers = MessageHeader(message)
-        except AttributeError as e:
-            logger.exception(f"{e}")
-            raise
-        msg_data.update(
-            {
-                "source_id": self.archive_msg.identifier,
-                "msg_from": headers.get_header("From"),
-                "msg_to": headers.get_header("To"),
-                "msg_cc": headers.get_header("Cc"),
-                "msg_bcc": headers.get_header("Bcc"),
-                "subject": headers.get_header("Subject"),
-                "headers": headers.get_full_headers(),
-                "body": message.get_payload(),
-            }
-        )
-        message = None
+        rfc822 = self.archive.format_message(self.archive_msg)
+        # remove bad header line before creating EmailMessage
+        rfc822 = rfc822.replace("Microsoft Mail Internet Headers Version 2.0\r\n", "")
+        # convert to Python's EmailMessage
+        message = message_from_string(rfc822)
+        msg_data = {
+            "source_id": self.archive_msg.identifier,
+            "msg_from": message.get("From", ""),
+            "msg_to": message.get("To", ""),
+            "msg_cc": message.get("Cc", ""),
+            "msg_bcc": message.get("Bcc", ""),
+            "subject": message.get("Subject", ""),
+            "headers": dict(message.items()),
+            "body": message.get_payload(),
+        }
         return msg_data
 
     def clean_sent_date(self):
