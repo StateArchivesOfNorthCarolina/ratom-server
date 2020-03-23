@@ -25,6 +25,7 @@ ignore =
     # E131,
     # E133,
     E2,    # missing whitespace after ','
+    F601,
     # E3,
     # E5,
     # E701,

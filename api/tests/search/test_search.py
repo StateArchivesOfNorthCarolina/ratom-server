@@ -22,6 +22,20 @@ def test_account_does_not_exist(url, api_client, ratom_message):
     assert not response.data["results"]
 
 
+def test_keywords_use_or_searching(url, api_client, sally4_known_bodies):
+    m1, m2 = sally4_known_bodies
+    response = api_client.get(
+        url, data={"search_simple_query_string": "FileZilla,Zombie"}
+    )
+    assert m1.file.message_set.all().count() == 5
+    assert len(response.data["results"]) == 2
+    decomposed = list(response.data["results"][0].values()) + list(
+        response.data["results"][1].values()
+    )
+    assert str(m1.source_id) in decomposed
+    assert str(m2.source_id) in decomposed
+
+
 def test_label_match_single_term(url, api_client, sally1, event):
     sally1.audit.labels.add(event)
     sally1.save()
