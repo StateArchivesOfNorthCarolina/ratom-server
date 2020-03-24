@@ -66,7 +66,23 @@ class MessageAdmin(admin.ModelAdmin):
     inserted_on
     """
 
-    readonly_fields = ("get_history", "inserted_on")
+    readonly_fields = (
+        "get_history",
+        "inserted_on",
+        "directory",
+        "source_id",
+        "sent_date",
+        "subject",
+        "msg_to",
+        "msg_from",
+        "msg_cc",
+        "msg_bcc",
+        "body",
+        "errors",
+        "account",
+        "file",
+        "headers",
+    )
     list_filter = ("sent_date", "account")
     search_fields = ("body", "source_id")
     date_hierarchy = "sent_date"
