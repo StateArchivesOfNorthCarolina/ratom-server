@@ -110,7 +110,7 @@ class MessageAdmin(admin.ModelAdmin):
             },
         ),
         ("Errors", {"classes": ("collapse",), "fields": ("errors",)}),
-        ("Message History", {"fields": ("get_history",)}),
+        ("Message History", {"fields": ("audit", "get_history",)}),
     )
 
     def get_history(self, instance):
@@ -121,7 +121,7 @@ class MessageAdmin(admin.ModelAdmin):
         :param instance: MessageAudit
         :return: SafeString
         """
-        histories = instance.audit.history.all()
+        histories = instance.audit.history.all().order_by("history_date")
         history_line = "<table><tr><th>Date and Time</th><th>Field</th><th>Changed From</th><th>Changed To</th><th>User</th></tr>"
         for new_record, old_record in self._get_history_pairs(histories):
             if new_record:
@@ -137,38 +137,34 @@ class MessageAdmin(admin.ModelAdmin):
                             f"<td>{ratom.User.objects.filter(pk=new_record.updated_by_id).first()}"
                             f"</tr>"
                         )
-            else:
-                first = histories.last()
-                history_line += (
-                    f"<tr>"
-                    f"<td>{first.history_date.strftime('%Y-%m-%d %H:%M:%S')}</td>"
-                    f"<td colspan=3>Message Imported</td>"
-                    f"</tr>"
-                )
+        first = histories.first()
+        history_line += (
+            f"<tr>"
+            f"<td>{first.history_date.strftime('%Y-%m-%d %H:%M:%S')}</td>"
+            f"<td colspan=3>Message Imported</td>"
+            f"</tr>"
+        )
         history_line += "</table>"
         return format_html(history_line)
 
     def _get_history_pairs(self, histories):
         """
-        Yields pairs of histories. This function assumes a queryset of histories with most recent
-        change last in the set. We flip these to print the newest changes first and descend to the
-        oldest.
+        Yields pairs of histories. This function assumes a queryset of histories with the oldest entry
+        first in the set.
         :param histories:
         :return: tuple(MessageAuditHistory, MessageAuditHistory)
         """
-        hist_list = list(histories)
-        hist_list.reverse()
         new = None
         old = None
-        while len(hist_list) > 1:
+        hist_list = list(histories)
+        if len(hist_list) == 1:
+            yield None, hist_list.pop()
+        while hist_list:
+            new = old
             if not new:
                 new = hist_list.pop()
-                old = hist_list.pop()
-            else:
-                new = old
-                old = hist_list.pop()
+            old = hist_list.pop()
             yield new, old
-        yield None, None
 
 
 @admin.register(ratom.MessageAudit)
