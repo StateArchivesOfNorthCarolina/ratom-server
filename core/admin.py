@@ -40,6 +40,7 @@ class CustomUserAdmin(UserAdmin):
 
 @admin.register(ratom.Message)
 class MessageAdmin(admin.ModelAdmin):
+    IGNORE_CHANGES = ["date_processed", "updated_by"]
     list_display = (
         "pk",
         "source_id",
@@ -49,36 +50,51 @@ class MessageAdmin(admin.ModelAdmin):
         "subject",
         "account",
     )
+
+    """
+    source_id
+    sent_date
+    msg_from
+    msg_to
+    msg_cc
+    msg_bcc
+    subject
+    body
+    directory
+    headers
+    errors
+    inserted_on
+    """
+
+    readonly_fields = ("get_history", "inserted_on")
     list_filter = ("sent_date", "account")
     search_fields = ("body", "source_id")
     date_hierarchy = "sent_date"
     raw_id_fields = ("audit", "file")
     ordering = ("-sent_date",)
 
-
-@admin.register(ratom.MessageAudit)
-class MessageAuditAdmin(admin.ModelAdmin):
-    IGNORE_CHANGES = ["date_processed", "updated_by"]
-    list_display = (
-        "pk",
-        "message",
-        "processed",
-        "is_record",
-        "date_processed",
-        "updated_by",
-    )
-    readonly_fields = ("get_history",)
-    list_select_related = ("message",)
-    list_filter = ("is_record", "processed", "message__account")
-    search_fields = ("message__body", "pk")
-    date_hierarchy = "date_processed"
-    ordering = ("-pk",)
-
     fieldsets = (
-        ("Status", {"fields": (("processed", "is_record", "needs_redaction"),)},),
-        ("Restrictions", {"fields": ("is_restricted", "restricted_until")}),
-        ("Labels", {"fields": ("labels",)}),
-        ("Message History", {"classes": ("collapse",), "fields": ("get_history",)}),
+        ("Message Metadata", {"fields": ("account", "file", "inserted_on")}),
+        ("Headers", {"classes": ("collapse",), "fields": ("headers",),}),
+        (
+            "Message",
+            {
+                "classes": ("collapse",),
+                "fields": (
+                    "directory",
+                    "source_id",
+                    "sent_date",
+                    "subject",
+                    "msg_to",
+                    "msg_from",
+                    "msg_cc",
+                    "msg_bcc",
+                    "body",
+                ),
+            },
+        ),
+        ("Errors", {"classes": ("collapse",), "fields": ("errors",)}),
+        ("Message History", {"fields": ("get_history",)}),
     )
 
     def get_history(self, instance):
@@ -89,7 +105,7 @@ class MessageAuditAdmin(admin.ModelAdmin):
         :param instance: MessageAudit
         :return: SafeString
         """
-        histories = instance.history.all()
+        histories = instance.audit.history.all()
         history_line = "<table><tr><th>Date and Time</th><th>Field</th><th>Changed From</th><th>Changed To</th><th>User</th></tr>"
         for new_record, old_record in self._get_history_pairs(histories):
             if new_record:
@@ -137,6 +153,29 @@ class MessageAuditAdmin(admin.ModelAdmin):
                 old = hist_list.pop()
             yield new, old
         yield None, None
+
+
+@admin.register(ratom.MessageAudit)
+class MessageAuditAdmin(admin.ModelAdmin):
+    list_display = (
+        "pk",
+        "message",
+        "processed",
+        "is_record",
+        "date_processed",
+        "updated_by",
+    )
+    list_select_related = ("message",)
+    list_filter = ("is_record", "processed", "message__account")
+    search_fields = ("message__body", "pk")
+    date_hierarchy = "date_processed"
+    ordering = ("-pk",)
+
+    fieldsets = (
+        ("Status", {"fields": (("processed", "is_record", "needs_redaction"),)},),
+        ("Restrictions", {"fields": ("is_restricted", "restricted_until")}),
+        ("Labels", {"fields": ("labels",)}),
+    )
 
 
 @admin.register(ratom.File)
