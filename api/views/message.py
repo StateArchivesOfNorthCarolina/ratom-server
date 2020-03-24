@@ -172,7 +172,7 @@ class MessageDocumentView(LoggingDocumentViewSet):
     simple_query_string_search_fields = {"subject": None, "body": None}
 
     simple_query_string_options = {
-        "default_operator": "and",
+        "default_operator": "or",
     }
 
     faceted_search_fields = {

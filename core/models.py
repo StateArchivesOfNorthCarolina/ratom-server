@@ -110,9 +110,9 @@ class File(models.Model):
     filename = models.CharField(max_length=200)
     original_path = models.CharField(max_length=500)
     reported_total_messages = models.IntegerField(null=True)
-    accession_date = models.DateField(null=True)
+    accession_date = models.DateField(null=True, blank=True)
     file_size = models.BigIntegerField(null=True)
-    sha256 = models.CharField(max_length=64, default="")
+    sha256 = models.CharField("SHA256", max_length=64, default="", blank=True)
     import_status = models.CharField(
         max_length=2, choices=IMPORT_STATUS, default=CREATED
     )
@@ -163,11 +163,11 @@ class Label(models.Model):
 class MessageAudit(models.Model):
     processed = models.BooleanField(default=False)
     is_record = models.BooleanField(default=True)
-    date_processed = models.DateTimeField(null=True)
-    restricted_until = models.DateTimeField(null=True)
+    date_processed = models.DateTimeField(null=True, blank=True)
+    restricted_until = models.DateTimeField(null=True, blank=True)
     is_restricted = models.BooleanField(default=False)
     needs_redaction = models.BooleanField(default=False)
-    labels = models.ManyToManyField(Label)
+    labels = models.ManyToManyField(Label, blank=True)
     updated_by = models.ForeignKey(User, null=True, on_delete=models.PROTECT)
     history = HistoricalRecords()
 

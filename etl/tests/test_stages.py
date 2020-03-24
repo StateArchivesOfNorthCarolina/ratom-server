@@ -22,6 +22,20 @@ def test_create_ratom_file__missing(pst_importer, account, local_file):
     assert not ratom_file.file_size
 
 
+def test_get_sha256_before_open_fails(pst_importer, account, local_file):
+    pst_importer._create_ratom_file(account, local_file)
+    pst_importer.initializing_stage()
+    with pytest.raises(AssertionError):
+        assert pst_importer.ratom_file.sha256
+
+
+def test_get_sha256_after_open_succeeds(pst_importer, account, local_file):
+    pst_importer._create_ratom_file(account, local_file)
+    pst_importer.initializing_stage()
+    pst_importer.importing_stage()
+    assert pst_importer.ratom_file.sha256
+
+
 @pytest.mark.parametrize("message_count", [100, 1_000])
 def test_importing_stage_message_count(test_archive, pst_importer, message_count):
     """Acrhive's reported total messages is saved to model"""
@@ -44,7 +58,7 @@ def test_add_file_error__no_msg(pst_importer):
     assert pst_importer.ratom_file_errors[0]["context"] == context
 
 
-def test_sent_date__errors(pst_importer, archive_msg):
+def test_sent_date__errors(pst_importer, email_message):
     """sent_date errors should be saved to message object."""
     with mock.patch("etl.message.forms.make_aware", side_effect=Exception):
         pst_importer.run()
@@ -79,3 +93,11 @@ class TestFileErrors:
         errors = ratom_file.errors
         assert len(errors) == 1
         assert errors[0]["name"] == "Unrecoverable import error"
+
+    def test_import_success__message_failure(self, pst_importer, archive_msg):
+        """Failed message errors should still be saved to DB."""
+        type(archive_msg).transport_headers = mock.PropertyMock(side_effect=Exception)
+        pst_importer.run()
+        ratom_file = ratom.File.objects.get()
+        assert ratom_file.import_status == ratom.File.COMPLETE
+        assert "create_message() failed" in ratom_file.errors[0]["name"]

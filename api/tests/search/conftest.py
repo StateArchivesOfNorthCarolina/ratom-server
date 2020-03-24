@@ -73,6 +73,17 @@ def sally3(file_sally):
 
 
 @pytest.fixture
+def sally4_known_bodies(file_sally, sally1, sally2, sally3):
+    message1 = factories.MessageFactory(account=file_sally.account, file=file_sally)
+    message1.body += " FileZilla"
+    message1.save()
+    message2 = factories.MessageFactory(account=file_sally.account, file=file_sally)
+    message2.subject += " Zombie"
+    message2.save()
+    return message1, message2
+
+
+@pytest.fixture
 def event():
     return factories.LabelFactory(name="EVENT")
 

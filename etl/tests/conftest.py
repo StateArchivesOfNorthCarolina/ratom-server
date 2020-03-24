@@ -1,9 +1,30 @@
 import datetime as dt
 import pytest
 from unittest import mock
+from email.message import EmailMessage
+
+
+from libratom.lib.pff import PffArchive
 
 from etl.importer import PstImporter
 from etl.providers.factory import import_provider_factory, ProviderTypes
+
+headers = [
+    "date: Mon, 2 Apr 2001 11:10:00 -0700 (PDT) Mon, 2 Apr 2001 11:10:00 -0700  (PDT)",
+    "Message-ID: <PPCBV2QFM1HWPI3I1YTQ5013JUTHIZOCB@zlsvr22>",
+    "MIME-Version: 1.0",
+    'Content-Type: text/plain; charset="us-ascii"',
+    "Content-Transfer-Encoding: 7bit",
+    'from: "Lester Rawson"',
+    'to: "Kate Symes"',
+    "subject: Re: Unit Contingent Deals",
+    "filename: kate symes 6-27-02.nsf",
+    "folder: \\kate symes 6-27-02\\Notes Folders\\All documents",
+]
+
+bad_header = [
+    "Bad Header No Colon",
+]
 
 
 @pytest.fixture()
@@ -37,18 +58,6 @@ def archive_msg(empty_message):
     empty_message.delivery_time = dt.datetime(2020, 1, 1)
     empty_message.identifier = 2097220
     empty_message.plain_text_body = "Hello, World!"
-    headers = [
-        "date: Mon, 2 Apr 2001 11:10:00 -0700 (PDT) Mon, 2 Apr 2001 11:10:00 -0700  (PDT)",
-        "Message-ID: <PPCBV2QFM1HWPI3I1YTQ5013JUTHIZOCB@zlsvr22>",
-        "MIME-Version: 1.0",
-        'Content-Type: text/plain; charset="us-ascii"',
-        "Content-Transfer-Encoding: 7bit",
-        'from: "Lester Rawson"',
-        'to: "Kate Symes"',
-        "subject: Re: Unit Contingent Deals",
-        "filename: kate symes 6-27-02.nsf",
-        "folder: \\kate symes 6-27-02\\Notes Folders\\All documents",
-    ]
     empty_message.transport_headers = "\r\n".join(headers)
     yield empty_message
 
@@ -64,6 +73,27 @@ def archive_folder(archive_msg):
     yield folder
 
 
+@pytest.fixture
+def email_message(archive_msg):
+    em = EmailMessage()
+    em.set_payload(archive_msg.plain_text_body)
+    for i in headers:
+        s = i.split(":", maxsplit=1)
+        em[s[0]] = s[1]
+    yield em
+
+
+@pytest.fixture
+def email_message_w_bad_header(archive_msg):
+    em = EmailMessage()
+    em.set_payload(archive_msg.plain_text_body)
+    for i in headers:
+        s = i.split(":", maxsplit=1)
+        em[s[0]] = s[1]
+    em[bad_header[0]] = ""
+    yield em
+
+
 @pytest.fixture()
 def test_archive(archive_folder):
     """A mock pypff archive with ."""
@@ -71,6 +101,7 @@ def test_archive(archive_folder):
         archive = _mock.return_value
         archive.message_count = 1
         archive.folders.return_value = [archive_folder]
+        archive.format_message = mock.MagicMock(side_effect=PffArchive.format_message)
         yield _mock
 
 
