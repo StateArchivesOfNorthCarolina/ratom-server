@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from typing import List
+from django.utils.html import format_html
 from core import models as ratom
 
 admin.site.register(ratom.Account)
@@ -56,6 +56,7 @@ class MessageAdmin(admin.ModelAdmin):
 
 @admin.register(ratom.MessageAudit)
 class MessageAuditAdmin(admin.ModelAdmin):
+    IGNORE_CHANGES = ["date_processed", "updated_by"]
     list_display = (
         "pk",
         "message",
@@ -72,37 +73,68 @@ class MessageAuditAdmin(admin.ModelAdmin):
     ordering = ("-message__sent_date",)
 
     fieldsets = (
-        (
-            None,
-            {
-                "fields": (
-                    ("processed", "is_record", "is_restricted", "needs_redaction"),
-                )
-            },
-        ),
+        ("Status", {"fields": (("processed", "is_record", "needs_redaction"),)},),
+        ("Restrictions", {"fields": ("is_restricted", "restricted_until")}),
         ("Labels", {"fields": ("labels",)}),
-        ("History", {"classes": ("collapse",), "fields": ("get_history",)}),
+        ("Message History", {"classes": ("collapse",), "fields": ("get_history",)}),
     )
 
     def get_history(self, instance):
-        # import pudb;pudb.set_trace()
-        # history = instance.history.intersection()
-        # html_table = self._stringify_history(instance.history.all())
-        pass
-
-    def _stringify_history(self, histories: List[ratom.HistoricalRecords]):
-        history_line = []
-        history_line.append("\n\nChanged Field\tBefore Change\tAfter Change\n")
-        if len(histories) == 1:
-            pass
-        else:
-            new_record, old_record = histories
-            delta = new_record.diff_against(old_record)
-            for change in delta.changes:
-                history_line.append(
-                    f"{change.field}\t" f"{change.old}\t" f"{change.new}\t" f"\n\n"
+        """
+        Returns an html representation of the MessageAudit's history. Not every change is important
+        date_processed is a change but doesn't give anymore information than is revealed by the
+        Date and Time column.
+        :param instance: MessageAudit
+        :return: SafeString
+        """
+        histories = instance.history.all()
+        history_line = "<table><tr><th>Date and Time</th><th>Field</th><th>Changed From</th><th>Changed To</th><th>User</th></tr>"
+        for new_record, old_record in self._get_history_pairs(histories):
+            if new_record:
+                delta = new_record.diff_against(old_record)
+                for change in delta.changes:
+                    if change.field not in self.IGNORE_CHANGES:
+                        history_line += (
+                            f"<tr>"
+                            f"<td>{new_record.history_date.strftime('%Y-%m-%d %H:%M:%S')}</td>"
+                            f"<td>{change.field}</td>"
+                            f"<td>{change.old}</td>"
+                            f"<td>{change.new}</td>"
+                            f"<td>{ratom.User.objects.filter(pk=new_record.updated_by_id).first()}"
+                            f"</tr>"
+                        )
+            else:
+                first = histories.last()
+                history_line += (
+                    f"<tr>"
+                    f"<td>{first.history_date.strftime('%Y-%m-%d %H:%M:%S')}</td>"
+                    f"<td colspan=3>Message Imported</td>"
+                    f"</tr>"
                 )
-            return "".join(history_line)
+        history_line += "</table>"
+        return format_html(history_line)
+
+    def _get_history_pairs(self, histories):
+        """
+        Yields pairs of histories. This function assumes a queryset of histories with most recent
+        change last in the set. We flip these to print the newest changes first and descend to the
+        oldest.
+        :param histories:
+        :return: tuple(MessageAuditHistory, MessageAuditHistory)
+        """
+        hist_list = list(histories)
+        hist_list.reverse()
+        new = None
+        old = None
+        while len(hist_list) > 1:
+            if not new:
+                new = hist_list.pop()
+                old = hist_list.pop()
+            else:
+                new = old
+                old = hist_list.pop()
+            yield new, old
+        yield None, None
 
 
 @admin.register(ratom.File)
