@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.utils.html import format_html
 from django.db.models import Count
 from django.template.defaultfilters import filesizeformat
 from core import models as ratom
@@ -39,6 +40,7 @@ class CustomUserAdmin(UserAdmin):
 
 @admin.register(ratom.Message)
 class MessageAdmin(admin.ModelAdmin):
+    IGNORE_CHANGES = ["date_processed", "updated_by"]
     list_display = (
         "pk",
         "source_id",
@@ -48,11 +50,106 @@ class MessageAdmin(admin.ModelAdmin):
         "subject",
         "account",
     )
+
+    readonly_fields = (
+        "get_history",
+        "inserted_on",
+        "directory",
+        "source_id",
+        "sent_date",
+        "subject",
+        "msg_to",
+        "msg_from",
+        "msg_cc",
+        "msg_bcc",
+        "body",
+        "errors",
+        "account",
+        "file",
+        "headers",
+    )
     list_filter = ("sent_date", "account")
     search_fields = ("body", "source_id")
     date_hierarchy = "sent_date"
     raw_id_fields = ("audit", "file")
     ordering = ("-sent_date",)
+
+    fieldsets = (
+        ("Message Metadata", {"fields": ("account", "file", "inserted_on")}),
+        ("Headers", {"classes": ("collapse",), "fields": ("headers",),}),
+        (
+            "Message",
+            {
+                "classes": ("collapse",),
+                "fields": (
+                    "directory",
+                    "source_id",
+                    "sent_date",
+                    "subject",
+                    "msg_to",
+                    "msg_from",
+                    "msg_cc",
+                    "msg_bcc",
+                    "body",
+                ),
+            },
+        ),
+        ("Errors", {"classes": ("collapse",), "fields": ("errors",)}),
+        ("Message History", {"fields": ("audit", "get_history",)}),
+    )
+
+    def get_history(self, instance):
+        """
+        Returns an html representation of the MessageAudit's history. Not every change is important
+        date_processed is a change but doesn't give anymore information than is revealed by the
+        Date and Time column.
+        :param instance: MessageAudit
+        :return: SafeString
+        """
+        histories = instance.audit.history.all().order_by("history_date")
+        history_line = "<table><tr><th>Date and Time</th><th>Field</th><th>Changed From</th><th>Changed To</th><th>User</th></tr>"
+        for new_record, old_record in self._get_history_pairs(histories):
+            if new_record:
+                delta = new_record.diff_against(old_record)
+                for change in delta.changes:
+                    if change.field not in self.IGNORE_CHANGES:
+                        history_line += (
+                            f"<tr>"
+                            f"<td>{new_record.history_date.strftime('%Y-%m-%d %H:%M:%S')}</td>"
+                            f"<td>{change.field}</td>"
+                            f"<td>{change.old}</td>"
+                            f"<td>{change.new}</td>"
+                            f"<td>{ratom.User.objects.filter(pk=new_record.updated_by_id).first()}"
+                            f"</tr>"
+                        )
+        first = histories.first()
+        history_line += (
+            f"<tr>"
+            f"<td>{first.history_date.strftime('%Y-%m-%d %H:%M:%S')}</td>"
+            f"<td colspan=3>Message Imported</td>"
+            f"</tr>"
+        )
+        history_line += "</table>"
+        return format_html(history_line)
+
+    def _get_history_pairs(self, histories):
+        """
+        Yields pairs of histories. This function assumes a queryset of histories with the oldest entry
+        first in the set.
+        :param histories:
+        :return: tuple(MessageAuditHistory, MessageAuditHistory)
+        """
+        new = None
+        old = None
+        hist_list = list(histories)
+        if len(hist_list) == 1:
+            yield None, hist_list.pop()
+        while hist_list:
+            new = old
+            if not new:
+                new = hist_list.pop()
+            old = hist_list.pop()
+            yield new, old
 
 
 @admin.register(ratom.MessageAudit)
@@ -70,6 +167,12 @@ class MessageAuditAdmin(admin.ModelAdmin):
     search_fields = ("message__body", "pk")
     date_hierarchy = "date_processed"
     ordering = ("-pk",)
+
+    fieldsets = (
+        ("Status", {"fields": (("processed", "is_record", "needs_redaction"),)},),
+        ("Restrictions", {"fields": ("is_restricted", "restricted_until")}),
+        ("Labels", {"fields": ("labels",)}),
+    )
 
 
 @admin.register(ratom.File)
