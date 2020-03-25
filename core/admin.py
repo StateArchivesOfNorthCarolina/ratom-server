@@ -51,21 +51,6 @@ class MessageAdmin(admin.ModelAdmin):
         "account",
     )
 
-    """
-    source_id
-    sent_date
-    msg_from
-    msg_to
-    msg_cc
-    msg_bcc
-    subject
-    body
-    directory
-    headers
-    errors
-    inserted_on
-    """
-
     readonly_fields = (
         "get_history",
         "inserted_on",
