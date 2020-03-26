@@ -51,7 +51,6 @@ k8s_environment_variables:
   DATABASE_URL: "postgres://ratom_production%40ratomdb-dncr:{{ vault_database_password }}@ratomdb-dncr.postgres.database.azure.com:5432/ratom_production"
   DOMAIN: "{{ k8s_domain_names[0] }}"
   SENTRY_DSN: "{{ vault_sentry_dsn }}"
-  DJANGO_MANAGEPY_MIGRATE: "on"
   BROKER_URL: "redis"
   CACHE_HOST: memcached:11211
   ELASTICSEARCH_URL: "elasticsearch:9200"
