@@ -5,28 +5,25 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.models import File
-from etl.tasks import import_file_task
+from etl.tasks import remove_file_task
 
-__all__ = ("FileUpdateView",)
+__all__ = ("FileDeleteView",)
 
 logger = logging.getLogger(__name__)
 
 
-class FileUpdateView(APIView):
+class FileDeleteView(APIView):
     """
-    A view to restart a file.
+    A view to remove a file.
     """
 
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        # MVP: We assume this will always be one and only one failed file.
-        qs = (
-            File.objects.filter(account=request.data["id"])
-            .filter(import_status=File.FAILED)
-            .first()
+        qs = File.objects.filter(account=request.data["id"]).filter(
+            import_status=File.FAILED
         )
         if qs:
-            import_file_task.delay([qs.filename], qs.account.title, clean_file=True)
+            remove_file_task.delay(list(qs.values_list(flat=True)))
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
