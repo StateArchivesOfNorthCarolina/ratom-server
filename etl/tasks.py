@@ -21,20 +21,15 @@ def import_file_task(
 
 @shared_task
 def remove_file_task(files: []):
-    account = None
-    for f in files:
-        remove = File.objects.filter(id=f).first()
-        account = remove.account
+    """
+    Accounts have properties tied to the front-end account list widget. If there
+    are no files this state crashes the UI. So, remove the account if an account
+    has no files, after an attempted restore.
+    """
+    for f in File.objects.filter(pk__in=files):
         logger.info(
-            f"Recovering {remove.account.title} by removing failed file: {remove.filename}"
+            f"Recovering {f.account.title} by removing failed file: {f.filename}"
         )
-        if remove:
-            remove.delete()
-
-    if account.files.count() == 0:
-        """
-        Accounts have properties tied to the front-end account list widget. If there
-        are no files this state crashes the UI. So, remove the account if an account
-        has no files, after an attempted restore.
-        """
-        account.delete()
+        f.delete()
+        if f.account.files.count() == 0:
+            f.account.delete()

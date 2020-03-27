@@ -17,7 +17,7 @@ def test_remove_file(ratom_file, api_client, celery_mock):
     ratom_file.import_status = File.FAILED
     ratom_file.save()
     url = reverse("remove_file")
-    response = api_client.post(url, data={"id": ratom_file.account.pk})
+    response = api_client.delete(url, data={"id": ratom_file.account.pk})
     assert response.status_code == 204
     celery_mock.delay.assert_called_once_with([ratom_file.pk])
 
@@ -30,7 +30,7 @@ def test_remove_multiple_files(multiple_file_account, api_client, celery_mock):
         f.save()
         failed_ids.append(f.id)
     url = reverse("remove_file")
-    response = api_client.post(url, data={"id": account})
+    response = api_client.delete(url, data={"id": account})
     assert response.status_code == 204
     failed_ids.reverse()
     celery_mock.delay.assert_called_once_with(failed_ids)
@@ -52,14 +52,14 @@ def test_file_remove_file_fail(ratom_file, api_client):
     ratom_file.import_status = File.IMPORTING
     ratom_file.save()
     url = reverse("remove_file")
-    response = api_client.post(url, data={"id": ratom_file.account.pk})
+    response = api_client.delete(url, data={"id": ratom_file.account.pk})
     assert response.status_code == 404
 
 
-def test_file_remvoe_file_fail_no_account_id(ratom_file, api_client):
+def test_file_remove_file_fail_no_account_id(ratom_file, api_client):
     ratom_file.import_status = File.IMPORTING
     ratom_file.save()
     url = reverse("remove_file")
     # Should also return 404 if there is no account id
-    response = api_client.post(url, data={"id": 600})
+    response = api_client.delete(url, data={"id": 600})
     assert response.status_code == 404
