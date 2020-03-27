@@ -19,11 +19,11 @@ class FileDeleteView(APIView):
 
     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
+    def delete(self, request):
         qs = File.objects.filter(account=request.data["id"]).filter(
             import_status=File.FAILED
         )
-        if qs:
+        if qs.exists():
             remove_file_task.delay(list(qs.values_list(flat=True)))
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
