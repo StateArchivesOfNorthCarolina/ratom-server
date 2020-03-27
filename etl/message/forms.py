@@ -1,5 +1,6 @@
 import logging
 import re
+from pathlib import Path
 from email import message_from_string
 from typing import Dict
 from bs4 import BeautifulSoup
@@ -33,6 +34,10 @@ def clean_html(html: str) -> str:
     soup = BeautifulSoup(html, "html.parser")
     for script in soup(FORBIDDEN_TAGS):
         script.decompose()
+    for img in soup.find_all("img"):
+        img.name = "span"
+        img["class"] = "former_img"
+        img.string = Path(img["src"]).parts[-1]
     return str(soup)
 
 
