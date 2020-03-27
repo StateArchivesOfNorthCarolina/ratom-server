@@ -8,7 +8,7 @@ k8s_auth_ssl_ca_cert: "certs/sanc-ratom.pem"
 
 k8s_worker_resources:
   requests:
-    memory: "8Gi"
+    memory: "5Gi"
     cpu: "600m"
 
 vault_database_password: !vault |
