@@ -1,6 +1,7 @@
 import pytest
 from django.urls import reverse
-from core.models import File
+from core.models import File, Account
+from etl.tasks import remove_file_task
 from unittest import mock
 
 pytestmark = pytest.mark.django_db
@@ -33,6 +34,17 @@ def test_remove_multiple_files(multiple_file_account, api_client, celery_mock):
     assert response.status_code == 204
     failed_ids.reverse()
     celery_mock.delay.assert_called_once_with(failed_ids)
+
+
+def test_account_removed_if_all_files_removed(multiple_file_account):
+    account = multiple_file_account[0].account.id
+    failed_ids = []
+    for f in multiple_file_account:
+        f.import_status = File.FAILED
+        f.save()
+        failed_ids.append(f.id)
+    remove_file_task(failed_ids)
+    assert Account.objects.filter(pk=account).count() == 0
 
 
 def test_file_remove_file_fail(ratom_file, api_client):
