@@ -9,7 +9,7 @@ from .views import (
     message_detail,
     messages_batch,
     MessageDocumentView,
-    FileUpdateView,
+    FileDeleteView,
     reset_sample_data,
     ExportDocumentView,
 )
@@ -29,7 +29,7 @@ urlpatterns += [
 
 # Files
 urlpatterns += [
-    path("files/", FileUpdateView.as_view(), name="restart_file"),
+    path("files/", FileDeleteView.as_view(), name="remove_file"),
 ]
 
 # Messages

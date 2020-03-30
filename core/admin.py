@@ -6,7 +6,11 @@ from django.template.defaultfilters import filesizeformat
 from django.utils.translation import gettext_lazy as _
 from core import models as ratom
 
-admin.site.register(ratom.Account)
+
+@admin.register(ratom.Account)
+class AccountAdmin(admin.ModelAdmin):
+    actions = None
+    list_display = ("title",)
 
 
 @admin.register(ratom.User)
@@ -210,6 +214,7 @@ class FileAdmin(admin.ModelAdmin):
         "date_imported",
         "import_status",
     )
+    readonly_fields = ("account",)
     list_filter = ("import_status", "account")
     ordering = ("-date_imported",)
     search_fields = ("filename", "pk")

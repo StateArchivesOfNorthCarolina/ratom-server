@@ -38,6 +38,14 @@ def ratom_file(account):
 
 
 @pytest.fixture
+def multiple_file_account(account):
+    files = []
+    for i in iter(range(3)):
+        files.append(factories.FileFactory(account=account))
+    yield files
+
+
+@pytest.fixture
 def file_account(ratom_file):
     """Get a file's account"""
     yield ratom_file.account
