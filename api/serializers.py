@@ -94,6 +94,13 @@ class LabelSerializer(serializers.ModelSerializer):
 
 
 class MessageAuditListSerializer(serializers.ListSerializer):
+    def validate(self, instances):
+        if len(instances) > settings.BULK_ACTION_MESSAGE_LIMIT:
+            raise serializers.ValidationError(
+                f"{settings.BULK_ACTION_MESSAGE_LIMIT} message limit exceeded"
+            )
+        return instances
+
     def update(self, instances, validated_data):
         message_audit_mapping = {
             message_audit.id: message_audit for message_audit in instances
