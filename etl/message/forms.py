@@ -36,7 +36,7 @@ def clean_html(html: str) -> str:
         script.decompose()
     for img in soup.find_all("img"):
         img.name = "span"
-        img["class"] = "former_img"
+        img["class"] = "__RATOM__former-img"
         img.string = Path(img["src"]).parts[-1]
     return str(soup)
 

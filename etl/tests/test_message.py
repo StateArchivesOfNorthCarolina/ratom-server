@@ -36,7 +36,7 @@ def test_body__clean_img_html(test_archive, archive_msg, html_file):
         not in form.cleaned_data["body"]
     )
     assert (
-        """<span alt="test image" class="former_img" height="10" src="http://example.com/images/img0001.png" width="10">img0001.png</span>"""
+        """<span alt="test image" class="__RATOM__former-img" height="10" src="http://example.com/images/img0001.png" width="10">img0001.png</span>"""
         in form.cleaned_data["body"]
     )
 
