@@ -111,3 +111,22 @@ def pst_importer(account, local_file, test_archive):
     importer = PstImporter(local_file, account, mock.MagicMock())
     importer.get_folder_abs_path = mock.MagicMock(return_value="/Important/Project/")
     yield importer
+
+
+@pytest.fixture
+def html_file():
+    """
+    A mock html file to test scrubbing features
+    """
+    html = """
+    <html><head></head><body>
+    <p>I am a paragraph. I have an image
+    <img src="http://example.com/images/img0001.png" width="10" height="10" alt="test image">
+    </p>
+
+    <p>I'm fine</p>
+    <script>I am bad</script>
+
+    </body></html>
+    """
+    yield html
