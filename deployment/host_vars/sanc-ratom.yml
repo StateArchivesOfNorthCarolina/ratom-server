@@ -6,6 +6,11 @@ k8s_domain_names:
 k8s_auth_host: https://caktus-rat-ratom-cc639d-0a4894ee.hcp.eastus.azmk8s.io:443
 k8s_auth_ssl_ca_cert: "certs/sanc-ratom.pem"
 
+k8s_worker_resources:
+  requests:
+    memory: "5Gi"
+    cpu: "600m"
+
 vault_database_password: !vault |
           $ANSIBLE_VAULT;1.1;AES256
           39363035663064643964646365353335373937383363646164303062646639646665366139623238
