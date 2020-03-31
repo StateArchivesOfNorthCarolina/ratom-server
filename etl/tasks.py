@@ -27,6 +27,8 @@ def remove_file_task(files: []):
     has no files, after an attempted restore.
     """
     for f in File.objects.filter(pk__in=files):
+        if f.import_status != File.FAILED:
+            continue
         logger.info(
             f"Recovering {f.account.title} by removing failed file: {f.filename}"
         )
