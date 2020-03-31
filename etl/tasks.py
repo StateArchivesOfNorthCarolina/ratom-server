@@ -30,6 +30,8 @@ def remove_file_task(files: []):
         logger.info(
             f"Recovering {f.account.title} by removing failed file: {f.filename}"
         )
+        f.import_status = File.RESTORING
+        f.save()
         f.delete()
         if f.account.files.count() == 0:
             f.account.delete()
