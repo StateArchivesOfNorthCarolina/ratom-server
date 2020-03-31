@@ -12,6 +12,13 @@ class AccountAdmin(admin.ModelAdmin):
     actions = None
     list_display = ("title",)
 
+    def render_change_form(
+        self, request, context, add=False, change=False, form_url="", obj=None
+    ):
+        rcf = super().render_change_form(request, context, add, change, form_url, obj)
+        rcf.context_data["has_delete_permission"] = False
+        return rcf
+
 
 @admin.register(ratom.User)
 class CustomUserAdmin(UserAdmin):
