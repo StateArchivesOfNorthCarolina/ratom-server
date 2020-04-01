@@ -47,6 +47,20 @@ def test_account_removed_if_all_files_removed(multiple_file_account):
     assert Account.objects.filter(pk=account).count() == 0
 
 
+def test_account_and_files_not_removed_if_not_failed(multiple_file_account):
+    status_list = [File.COMPLETE, File.IMPORTING, File.RESTORING]
+    ids = []
+    for i in range(3):
+        multiple_file_account[i].account_status = status_list[i]
+        multiple_file_account[i].save()
+        ids.append(multiple_file_account[i].id)
+    remove_file_task(ids)
+    assert (
+        File.objects.filter(account__id=multiple_file_account[0].account.id).count()
+        == 3
+    )
+
+
 def test_file_remove_file_fail(ratom_file, api_client):
     # When no file has a FAILED status
     ratom_file.import_status = File.IMPORTING

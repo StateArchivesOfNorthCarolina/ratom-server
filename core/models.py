@@ -87,6 +87,8 @@ class Account(models.Model):
         """
         if self.files.filter(import_status=File.IMPORTING).count() > 0:
             return File.IMPORTING
+        if self.files.filter(import_status=File.RESTORING).count() > 0:
+            return File.RESTORING
         if self.files.filter(import_status=File.FAILED).count() > 0:
             return File.FAILED
         if self.files.filter(import_status=File.CREATED).count() > 0:
@@ -98,11 +100,13 @@ class File(models.Model):
     CREATED = "CR"
     IMPORTING = "IM"
     COMPLETE = "CM"
+    RESTORING = "RE"
     FAILED = "FA"
     IMPORT_STATUS = [
         (CREATED, "Created"),
         (IMPORTING, "Importing"),
         (COMPLETE, "Complete"),
+        (RESTORING, "Restoring"),
         (FAILED, "Failed"),
     ]
 
