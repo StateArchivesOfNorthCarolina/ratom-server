@@ -51,12 +51,11 @@ class AzureServiceProvider(ImportProvider):
         return False
 
     def _get_file(self):
-
         tmp_file = NamedTemporaryFile(delete=False, prefix="ratom-")
         logger.info(f"Downloading to {tmp_file.name}")
         with Path(tmp_file.name).open(mode="wb") as fh:
             blob_data = self._client.download_blob(self.pst_blob)
-            fh.write(blob_data.readall())
+            blob_data.readinto(fh)
             self._data = tmp_file.name
         logger.info("Download complete")
 
