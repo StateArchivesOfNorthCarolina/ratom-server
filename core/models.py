@@ -59,7 +59,7 @@ class Account(models.Model):
         self, str_fmt: str = YMD_HMS, as_string: bool = True
     ) -> tuple:
         """
-        Returns the earliest message date in a collection an
+        Returns the earliest and latest message dates in an account.
         :param str_fmt: Optional stftime formatter when returning strings
         :param as_string: return the dates as string representations,
                           based on a default or supplied format.
