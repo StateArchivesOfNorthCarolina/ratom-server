@@ -196,11 +196,13 @@ class MessageDocumentView(LoggingDocumentViewSet):
             "facet": TermsFacet,
             "enabled": True,
         },
-        "labels": {
-            # "field": "labels.raw",
-            "field": "labels",
+        "labels": {"field": "labels", "facet": TermsFacet,},
+        "directory": {
+            "field": "directory",
             "facet": TermsFacet,
-            # "enabled": True,
+            "enabled": True,
+            # The number of buckets to show (ie the number of unique directories)
+            "options": {"size": 200},
         },
         "is_record": {
             "field": "audit.is_record",
@@ -230,6 +232,7 @@ class MessageDocumentView(LoggingDocumentViewSet):
         "sent_date": "sent_date",
         "email": "msg_to",
         "body": "body",
+        "directory": "directory",
         "processed": "audit.processed",
         "needs_redaction": "audit.needs_redaction",
         "is_restricted": "audit.is_restricted",

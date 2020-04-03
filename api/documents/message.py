@@ -29,6 +29,7 @@ class MessageDocument(Document):
     subject = fields.TextField(analyzer=html_strip)
     body = fields.TextField(analyzer=html_strip)
     sent_date = fields.DateField()
+    directory = fields.KeywordField()
 
     audit = fields.ObjectField(
         properties={
@@ -64,3 +65,6 @@ class MessageDocument(Document):
 
     class Django(object):
         model = Message
+
+
+# %2FTop%20of%20Personal%20Folders%2Frapp-b%2FBill_Rapp_Jan2002%2FRapp,%20Bill%2Fmarketing%20affiliate
