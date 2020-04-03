@@ -84,6 +84,7 @@ class AccountSerializer(serializers.ModelSerializer):
             ),
             "account_status": instance.get_account_status(),
             "labels": list(Label.objects.all().values("type", "name")),
+            "paths": instance.unique_paths,
         }
 
 
