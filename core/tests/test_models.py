@@ -56,6 +56,7 @@ class TestAccount(TestCase):
         for file in self.files:
             messages = generate_messages(account=self.account, file=file)
             file.reported_total_messages = len(messages)
+            file.unique_paths = [x.directory for x in messages]
             self.message_map[file] = len(messages)
             file.save()
 
@@ -127,3 +128,6 @@ class TestAccount(TestCase):
             files[0].import_status = m.File.FAILED
             files[0].save()
             self.assertEqual(self.account.get_account_status(), m.File.FAILED)
+
+    def test_account_unique_paths(self):
+        self.assertEqual(len(self.account.unique_paths), 1)
