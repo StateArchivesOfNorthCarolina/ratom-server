@@ -1,8 +1,15 @@
-import factory
-from core import models as core
+from pathlib import PosixPath
+from random import randint
+
 import pytz
 
+import factory
+
+from core import models as core
+
+
 timezone = pytz.timezone("America/New_York")
+path_faker = factory.Faker("file_path", depth=4)
 
 
 class UserFactory(factory.DjangoModelFactory):
@@ -25,6 +32,13 @@ class AccountFactory(factory.DjangoModelFactory):
     title = factory.Faker("name")
 
 
+def fake_paths():
+    paths = set()
+    for _ in range(0, randint(1, 5)):
+        paths.add(str(PosixPath(path_faker.generate()).parent))
+    return list(paths)
+
+
 class FileFactory(factory.DjangoModelFactory):
     class Meta:
         model = core.File
@@ -34,6 +48,7 @@ class FileFactory(factory.DjangoModelFactory):
     original_path = factory.Faker("file_path", extension="pst")
     sha256 = factory.Faker("text", max_nb_chars=64)
     import_status = core.File.CREATED
+    unique_paths = factory.LazyFunction(fake_paths)
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
