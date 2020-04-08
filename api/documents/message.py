@@ -65,6 +65,3 @@ class MessageDocument(Document):
 
     class Django(object):
         model = Message
-
-
-# %2FTop%20of%20Personal%20Folders%2Frapp-b%2FBill_Rapp_Jan2002%2FRapp,%20Bill%2Fmarketing%20affiliate
