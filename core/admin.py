@@ -218,6 +218,7 @@ class FileAdmin(admin.ModelAdmin):
     list_filter = ("import_status", "account")
     ordering = ("-date_imported",)
     search_fields = ("filename", "pk")
+    readonly_fields = ("unique_paths",)
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
