@@ -1,4 +1,7 @@
 import logging
+
+from natsort import natsorted, ns
+
 from django.conf import settings
 from django.utils import timezone
 
@@ -84,6 +87,7 @@ class AccountSerializer(serializers.ModelSerializer):
             ),
             "account_status": instance.get_account_status(),
             "labels": list(Label.objects.all().values("type", "name")),
+            "paths": natsorted(instance.unique_paths, alg=ns.PATH),
         }
 
 

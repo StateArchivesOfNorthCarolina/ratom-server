@@ -93,6 +93,7 @@ class PstImporter:
             if message_count == 0:
                 continue
             folder_path = self.get_folder_abs_path(folder)
+            self.ratom_file.unique_paths.append(folder_path)
             msg_iterator = tqdm(
                 folder.sub_messages,
                 unit="msgs",

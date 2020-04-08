@@ -1,7 +1,11 @@
-import pytest
-from django.urls import reverse
-from core.models import Account, File
 from unittest import mock
+import pytest
+
+from django.urls import reverse
+
+from core.models import Account, File
+from core.tests.factories import FileFactory
+
 
 pytestmark = pytest.mark.django_db
 
@@ -28,6 +32,15 @@ def test_account_detail_account_exists(file_account, api_client):
     url = reverse("account_detail", args=[file_account.pk])
     response = api_client.get(url)
     assert response.status_code == 200
+
+
+def test_account_combined_unique_paths(account, api_client):
+    file1 = FileFactory(account=account)
+    file2 = FileFactory(account=account)
+    paths = set(file1.unique_paths) | set(file2.unique_paths)
+    url = reverse("account_detail", args=[account.pk])
+    response = api_client.get(url)
+    assert set(response.data["paths"]) == paths
 
 
 def test_account_detail_no_account(api_client):

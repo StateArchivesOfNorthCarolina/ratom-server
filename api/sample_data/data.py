@@ -39,6 +39,7 @@ def ingest_files(account, spacy_model, files, source):
         for message in messages:
             message.object.account = account
             message.object.file = ratom_file
+            ratom_file.unique_paths.append(message.object.directory)
             labels = extract_labels(
                 f"{message.object.subject}\n{message.object.body}", spacy_model
             )

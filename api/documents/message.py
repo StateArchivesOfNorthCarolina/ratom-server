@@ -29,6 +29,7 @@ class MessageDocument(Document):
     subject = fields.TextField(analyzer=html_strip)
     body = fields.TextField(analyzer=html_strip)
     sent_date = fields.DateField()
+    directory = fields.KeywordField()
 
     audit = fields.ObjectField(
         properties={

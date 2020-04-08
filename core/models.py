@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-from django.contrib.postgres.fields import JSONField, CICharField
+from django.contrib.postgres.fields import JSONField, CICharField, ArrayField
 from django.db import models
 
 from simple_history.models import HistoricalRecords
@@ -95,6 +95,13 @@ class Account(models.Model):
             return File.CREATED
         return File.COMPLETE
 
+    @property
+    def unique_paths(self):
+        unique_paths = set()
+        for paths in self.files.values_list("unique_paths", flat=True):
+            unique_paths |= set(paths)
+        return list(unique_paths)
+
 
 class File(models.Model):
     CREATED = "CR"
@@ -121,6 +128,7 @@ class File(models.Model):
         max_length=2, choices=IMPORT_STATUS, default=CREATED
     )
     date_imported = models.DateTimeField(auto_now_add=True)
+    unique_paths = ArrayField(base_field=models.TextField(), default=list)
     errors = JSONField(null=True, blank=True)
 
     # Managers
