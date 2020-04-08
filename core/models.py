@@ -97,9 +97,10 @@ class Account(models.Model):
 
     @property
     def unique_paths(self):
-        return list(
-            set(list(self.files.all().values_list("unique_paths", flat=True)[0]))
-        )
+        unique_paths = set()
+        for paths in self.files.values_list("unique_paths", flat=True):
+            unique_paths |= set(paths)
+        return list(unique_paths)
 
 
 class File(models.Model):
