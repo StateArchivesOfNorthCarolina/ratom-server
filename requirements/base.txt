@@ -32,3 +32,4 @@ tqdm==4.41.1
 celery[redis]==4.4.0
 azure-core==1.2.1
 azure-storage-blob==12.1.0
+natsort==7.0.1
