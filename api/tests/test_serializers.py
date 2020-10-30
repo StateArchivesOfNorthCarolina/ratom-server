@@ -147,6 +147,21 @@ def test_audit_append_user_label__existing(ratom_message_audit, user, user_label
     assert Label.objects.count() == 1  # still only should be one label
 
 
+def test_add_label_does_not_process_record(ratom_message_audit, user, user_label):
+    """
+    A bug existed that caused records to be marked as "Open Record" on the front end
+    after adding a label. Adding labels should not mark a record as "processed".
+    """
+    assert ratom_message_audit.processed is False
+    serializer = MessageAuditSerializer(
+        instance=ratom_message_audit, data={"append_user_label": user_label.name}
+    )
+    assert serializer.is_valid(), serializer.errors
+    instance = serializer.save(updated_by=user)
+    # After updating a label, processed should remain False
+    assert instance.processed is False
+
+
 def test_audit_append_user_label__case_insensitive_existing(
     ratom_message_audit, user, user_label
 ):
