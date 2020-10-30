@@ -24,27 +24,13 @@ def test_serializer_expected_fields(ratom_message_audit):
     }
 
 
-@pytest.mark.parametrize(
-    "field,val", [("processed", False), ("date_processed", None), ("updated_by", None),]
-)
+@pytest.mark.parametrize("field,val", [("date_processed", None), ("updated_by", None),])
 def test_ignore_read_only_fields(ratom_message_audit, user, field, val):
     """Read-only field and should be ignored."""
     serializer = MessageAuditSerializer(instance=ratom_message_audit, data={field: val})
     assert serializer.is_valid(), serializer.errors
     instance = serializer.save(updated_by=user)
     assert getattr(instance, field)
-
-
-def test_always_processed(ratom_message_audit, user):
-    """Any interaction with serializer will mark it as processed with a date."""
-    ratom_message_audit.processed = False
-    ratom_message_audit.date_processed = None
-    ratom_message_audit.save()
-    serializer = MessageAuditSerializer(instance=ratom_message_audit, data={})
-    assert serializer.is_valid(), serializer.errors
-    instance = serializer.save(updated_by=user)
-    assert instance.processed
-    assert instance.date_processed
 
 
 def test_updated_by(ratom_message_audit, user):
