@@ -61,6 +61,9 @@ EXPOSE 8000
 ENV DJANGO_SETTINGS_MODULE=ratom.settings.deploy
 
 # Call collectstatic (customize the following line with the minimal environment variables needed for manage.py to run):
+RUN touch /code/.env
+RUN rm -rf /code/.git
+RUN find . -name "*.pyc" -delete
 RUN DATABASE_URL='' ENVIRONMENT='' DJANGO_SECRET_KEY='dummy' DOMAIN='' python manage.py collectstatic --noinput
 
 # Tell uWSGI where to find your wsgi file (change this):
