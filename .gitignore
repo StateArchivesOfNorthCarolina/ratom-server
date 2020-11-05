@@ -32,3 +32,4 @@ docker-compose.kibana.yml
 .envs/
 .idea/
 jgdc.yml
+mytest.ini

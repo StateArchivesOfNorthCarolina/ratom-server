@@ -3,6 +3,8 @@ import pytest
 import gzip
 import json
 
+from core.tests import factories
+
 pytestmark = [
     pytest.mark.skipif(
         os.getenv("TEST_ELASTICSEARCH", "false") == "false",
@@ -106,3 +108,19 @@ def test_export_match_two_file(
     assert eric1.source_id in source_ids
     assert sally1.source_id in source_ids
     assert sally2.source_id in source_ids
+
+
+def test_msg_to_indexes_lowercase_without_analyzer(url, api_client, file_sally):
+    message = factories.MessageFactory(account=file_sally.account, file=file_sally)
+    message.msg_to = "ABC <ABC@123.com>"
+    message.save()
+    response = api_client.get(url, data={"email__contains": f"abc"})
+    assert response.data["count"] == 1
+
+
+def test_long_msg_to_does_not_break(url, api_client, file_sally):
+    message = factories.MessageFactory(account=file_sally.account, file=file_sally)
+    message.msg_to = "ABC <ABC@123.com>; " * 10000
+    message.save()
+    response = api_client.get(url, data={"email__contains": f"abc"})
+    assert response.data["count"] == 1

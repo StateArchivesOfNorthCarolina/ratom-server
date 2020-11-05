@@ -24,8 +24,8 @@ class MessageDocument(Document):
 
     id = fields.IntegerField(attr="id")
     source_id = fields.TextField(fielddata=True)
-    msg_to = fields.StringField(analyzer=lowercase_analyzer)
-    msg_from = fields.StringField(analyzer=lowercase_analyzer)
+    msg_to = fields.StringField()
+    msg_from = fields.StringField()
     subject = fields.TextField(analyzer=html_strip)
     body = fields.TextField(analyzer=html_strip)
     sent_date = fields.DateField()
