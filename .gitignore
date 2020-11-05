@@ -15,6 +15,7 @@ public/media/
 conf/pillar/*/deploy
 *.priv
 .env
+.envrc
 .vscode/
 .vscode
 .python-version
