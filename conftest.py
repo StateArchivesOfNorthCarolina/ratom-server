@@ -32,9 +32,21 @@ def account():
 
 
 @pytest.fixture
+def account_2():
+    """ratom.core.models.Account instance"""
+    yield factories.AccountFactory()
+
+
+@pytest.fixture
 def ratom_file(account):
     """ratom.core.models.File instance"""
     yield factories.FileFactory(account=account)
+
+
+@pytest.fixture
+def ratom_file_2(account_2):
+    """ratom.core.models.File instance"""
+    yield factories.FileFactory(account=account_2)
 
 
 @pytest.fixture

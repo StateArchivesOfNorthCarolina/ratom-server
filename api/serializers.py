@@ -73,7 +73,7 @@ class AccountSerializer(serializers.ModelSerializer):
         return instance
 
     def to_representation(self, instance: Account):
-        return {
+        account = {
             "id": instance.id,
             "title": instance.title,
             "files_in_account": instance.files.count(),
@@ -86,9 +86,14 @@ class AccountSerializer(serializers.ModelSerializer):
                 "%Y-%m-%d", as_string=False
             ),
             "account_status": instance.get_account_status(),
-            "labels": list(Label.objects.all().values("type", "name")),
-            "paths": natsorted(instance.unique_paths, alg=ns.PATH),
         }
+
+        # Send a "thin" response if requesting many, otherwise send "thick"
+        if not self.parent:
+            account["labels"] = list(Label.objects.all().values("type", "name"))
+            account["paths"] = natsorted(instance.unique_paths, alg=ns.PATH)
+
+        return account
 
 
 class LabelSerializer(serializers.ModelSerializer):
