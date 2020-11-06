@@ -39,6 +39,8 @@ class Account(models.Model):
 
     @property
     def total_messages_in_account(self):
+        if hasattr(self, "total_reported_messages"):
+            return self.total_reported_messages
         return self.files.aggregate(models.Sum("reported_total_messages")).get(
             "reported_total_messages__sum", 0
         )
@@ -65,11 +67,15 @@ class Account(models.Model):
                           based on a default or supplied format.
         :return tuple(datetime, datetime) or tuple(str, str):
         """
-        dates = self.messages.aggregate(
-            min=models.Min("sent_date"), max=models.Max("sent_date")
-        )
-        min_date = dates.get("min")
-        max_date = dates.get("max")
+        if hasattr(self, "min_date") and hasattr(self, "max_date"):
+            min_date = self.min_date
+            max_date = self.max_date
+        else:
+            dates = self.messages.aggregate(
+                min=models.Min("sent_date"), max=models.Max("sent_date")
+            )
+            min_date = dates.get("min")
+            max_date = dates.get("max")
         if all((min_date, max_date, as_string)):
             return f"{min_date.strftime(str_fmt)}", f"{max_date.strftime(str_fmt)}"
         return min_date, max_date

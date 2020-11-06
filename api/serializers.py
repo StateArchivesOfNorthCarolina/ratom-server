@@ -73,11 +73,16 @@ class AccountSerializer(serializers.ModelSerializer):
         return instance
 
     def to_representation(self, instance: Account):
+        files_in_account = (
+            instance.total_files
+            if hasattr(instance, "total_files")
+            else instance.files.count()
+        )
         account = {
             "id": instance.id,
             "title": instance.title,
-            "files_in_account": instance.files.count(),
-            "messages_in_account": instance.total_messages_in_account,
+            "files_in_account": files_in_account,
+            "messages_in_account": instance.total_reported_messages,
             "processed_messages": instance.total_processed_messages,
             "account_last_modified": instance.account_last_modified.strftime(
                 "%Y-%m-%d %H:%M:%S"
