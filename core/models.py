@@ -55,6 +55,8 @@ class Account(models.Model):
 
     @property
     def account_last_modified(self):
+        if hasattr(self, "latest_import_date"):
+            return self.latest_import_date
         return self.files.latest("date_imported").date_imported
 
     def get_inclusive_dates(
