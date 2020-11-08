@@ -67,8 +67,6 @@ class AccountListView(APIView):
             total_files=Count("files"),
             total_reported_messages=Sum("files__reported_total_messages"),
             latest_import_date=Max("files__date_imported"),
-            min_date=Min("files__message__sent_date"),
-            max_date=Max("files__message__sent_date"),
         )
 
     def get(self, request):
