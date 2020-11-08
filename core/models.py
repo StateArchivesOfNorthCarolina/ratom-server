@@ -91,14 +91,16 @@ class Account(models.Model):
         If No file meets these criteria then the account is in status Complete
         :return str:
         """
-        if self.files.filter(import_status=File.IMPORTING).count() > 0:
-            return File.IMPORTING
-        if self.files.filter(import_status=File.RESTORING).count() > 0:
-            return File.RESTORING
-        if self.files.filter(import_status=File.FAILED).count() > 0:
-            return File.FAILED
-        if self.files.filter(import_status=File.CREATED).count() > 0:
-            return File.CREATED
+        file_counts = self.files.values("import_status").annotate(
+            status_count=models.Count("import_status")
+        )
+        for status in (File.IMPORTING, File.RESTORING, File.FAILED, File.CREATED):
+            for file_count in file_counts:
+                if (
+                    file_count["import_status"] == status
+                    and file_count["status_count"] > 0
+                ):
+                    return status
         return File.COMPLETE
 
     @property
