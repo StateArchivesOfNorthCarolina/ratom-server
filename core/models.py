@@ -183,7 +183,7 @@ class Label(models.Model):
 
 
 class MessageAudit(models.Model):
-    processed = models.BooleanField(default=False)
+    processed = models.BooleanField(default=False, db_index=True)
     is_record = models.BooleanField(default=True)
     date_processed = models.DateTimeField(null=True, blank=True)
     restricted_until = models.DateTimeField(null=True, blank=True)
