@@ -82,7 +82,7 @@ class AccountSerializer(serializers.ModelSerializer):
             "id": instance.id,
             "title": instance.title,
             "files_in_account": files_in_account,
-            "messages_in_account": instance.total_reported_messages,
+            "messages_in_account": instance.total_messages_in_account,
             "processed_messages": instance.total_processed_messages,
             "account_last_modified": instance.account_last_modified.strftime(
                 "%Y-%m-%d %H:%M:%S"
