@@ -1,6 +1,6 @@
 import logging
 
-from django.db.models import Count, Sum, Min, Max
+from django.db.models import Count, Sum, Max
 
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
