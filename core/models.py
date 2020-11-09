@@ -229,6 +229,7 @@ class Message(models.Model):
 
     class Meta:
         ordering = ["sent_date"]
+        indexes = (models.Index(fields=["account", "sent_date"]),)
 
     @property
     def audit_indexing(self):
