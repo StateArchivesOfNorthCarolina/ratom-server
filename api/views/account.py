@@ -1,4 +1,7 @@
 import logging
+
+from django.db.models import Count, Sum, Max
+
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -59,10 +62,17 @@ def account_detail(request, pk):
 class AccountListView(APIView):
     permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        return Account.objects.annotate(
+            total_files=Count("files"),
+            total_reported_messages=Sum("files__reported_total_messages"),
+            latest_import_date=Max("files__date_imported"),
+        )
+
     def get(self, request):
         # TODO: currently showing all accounts.
         # TODO: need to decide how/if to limit access
-        accounts = Account.objects.all()
+        accounts = self.get_queryset()
         serialized_account = AccountSerializer(accounts, many=True)
         return Response(serialized_account.data, status=status.HTTP_200_OK)
 

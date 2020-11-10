@@ -3,10 +3,21 @@ from django.utils import timezone
 import pytest
 
 import factory
-from api.serializers import MessageAuditSerializer
-from core.models import Label
+from api.serializers import AccountSerializer, MessageAuditSerializer
+from core.models import Label, Account
 
 pytestmark = pytest.mark.django_db
+
+thick_properties = ["labels", "paths"]
+
+
+def test_account_thick_and_thin(account, account_2, ratom_file, ratom_file_2):
+    accounts = Account.objects.all()
+    many_serializer = AccountSerializer(accounts, many=True)
+    assert not any(prop in many_serializer.data[0] for prop in thick_properties)
+
+    single_serializer = AccountSerializer(account)
+    assert all(prop in single_serializer.data for prop in thick_properties)
 
 
 def test_serializer_expected_fields(ratom_message_audit):

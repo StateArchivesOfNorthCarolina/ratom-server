@@ -84,5 +84,7 @@ ENV UWSGI_STATIC_MAP="/static/=/code/static/" UWSGI_STATIC_EXPIRES_URI="/static/
 # Uncomment after creating your docker-entrypoint.sh
 ENTRYPOINT ["/code/docker-entrypoint.sh"]
 
+ENV NEW_RELIC_MONITOR_MODE="false"
+
 # Start uWSGI
-CMD ["uwsgi", "--show-config"]
+CMD ["newrelic-admin", "run-program", "uwsgi", "--single-interpreter", "--enable-threads", "--show-config"]

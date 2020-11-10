@@ -39,6 +39,8 @@ class Account(models.Model):
 
     @property
     def total_messages_in_account(self):
+        if hasattr(self, "total_reported_messages"):
+            return self.total_reported_messages
         return self.files.aggregate(models.Sum("reported_total_messages")).get(
             "reported_total_messages__sum", 0
         )
@@ -53,6 +55,8 @@ class Account(models.Model):
 
     @property
     def account_last_modified(self):
+        if hasattr(self, "latest_import_date"):
+            return self.latest_import_date
         return self.files.latest("date_imported").date_imported
 
     def get_inclusive_dates(
@@ -65,11 +69,15 @@ class Account(models.Model):
                           based on a default or supplied format.
         :return tuple(datetime, datetime) or tuple(str, str):
         """
-        dates = self.messages.aggregate(
-            min=models.Min("sent_date"), max=models.Max("sent_date")
-        )
-        min_date = dates.get("min")
-        max_date = dates.get("max")
+        if hasattr(self, "min_date") and hasattr(self, "max_date"):
+            min_date = self.min_date
+            max_date = self.max_date
+        else:
+            dates = self.messages.aggregate(
+                min=models.Min("sent_date"), max=models.Max("sent_date")
+            )
+            min_date = dates.get("min")
+            max_date = dates.get("max")
         if all((min_date, max_date, as_string)):
             return f"{min_date.strftime(str_fmt)}", f"{max_date.strftime(str_fmt)}"
         return min_date, max_date
@@ -85,14 +93,16 @@ class Account(models.Model):
         If No file meets these criteria then the account is in status Complete
         :return str:
         """
-        if self.files.filter(import_status=File.IMPORTING).count() > 0:
-            return File.IMPORTING
-        if self.files.filter(import_status=File.RESTORING).count() > 0:
-            return File.RESTORING
-        if self.files.filter(import_status=File.FAILED).count() > 0:
-            return File.FAILED
-        if self.files.filter(import_status=File.CREATED).count() > 0:
-            return File.CREATED
+        file_counts = self.files.values("import_status").annotate(
+            status_count=models.Count("import_status")
+        )
+        for status in (File.IMPORTING, File.RESTORING, File.FAILED, File.CREATED):
+            for file_count in file_counts:
+                if (
+                    file_count["import_status"] == status
+                    and file_count["status_count"] > 0
+                ):
+                    return status
         return File.COMPLETE
 
     @property
@@ -173,7 +183,7 @@ class Label(models.Model):
 
 
 class MessageAudit(models.Model):
-    processed = models.BooleanField(default=False)
+    processed = models.BooleanField(default=False, db_index=True)
     is_record = models.BooleanField(default=True)
     date_processed = models.DateTimeField(null=True, blank=True)
     restricted_until = models.DateTimeField(null=True, blank=True)
@@ -219,6 +229,7 @@ class Message(models.Model):
 
     class Meta:
         ordering = ["sent_date"]
+        indexes = (models.Index(fields=["account", "sent_date"]),)
 
     @property
     def audit_indexing(self):

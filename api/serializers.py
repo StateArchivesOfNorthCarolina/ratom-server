@@ -73,10 +73,15 @@ class AccountSerializer(serializers.ModelSerializer):
         return instance
 
     def to_representation(self, instance: Account):
-        return {
+        files_in_account = (
+            instance.total_files
+            if hasattr(instance, "total_files")
+            else instance.files.count()
+        )
+        account = {
             "id": instance.id,
             "title": instance.title,
-            "files_in_account": instance.files.count(),
+            "files_in_account": files_in_account,
             "messages_in_account": instance.total_messages_in_account,
             "processed_messages": instance.total_processed_messages,
             "account_last_modified": instance.account_last_modified.strftime(
@@ -86,9 +91,14 @@ class AccountSerializer(serializers.ModelSerializer):
                 "%Y-%m-%d", as_string=False
             ),
             "account_status": instance.get_account_status(),
-            "labels": list(Label.objects.all().values("type", "name")),
-            "paths": natsorted(instance.unique_paths, alg=ns.PATH),
         }
+
+        # Send a "thin" response if requesting many, otherwise send "thick"
+        if not self.parent:
+            account["labels"] = list(Label.objects.all().values("type", "name"))
+            account["paths"] = natsorted(instance.unique_paths, alg=ns.PATH)
+
+        return account
 
 
 class LabelSerializer(serializers.ModelSerializer):
