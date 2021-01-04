@@ -29,3 +29,19 @@ k8s_worker_resources:
 
 # Celery beat
 k8s_worker_beat_enabled: false
+
+k8s_templates:
+  # - name: registry_secret.yaml.j2
+  #   state: "{{ k8s_dockerconfigjson | ternary('present', 'absent') }}"
+  # - name: redis.yaml.j2
+  # state: "{{ k8s_redis_enabled | ternary('present', 'absent') }}"
+  - name: elasticsearch.yaml.j2
+    state: "{{ k8s_elasticsearch_enabled | ternary('present', 'absent') }}"
+  # - name: memcached.yaml.j2
+  #   state: "{{ k8s_memcached_enabled | ternary('present', 'absent') }}"
+  # - name: web.yaml.j2
+  #   state: present
+  # - name: workers.yaml.j2
+  #   state: "{{ k8s_worker_enabled | ternary('present', 'absent') }}"
+  # - name: workers_beat.yaml.j2
+  #   state: "{{ (k8s_worker_enabled and k8s_worker_beat_enabled) | ternary('present', 'absent') }}"

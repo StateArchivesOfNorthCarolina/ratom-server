@@ -1,6 +1,6 @@
 ---
 
-k8s_kube_context: sanc-ratom
+k8s_kube_context: caktus-ratom
 k8s_domain_names:
 - ratom-sanc-prod.caktus-built.com
 k8s_auth_host: https://caktus-rat-ratom-cc639d-0a4894ee.hcp.eastus.azmk8s.io:443
