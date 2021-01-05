@@ -18,7 +18,7 @@ pytest-django==3.8.0
 pytest-cov==2.8.1
 
 # For translation
-transifex-client==0.13.6
+transifex-client==0.14.2
 requires.io
 
 # For docs
