@@ -8,7 +8,7 @@ sqlparse==0.3.0
 pytz
 
 # DRF
-djangorestframework==3.11.0
+djangorestframework==3.11.2
 djangorestframework-simplejwt==4.4.0
 
 # elasticsearch
