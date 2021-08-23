@@ -38,6 +38,6 @@ docker==4.1.0
 
 # For Jupyter notebooks
 pandas==0.25.3
-jupyterlab==1.2.2
+jupyterlab==1.2.21
 
 django-cors-headers==3.2.1
